@@ -66,8 +66,22 @@ struct StampCardView: View {
                 // Use WebView for HTML and SVG content
                 StampWebView(url: stamp.imageURL)
                     .frame(width: geometry.size.width, height: geometry.size.width)
+            } else if stamp.isAnimated {
+                // Use KFAnimatedImage for GIFs
+                KFAnimatedImage(stamp.imageURL)
+                    .placeholder {
+                        placeholderView
+                    }
+                    .cacheOriginalImage()
+                    .onFailure { error in
+                        print("GIF load failed for \(stamp.id): \(error.localizedDescription)")
+                        imageLoadFailed = true
+                    }
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.width)
+                    .clipped()
             } else {
-                // Use Kingfisher for regular images
+                // Use KFImage for regular images
                 KFImage(stamp.imageURL)
                     .placeholder {
                         placeholderView
