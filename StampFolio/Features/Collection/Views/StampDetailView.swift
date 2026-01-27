@@ -95,8 +95,17 @@ struct StampDetailView: View {
         if stamp.isSVG || stamp.isHTML {
             // WebView for SVG/HTML content
             WebContentView(url: stamp.imageURL)
+        } else if stamp.isAnimated {
+            // KFAnimatedImage for animated GIFs
+            KFAnimatedImage(stamp.imageURL)
+                .placeholder {
+                    ProgressView()
+                        .tint(Color.stampchainPurple)
+                }
+                .cacheOriginalImage()
+                .aspectRatio(contentMode: .fit)
         } else {
-            // Kingfisher for images (including GIF)
+            // KFImage for static images
             KFImage(stamp.imageURL)
                 .placeholder {
                     ProgressView()
