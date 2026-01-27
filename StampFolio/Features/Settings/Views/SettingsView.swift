@@ -64,11 +64,6 @@ struct SettingsView: View {
             .sheet(isPresented: $viewModel.showAddWallet) {
                 AddWalletView()
             }
-            .sheet(isPresented: $viewModel.showQRScanner) {
-                QRScannerView { result in
-                    viewModel.handleQRScan(result)
-                }
-            }
             .alert("Notice", isPresented: $viewModel.showAlert) {
                 Button("OK", role: .cancel) {}
             } message: {

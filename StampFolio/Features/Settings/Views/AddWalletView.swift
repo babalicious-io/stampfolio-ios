@@ -104,6 +104,11 @@ struct AddWalletView: View {
             .onAppear {
                 isAddressFocused = true
             }
+            .sheet(isPresented: $viewModel.showQRScanner) {
+                QRScannerView { result in
+                    viewModel.handleQRScan(result)
+                }
+            }
         }
     }
     
