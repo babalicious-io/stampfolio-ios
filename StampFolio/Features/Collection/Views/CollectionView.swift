@@ -16,6 +16,7 @@ struct CollectionView: View {
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -35,7 +36,7 @@ struct CollectionView: View {
         NavigationStack {
             ZStack {
                 // Background
-                Color.adaptiveBackground(for: .dark)
+                Color.adaptiveBackground(for: colorScheme)
                     .ignoresSafeArea()
                 
                 content
@@ -103,11 +104,11 @@ struct CollectionView: View {
             Text("No Wallets Added")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.stampchainGreyLight)
+                .foregroundStyle(Color.primaryText(for: colorScheme))
             
             Text("Add a Bitcoin wallet to view your stamp collection")
                 .font(.body)
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             
@@ -116,7 +117,7 @@ struct CollectionView: View {
             } label: {
                 Text("Add Wallet")
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.stampchainGreyLight)
+                    .foregroundStyle(Color.primaryText(for: colorScheme))
                     .glassButton()
             }
             .accessibilityLabel("Add a Bitcoin wallet")
@@ -135,7 +136,7 @@ struct CollectionView: View {
             
             Text("Loading stamps...")
                 .font(.body)
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
         }
     }
     
@@ -150,12 +151,12 @@ struct CollectionView: View {
             Text("Unable to Load Stamps")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.stampchainGreyLight)
+                .foregroundStyle(Color.primaryText(for: colorScheme))
             
             if let error = viewModel.errorMessage {
                 Text(error)
                     .font(.body)
-                    .foregroundStyle(Color.stampchainGrey)
+                    .foregroundStyle(Color.secondaryText(for: colorScheme))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
@@ -167,7 +168,7 @@ struct CollectionView: View {
             } label: {
                 Text("Try Again")
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.stampchainGreyLight)
+                    .foregroundStyle(Color.primaryText(for: colorScheme))
                     .glassButton()
             }
             .accessibilityLabel("Retry loading stamps")
@@ -186,11 +187,11 @@ struct CollectionView: View {
             Text("No Stamps Found")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.stampchainGreyLight)
+                .foregroundStyle(Color.primaryText(for: colorScheme))
             
             Text("Your wallets don't contain any Bitcoin Stamps yet")
                 .font(.body)
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
         }
@@ -231,7 +232,7 @@ struct CollectionView: View {
             Text("You're offline. Showing cached content.")
         }
         .font(.caption)
-        .foregroundStyle(Color.stampchainGreyLight)
+        .foregroundStyle(Color.primaryText(for: colorScheme))
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
         .background(Color.stampchainOrange.opacity(0.8))

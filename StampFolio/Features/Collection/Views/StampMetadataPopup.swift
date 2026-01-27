@@ -82,7 +82,7 @@ struct StampMetadataPopup: View {
             Text(stamp.ident ?? "STAMP")
                 .font(.caption)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.stampchainGreyLight)
+                .foregroundStyle(Color.primaryText(for: colorScheme))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color.stampchainPurple.opacity(0.8))
@@ -185,7 +185,7 @@ struct StampMetadataPopup: View {
                 
                 Image(systemName: "arrow.up.right.square")
             }
-            .foregroundStyle(Color.stampchainGreyLight)
+            .foregroundStyle(Color.primaryText(for: colorScheme))
             .frame(maxWidth: .infinity)
             .glassButton()
         }
@@ -203,18 +203,19 @@ struct MetadataRow: View {
     var fullValue: String?
     var isMonospace: Bool = false
     
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showCopied = false
     
     var body: some View {
         HStack(alignment: .top) {
             Text(label)
                 .font(.metadataLabel)
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
                 .frame(width: 100, alignment: .leading)
             
             Text(value)
                 .font(isMonospace ? .monospace : .metadataValue)
-                .foregroundStyle(Color.stampchainGreyLight)
+                .foregroundStyle(Color.primaryText(for: colorScheme))
                 .textSelection(.enabled)
             
             Spacer()

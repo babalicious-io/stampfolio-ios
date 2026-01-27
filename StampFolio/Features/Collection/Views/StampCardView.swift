@@ -124,12 +124,12 @@ struct StampCardView: View {
     
     private var placeholderView: some View {
         ZStack {
-            Color.stampchainBackground
+            Color.adaptiveBackground(for: colorScheme)
             
             VStack(spacing: 8) {
                 Image(systemName: "photo")
                     .font(.title)
-                    .foregroundStyle(Color.stampchainGrey)
+                    .foregroundStyle(Color.secondaryText(for: colorScheme))
                 
                 ProgressView()
                     .tint(Color.stampchainPurple)
@@ -141,7 +141,7 @@ struct StampCardView: View {
     
     private var failedImageView: some View {
         ZStack {
-            Color.stampchainBackground
+            Color.adaptiveBackground(for: colorScheme)
             
             VStack(spacing: 8) {
                 Image(systemName: "photo.badge.exclamationmark")
@@ -150,7 +150,7 @@ struct StampCardView: View {
                 
                 Text("Failed to load")
                     .font(.caption2)
-                    .foregroundStyle(Color.stampchainGrey)
+                    .foregroundStyle(Color.secondaryText(for: colorScheme))
                 
                 Button {
                     imageLoadFailed = false
@@ -173,7 +173,7 @@ struct StampCardView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
-                Color.stampchainBackground.opacity(0.8)
+                Color.adaptiveBackground(for: colorScheme).opacity(0.8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(Color.stampchainPurple.opacity(0.3), lineWidth: 1)
@@ -193,7 +193,7 @@ struct StampCardView: View {
                 .foregroundStyle(Color.stampchainPurple)
                 .background(
                     Circle()
-                        .fill(Color.stampchainBackground.opacity(0.8))
+                        .fill(Color.adaptiveBackground(for: colorScheme).opacity(0.8))
                         .frame(width: infoButtonSize + 4, height: infoButtonSize + 4)
                 )
         }
