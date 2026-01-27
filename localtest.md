@@ -28,12 +28,19 @@ This guide covers how to run and test StampFolio on your physical iPhone or iPad
 
 ### Step 3: Configure Signing (First Time Only)
 
-1. In Xcode, click **"StampFolio"** in the Project Navigator (left sidebar)
-2. Select the **"StampFolio"** target (under TARGETS)
-3. Go to the **"Signing & Capabilities"** tab
-4. Check **"Automatically manage signing"**
-5. Click the **Team** dropdown and select your Apple ID
-   - If your Apple ID isn't listed, click "Add an Account..." and sign in
+**SIMPLE METHOD - Click the Inspector Toggle:**
+
+1. In Xcode, click the **blue "StampFolio"** project icon at the top of the left sidebar
+2. In the top-right area of Xcode, **click the "Inspector" icon** (looks like a document or panel icon) to show the project settings panel
+3. You should now see **"PROJECT"** and **"TARGETS"** sections with tabs at the top
+4. Under **TARGETS**, click **"StampFolio"**
+5. Click the **"Signing & Capabilities"** tab at the top
+6. Check **"Automatically manage signing"**
+7. Click the **Team** dropdown and select your Apple ID
+   - If your Apple ID isn't listed, click **"Add an Account..."** and sign in
+   - Once added, select it from the Team dropdown
+
+**The Inspector icon is in the top-right toolbar area of Xcode - it toggles the project settings panel on/off.**
 
 ### Step 4: Trust Developer Certificate on Device
 
@@ -83,6 +90,57 @@ Go to **Settings → General → VPN & Device Management** on your device and tr
 2. Try disconnecting and reconnecting the USB cable
 3. Restart Xcode
 
+### Can't See "Signing & Capabilities" Tab
+
+**If you see raw code/text instead of tabs with "General", "Signing & Capabilities", etc.:**
+
+1. **Close the current editor tab:**
+   - Click the **X** button on the tab showing the code/text
+   - Or press **⌘W** to close the tab
+
+2. **Click the project icon again:**
+   - In the left sidebar, click the **blue "StampFolio"** project icon
+   - Make sure it's the project icon (blue folder), not any file inside it
+
+3. **Look for the settings interface:**
+   - The right side should now show tabs: **General** | **Signing & Capabilities** | **Resource Tags**
+   - If you still see code/text, try: **View → Show Project Navigator** (or press **⌘1**)
+
+4. **Alternative method:**
+   - Right-click the **blue "StampFolio"** project icon in the left sidebar
+   - Select **"Open in New Tab"** or **"Show in Finder"** then click it again
+   - This sometimes forces Xcode to show the settings interface
+
+5. **If tabs still don't appear:**
+   - Make sure you're clicking the **project icon** (blue), not a folder or file
+   - Try clicking on **"StampFolio"** under TARGETS in the center area (if visible)
+   - The Signing & Capabilities tab should appear at the top
+
+### "Signing requires a development team" Error
+
+**This is the most common error when connecting a device for the first time.**
+
+1. **Open Signing & Capabilities:**
+   - Click **"StampFolio"** (blue project icon) in the left sidebar
+   - Select the **"StampFolio"** target in the TARGETS section
+   - Click the **"Signing & Capabilities"** tab at the top
+
+2. **Configure signing:**
+   - Check **"Automatically manage signing"**
+   - Click the **Team** dropdown
+   - Select your Apple ID (or add it if not listed)
+
+3. **If Team dropdown is empty:**
+   - Click **"Add an Account..."** in the Team dropdown
+   - Sign in with your Apple ID
+   - Go back to Signing & Capabilities and select your account
+
+4. **Verify your account is added:**
+   - Go to **Xcode → Settings** (or **Preferences** on older versions)
+   - Click the **"Accounts"** tab
+   - Your Apple ID should be listed here
+   - If not, click the **"+"** button to add it
+
 ### "No provisioning profile" Error
 
 1. Ensure "Automatically manage signing" is checked
@@ -95,6 +153,40 @@ Go to **Settings → General → VPN & Device Management** on your device and tr
 2. Ensure you tapped "Trust" on your device
 3. Try a different USB port
 4. Restart both Xcode and your device
+
+### "Unpaired" Device Error
+
+If Xcode shows your iPad/iPhone as "unpaired", follow these steps to re-pair:
+
+1. **Disconnect and reconnect the device:**
+   - Unplug the USB cable from your Mac
+   - Wait 5 seconds
+   - Plug it back in
+
+2. **On your iPad/iPhone:**
+   - Unlock the device
+   - If prompted, tap **"Trust This Computer"**
+   - Enter your device passcode
+
+3. **In Xcode:**
+   - Go to **Window → Devices and Simulators** (⇧⌘2)
+   - Select your device in the left sidebar
+   - If you see an "Unpair" button, click it first to clear the old pairing
+   - Wait a few seconds, then the device should re-pair automatically
+
+4. **If still unpaired:**
+   - In Xcode Devices window, right-click your device and select **"Unpair Device"**
+   - Disconnect the USB cable
+   - Restart your iPad/iPhone
+   - Reconnect the USB cable
+   - On your device, tap **"Trust This Computer"** when prompted
+   - The device should now pair automatically
+
+5. **Alternative: Reset pairing via Finder (macOS Catalina+):**
+   - Open **Finder**
+   - Your iPad should appear in the sidebar under "Locations"
+   - If it shows as unpaired, click it and follow the on-screen instructions
+   - Trust the computer on your device when prompted
 
 ### Build Succeeds but App Crashes
 
