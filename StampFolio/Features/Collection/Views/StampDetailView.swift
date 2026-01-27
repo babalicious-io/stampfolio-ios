@@ -46,7 +46,7 @@ struct StampDetailView: View {
                     .scaleEffect(scale)
                     .offset(offset)
                     .offset(y: dragOffset.height)
-                    .opacity(1.0 - abs(dragOffset.height) / 500)
+                    .opacity(1.0 - Double(abs(dragOffset.height)) / 500.0)
                     .gesture(magnificationGesture)
                     .gesture(combinedDragGesture)
                     .onTapGesture(count: 2) {
