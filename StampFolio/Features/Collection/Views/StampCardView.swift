@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Kingfisher
+import WebKit
 
 /// Card view displaying a stamp in the collection grid
 struct StampCardView: View {
@@ -24,6 +25,7 @@ struct StampCardView: View {
     // MARK: - State
     
     @State private var isPressed = false
+    @State private var imageLoadFailed = false
     
     // MARK: - Layout
     
@@ -34,7 +36,7 @@ struct StampCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Stamp Image
-            stampImage
+            stampContent
             
             // Footer with stamp number and info button
             footer
@@ -54,22 +56,38 @@ struct StampCardView: View {
         .accessibilityAddTraits(.isButton)
     }
     
-    // MARK: - Stamp Image
+    // MARK: - Stamp Content
     
-    private var stampImage: some View {
+    private var stampContent: some View {
         GeometryReader { geometry in
-            KFImage(stamp.imageURL)
-                .placeholder {
-                    placeholderView
-                }
-                .retry(maxCount: 3, interval: .seconds(2))
-                .onFailure { _ in
-                    // Log error if needed
-                }
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: geometry.size.width, height: geometry.size.width)
-                .clipped()
+            if imageLoadFailed {
+                failedImageView
+            } else if stamp.isHTML || stamp.isSVG {
+                // Use WebView for HTML and SVG content
+                StampWebView(url: stamp.imageURL)
+                    .frame(width: geometry.size.width, height: geometry.size.width)
+            } else {
+                // Use Kingfisher for regular images
+                KFImage(stamp.imageURL)
+                    .placeholder {
+                        placeholderView
+                    }
+                    .retry(maxCount: 3, interval: .seconds(1))
+                    .fade(duration: 0.3)
+                    .cacheOriginalImage()
+                    .onSuccess { _ in
+                        imageLoadFailed = false
+                    }
+                    .onFailure { error in
+                        print("Image load failed for \(stamp.id): \(error.localizedDescription)")
+                        print("URL: \(stamp.stampUrl)")
+                        imageLoadFailed = true
+                    }
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.width)
+                    .clipped()
+            }
         }
         .aspectRatio(1, contentMode: .fit)
     }
@@ -87,6 +105,32 @@ struct StampCardView: View {
                 
                 ProgressView()
                     .tint(Color.stampchainPurple)
+            }
+        }
+    }
+    
+    // MARK: - Failed Image View
+    
+    private var failedImageView: some View {
+        ZStack {
+            Color.stampchainBackground
+            
+            VStack(spacing: 8) {
+                Image(systemName: "photo.badge.exclamationmark")
+                    .font(.title)
+                    .foregroundStyle(Color.stampchainOrange)
+                
+                Text("Failed to load")
+                    .font(.caption2)
+                    .foregroundStyle(Color.stampchainGrey)
+                
+                Button {
+                    imageLoadFailed = false
+                } label: {
+                    Text("Retry")
+                        .font(.caption2)
+                        .foregroundStyle(Color.stampchainPurple)
+                }
             }
         }
     }
@@ -120,6 +164,36 @@ struct StampCardView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(Color.stampchainBackground.opacity(0.5))
+    }
+}
+
+// MARK: - Stamp WebView for HTML/SVG Content
+
+struct StampWebView: UIViewRepresentable {
+    let url: URL?
+    
+    func makeUIView(context: Context) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        config.allowsInlineMediaPlayback = true
+        
+        let webView = WKWebView(frame: .zero, configuration: config)
+        webView.isOpaque = false
+        webView.backgroundColor = UIColor(Color.stampchainBackground)
+        webView.scrollView.backgroundColor = UIColor(Color.stampchainBackground)
+        webView.scrollView.isScrollEnabled = false
+        webView.isUserInteractionEnabled = false // Disable interaction in grid
+        
+        return webView
+    }
+    
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        guard let url = url else { return }
+        
+        // Only load if URL changed
+        if webView.url != url {
+            let request = URLRequest(url: url)
+            webView.load(request)
+        }
     }
 }
 
