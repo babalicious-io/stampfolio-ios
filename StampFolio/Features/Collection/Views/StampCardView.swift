@@ -166,7 +166,7 @@ struct StampCardView: View {
     // MARK: - Edition Badge
     
     private var editionBadge: some View {
-        Text("×\(stamp.supply)")
+        Text(stamp.formattedQuantity)
             .font(.caption)
             .fontWeight(.semibold)
             .foregroundStyle(Color.primaryText(for: colorScheme))
@@ -190,7 +190,11 @@ struct StampCardView: View {
         } label: {
             Image(systemName: "info.circle.fill")
                 .font(.system(size: infoButtonSize * 0.85))
-                .foregroundStyle(Color.stampchainPurple)
+                .foregroundStyle(
+                    colorScheme == .dark 
+                        ? Color.stampchainPurple 
+                        : Color.stampchainPurple.opacity(0.85)
+                )
                 .background(
                     Circle()
                         .fill(Color.adaptiveBackground(for: colorScheme).opacity(0.8))
