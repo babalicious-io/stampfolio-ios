@@ -34,73 +34,87 @@ struct StampCardView: View {
     // MARK: - Body
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Stamp Image
-            stampContent
-            
-            // Footer with stamp number and info button
-            footer
-        }
-        .glassCard(cornerRadius: 16, shadowRadius: 8)
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(.easeInOut(duration: 0.1), value: isPressed)
-        .onTapGesture {
-            onTap()
-        }
-        .onLongPressGesture(minimumDuration: 0.1, pressing: { pressing in
-            isPressed = pressing
-        }, perform: {})
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(stamp.formattedNumber)
-        .accessibilityHint("Double tap to view full screen")
-        .accessibilityAddTraits(.isButton)
+        stampContent
+            .glassCard(cornerRadius: 16, shadowRadius: 8)
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
+            .onTapGesture {
+                onTap()
+            }
+            .onLongPressGesture(minimumDuration: 0.1, pressing: { pressing in
+                isPressed = pressing
+            }, perform: {})
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(stamp.formattedNumber)
+            .accessibilityHint("Double tap to view full screen")
+            .accessibilityAddTraits(.isButton)
     }
     
     // MARK: - Stamp Content
     
     private var stampContent: some View {
         GeometryReader { geometry in
-            if imageLoadFailed {
-                failedImageView
-            } else if stamp.isHTML || stamp.isSVG {
-                // Use WebView for HTML and SVG content
-                StampWebView(url: stamp.imageURL)
-                    .frame(width: geometry.size.width, height: geometry.size.width)
-            } else if stamp.isAnimated {
-                // Use KFAnimatedImage for GIFs
-                KFAnimatedImage(stamp.imageURL)
-                    .placeholder {
-                        placeholderView
+            ZStack {
+                // Stamp image
+                if imageLoadFailed {
+                    failedImageView
+                } else if stamp.isHTML || stamp.isSVG {
+                    // Use WebView for HTML and SVG content
+                    StampWebView(url: stamp.imageURL)
+                        .frame(width: geometry.size.width, height: geometry.size.width)
+                } else if stamp.isAnimated {
+                    // Use KFAnimatedImage for GIFs
+                    KFAnimatedImage(stamp.imageURL)
+                        .placeholder {
+                            placeholderView
+                        }
+                        .cacheOriginalImage()
+                        .onFailure { error in
+                            print("GIF load failed for \(stamp.id): \(error.localizedDescription)")
+                            imageLoadFailed = true
+                        }
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.width)
+                        .clipped()
+                } else {
+                    // Use KFImage for regular images
+                    KFImage(stamp.imageURL)
+                        .placeholder {
+                            placeholderView
+                        }
+                        .retry(maxCount: 3, interval: .seconds(1))
+                        .fade(duration: 0.3)
+                        .cacheOriginalImage()
+                        .onSuccess { _ in
+                            imageLoadFailed = false
+                        }
+                        .onFailure { error in
+                            print("Image load failed for \(stamp.id): \(error.localizedDescription)")
+                            print("URL: \(stamp.stampUrl)")
+                            imageLoadFailed = true
+                        }
+                        .resizable()
+                        .interpolation(.none) // Prevents pixelation for small/pixel art stamps
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.width)
+                        .clipped()
+                }
+                
+                // Overlay: Edition count (bottom left) and Info button (bottom right)
+                VStack {
+                    Spacer()
+                    
+                    HStack(alignment: .bottom) {
+                        // Edition count - bottom left
+                        editionBadge
+                        
+                        Spacer()
+                        
+                        // Info button - bottom right
+                        infoButton
                     }
-                    .cacheOriginalImage()
-                    .onFailure { error in
-                        print("GIF load failed for \(stamp.id): \(error.localizedDescription)")
-                        imageLoadFailed = true
-                    }
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.width)
-                    .clipped()
-            } else {
-                // Use KFImage for regular images
-                KFImage(stamp.imageURL)
-                    .placeholder {
-                        placeholderView
-                    }
-                    .retry(maxCount: 3, interval: .seconds(1))
-                    .fade(duration: 0.3)
-                    .cacheOriginalImage()
-                    .onSuccess { _ in
-                        imageLoadFailed = false
-                    }
-                    .onFailure { error in
-                        print("Image load failed for \(stamp.id): \(error.localizedDescription)")
-                        print("URL: \(stamp.stampUrl)")
-                        imageLoadFailed = true
-                    }
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.width)
-                    .clipped()
+                    .padding(12)
+                }
             }
         }
         .aspectRatio(1, contentMode: .fit)
@@ -149,35 +163,43 @@ struct StampCardView: View {
         }
     }
     
-    // MARK: - Footer
+    // MARK: - Edition Badge
     
-    private var footer: some View {
-        HStack {
-            // Stamp number
-            Text(stamp.formattedNumber)
-                .font(.cardTitle)
-                .foregroundStyle(Color.primaryText(for: colorScheme))
-                .lineLimit(1)
-            
-            Spacer()
-            
-            // Info button
-            Button {
-                onInfoTap()
-            } label: {
-                Image(systemName: "info.circle")
-                    .font(.system(size: infoButtonSize * 0.75))
-                    .foregroundStyle(Color.stampchainPurple)
-                    .frame(width: infoButtonSize, height: infoButtonSize)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Show stamp details")
-            .accessibilityHint("Opens stamp metadata popup")
+    private var editionBadge: some View {
+        Text("×\(stamp.supply)")
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundStyle(Color.primaryText(for: colorScheme))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Color.stampchainBackground.opacity(0.8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.stampchainPurple.opacity(0.3), lineWidth: 1)
+                    )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+    
+    // MARK: - Info Button
+    
+    private var infoButton: some View {
+        Button {
+            onInfoTap()
+        } label: {
+            Image(systemName: "info.circle.fill")
+                .font(.system(size: infoButtonSize * 0.85))
+                .foregroundStyle(Color.stampchainPurple)
+                .background(
+                    Circle()
+                        .fill(Color.stampchainBackground.opacity(0.8))
+                        .frame(width: infoButtonSize + 4, height: infoButtonSize + 4)
+                )
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color.stampchainBackground.opacity(0.5))
+        .buttonStyle(.plain)
+        .accessibilityLabel("Show stamp details")
+        .accessibilityHint("Opens stamp metadata popup")
     }
 }
 

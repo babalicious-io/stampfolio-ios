@@ -113,6 +113,7 @@ struct StampDetailView: View {
                 }
                 .retry(maxCount: 3)
                 .resizable()
+                .interpolation(.none) // Prevents pixelation for small/pixel art stamps
                 .aspectRatio(contentMode: .fit)
         }
     }
