@@ -2,6 +2,8 @@
 
 Welcome to your comprehensive iOS development setup with Cursor AI! 🎉
 
+**Project: StampFolio** - Your iOS stamp collection app
+
 ## 📦 What's Installed
 
 You now have **24 specialized rule files** covering the complete iOS development lifecycle:
@@ -120,4 +122,4 @@ Your workspace now includes:
 
 ---
 
-**Ready to build amazing iOS apps! 🚀**
+**Ready to build StampFolio! 🚀**
