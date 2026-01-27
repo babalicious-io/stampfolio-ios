@@ -33,11 +33,11 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     /// Total supply/editions
     let supply: Int
     
-    /// Quantity owned in wallet (from balance endpoint)
-    let quantity: Int?
+    /// Whether the stamp is divisible (0 = false, 1 = true)
+    let divisible: Int
     
-    /// Whether the stamp is divisible (like Bitcoin satoshis)
-    let divisible: Bool?
+    /// Balance owned by wallet (optional - only from balance endpoint)
+    let balance: Double?
     
     /// Block timestamp when stamp was created (optional - not in balance endpoint)
     let blockTime: Date?
@@ -70,7 +70,6 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         case stampUrl = "stamp_url"
         case stampMimetype = "stamp_mimetype"
         case supply
-        case quantity
         case divisible
         case blockTime = "block_time"
         case blockIndex = "block_index"
@@ -136,19 +135,18 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         stampMimetype?.lowercased() == "text/html"
     }
     
+    /// Whether the stamp is divisible (converts int to bool)
+    var isDivisible: Bool {
+        divisible == 1
+    }
+    
     /// Formatted quantity for display in wallet
-    /// - For divisible stamps: converts from satoshi-like units (100,000,000 = 1)
-    /// - For non-divisible stamps: displays as-is
-    /// - Falls back to supply if quantity is not available
     var formattedQuantity: String {
-        guard let quantity = quantity else {
-            // Fallback to supply if quantity not available
-            return "\(supply)"
-        }
+        let quantity = balance ?? Double(supply)
         
-        // If divisible, convert from satoshi-like units
-        if divisible == true {
-            let actualAmount = Double(quantity) / 100_000_000.0
+        // If divisible, convert from satoshi-like units (100,000,000 = 1)
+        if isDivisible {
+            let actualAmount = quantity / 100_000_000.0
             // Remove decimals if it's a whole number
             if actualAmount.truncatingRemainder(dividingBy: 1) == 0 {
                 return String(format: "%.0f", actualAmount)
@@ -156,8 +154,8 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
                 return String(format: "%g", actualAmount)
             }
         } else {
-            // Non-divisible stamps
-            return "\(quantity)"
+            // Non-divisible stamps - show as integer
+            return String(format: "%.0f", quantity)
         }
     }
 }
@@ -175,8 +173,8 @@ extension Stamp {
         stampUrl: "https://stampchain.io/stamps/e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca.png",
         stampMimetype: "image/png",
         supply: 1,
-        quantity: 1,
-        divisible: false,
+        divisible: 0,
+        balance: 1,
         blockTime: Date(),
         blockIndex: 933837,
         txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
@@ -197,8 +195,8 @@ extension Stamp {
             stampUrl: "https://stampchain.io/stamps/1384302.gif",
             stampMimetype: "image/gif",
             supply: 42,
-            quantity: 111,
-            divisible: false,
+            divisible: 0,
+            balance: 111,
             blockTime: Date().addingTimeInterval(-86400),
             blockIndex: 933836,
             txHash: "def456abc789",
@@ -214,9 +212,9 @@ extension Stamp {
             creatorName: "divisible_test",
             stampUrl: "https://stampchain.io/stamps/test.png",
             stampMimetype: "image/png",
-            supply: 1000000000,
-            quantity: 6_900_000_000,
-            divisible: true,
+            supply: 1_000_000_000,
+            divisible: 1,
+            balance: 6_900_000_000,
             blockTime: Date().addingTimeInterval(-172800),
             blockIndex: 933835,
             txHash: "test123",

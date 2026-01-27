@@ -63,8 +63,8 @@ actor StampchainAPIClient {
     
     /// Fetch stamps owned by a wallet address
     /// - Parameter address: Bitcoin wallet address
-    /// - Returns: Array of stamps owned by the wallet
-    func fetchStampsByWallet(_ address: String) async throws -> [Stamp] {
+    /// - Returns: Array of stamp balances owned by the wallet
+    func fetchStampsByWallet(_ address: String) async throws -> [StampBalance] {
         let endpoint = "\(baseURL)/stamps/balance/\(address)"
         
         guard let url = URL(string: endpoint) else {
@@ -153,7 +153,7 @@ actor StampchainAPIClient {
 
 /// Response wrapper for wallet balance endpoint
 private struct WalletBalanceResponse: Decodable {
-    let data: [Stamp]
+    let data: [StampBalance]
 }
 
 /// Response wrapper for stamp detail endpoint

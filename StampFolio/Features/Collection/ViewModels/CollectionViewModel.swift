@@ -63,8 +63,10 @@ final class CollectionViewModel {
             for wallet in wallets {
                 group.addTask {
                     do {
-                        let walletStamps = try await self.apiClient.fetchStampsByWallet(wallet.address)
-                        return .success(walletStamps)
+                        let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address)
+                        // Convert StampBalance to Stamp
+                        let stamps = walletBalances.map { $0.toStamp() }
+                        return .success(stamps)
                     } catch {
                         return .failure(error)
                     }
