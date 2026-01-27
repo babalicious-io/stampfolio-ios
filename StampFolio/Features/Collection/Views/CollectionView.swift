@@ -1,0 +1,261 @@
+//
+//  CollectionView.swift
+//  StampFolio
+//
+//  Main collection view displaying stamps in a grid
+//
+
+import SwiftUI
+import SwiftData
+
+/// Main collection view showing stamps from all wallets
+struct CollectionView: View {
+    
+    // MARK: - Environment
+    
+    @Environment(CollectionViewModel.self) private var viewModel
+    @Environment(NetworkMonitor.self) private var networkMonitor
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    
+    // MARK: - State
+    
+    @State private var showOfflineBanner = false
+    
+    // MARK: - Layout
+    
+    private let columns = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
+    ]
+    
+    // MARK: - Body
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                // Background
+                Color.adaptiveBackground(for: .dark)
+                    .ignoresSafeArea()
+                
+                content
+            }
+            .navigationTitle("Collection")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(Color.stampchainPurpleLight)
+                    }
+                }
+            }
+            .task {
+                await viewModel.fetchStamps(for: wallets)
+            }
+            .refreshable {
+                await viewModel.refreshStamps(for: wallets)
+            }
+            .onChange(of: wallets.count) { _, _ in
+                Task {
+                    await viewModel.fetchStamps(for: wallets)
+                }
+            }
+            .onChange(of: networkMonitor.isConnected) { _, isConnected in
+                showOfflineBanner = !isConnected
+            }
+            .fullScreenCover(item: Bindable(viewModel).selectedStamp) { stamp in
+                StampDetailView(stamp: stamp)
+            }
+            .sheet(item: Bindable(viewModel).metadataStamp) { stamp in
+                StampMetadataPopup(stamp: stamp)
+                    .presentationDetents([.medium])
+                    .presentationBackground(.ultraThinMaterial)
+            }
+        }
+        .stampchainBackground()
+    }
+    
+    // MARK: - Content
+    
+    @ViewBuilder
+    private var content: some View {
+        if wallets.isEmpty {
+            emptyWalletsView
+        } else if viewModel.isLoading && viewModel.stamps.isEmpty {
+            loadingView
+        } else if viewModel.showError {
+            errorView
+        } else if viewModel.stamps.isEmpty {
+            noStampsView
+        } else {
+            stampsGrid
+        }
+    }
+    
+    // MARK: - Empty Wallets View
+    
+    private var emptyWalletsView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "wallet.pass")
+                .font(.system(size: 64))
+                .foregroundStyle(Color.stampchainPurple)
+            
+            Text("No Wallets Added")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.stampchainGreyLight)
+            
+            Text("Add a Bitcoin wallet to view your stamp collection")
+                .font(.body)
+                .foregroundStyle(Color.stampchainGrey)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            
+            NavigationLink {
+                SettingsView()
+            } label: {
+                Text("Add Wallet")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.stampchainGreyLight)
+                    .glassButton()
+            }
+            .accessibilityLabel("Add a Bitcoin wallet")
+            .accessibilityHint("Opens the settings screen to add a wallet")
+        }
+        .padding()
+    }
+    
+    // MARK: - Loading View
+    
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.5)
+                .tint(Color.stampchainPurpleLight)
+            
+            Text("Loading stamps...")
+                .font(.body)
+                .foregroundStyle(Color.stampchainGrey)
+        }
+    }
+    
+    // MARK: - Error View
+    
+    private var errorView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 64))
+                .foregroundStyle(Color.stampchainError)
+            
+            Text("Unable to Load Stamps")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.stampchainGreyLight)
+            
+            if let error = viewModel.errorMessage {
+                Text(error)
+                    .font(.body)
+                    .foregroundStyle(Color.stampchainGrey)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+            
+            Button {
+                Task {
+                    await viewModel.refreshStamps(for: wallets)
+                }
+            } label: {
+                Text("Try Again")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.stampchainGreyLight)
+                    .glassButton()
+            }
+            .accessibilityLabel("Retry loading stamps")
+        }
+        .padding()
+    }
+    
+    // MARK: - No Stamps View
+    
+    private var noStampsView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "photo.on.rectangle.angled")
+                .font(.system(size: 64))
+                .foregroundStyle(Color.stampchainPurple)
+            
+            Text("No Stamps Found")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.stampchainGreyLight)
+            
+            Text("Your wallets don't contain any Bitcoin Stamps yet")
+                .font(.body)
+                .foregroundStyle(Color.stampchainGrey)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+        }
+        .padding()
+    }
+    
+    // MARK: - Stamps Grid
+    
+    private var stampsGrid: some View {
+        ScrollView {
+            // Offline banner
+            if showOfflineBanner {
+                offlineBanner
+            }
+            
+            LazyVGrid(columns: columns, spacing: 16) {
+                ForEach(viewModel.stamps) { stamp in
+                    StampCardView(
+                        stamp: stamp,
+                        onTap: {
+                            viewModel.selectedStamp = stamp
+                        },
+                        onInfoTap: {
+                            viewModel.metadataStamp = stamp
+                        }
+                    )
+                }
+            }
+            .padding()
+        }
+    }
+    
+    // MARK: - Offline Banner
+    
+    private var offlineBanner: some View {
+        HStack {
+            Image(systemName: "wifi.slash")
+            Text("You're offline. Showing cached content.")
+        }
+        .font(.caption)
+        .foregroundStyle(Color.stampchainGreyLight)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .background(Color.stampchainOrange.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .padding()
+    }
+}
+
+// MARK: - Bindable Extension for Optional Binding
+
+extension Bindable where Value: AnyObject {
+    subscript<T>(dynamicMember keyPath: ReferenceWritableKeyPath<Value, T?>) -> Binding<T?> {
+        Binding(
+            get: { self.wrappedValue[keyPath: keyPath] },
+            set: { self.wrappedValue[keyPath: keyPath] = $0 }
+        )
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    CollectionView()
+        .environment(CollectionViewModel())
+        .environment(NetworkMonitor())
+        .modelContainer(for: Wallet.self, inMemory: true)
+}
