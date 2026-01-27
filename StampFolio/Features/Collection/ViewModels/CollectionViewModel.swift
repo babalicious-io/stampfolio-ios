@@ -78,7 +78,12 @@ final class CollectionViewModel {
                 case .success(let displayStamps):
                     allStamps.append(contentsOf: displayStamps)
                 case .failure(let error):
-                    fetchErrors.append(error.localizedDescription)
+                    let errorDetail = error.localizedDescription
+                    print("❌ Fetch error: \(errorDetail)")
+                    if let decodingError = error as? DecodingError {
+                        print("❌ Decoding error details: \(decodingError)")
+                    }
+                    fetchErrors.append(errorDetail)
                 }
             }
         }
@@ -97,9 +102,12 @@ final class CollectionViewModel {
         // Sort by stamp number (newest first)
         stamps = uniqueStamps.sorted { $0.id > $1.id }
         
+        print("✅ Loaded \(stamps.count) unique stamps")
+        
         // Set error if all fetches failed
         if stamps.isEmpty && !fetchErrors.isEmpty {
-            errorMessage = "Unable to load stamps. Please check your connection."
+            errorMessage = "Unable to load stamps: \(fetchErrors.first ?? "Unknown error")"
+            print("❌ Error message: \(errorMessage ?? "")")
         }
         
         isLoading = false

@@ -71,11 +71,40 @@ actor StampchainAPIClient {
             throw NetworkError.invalidURL
         }
         
+        print("🌐 Fetching stamps from: \(endpoint)")
+        
         let (data, _) = try await performRequest(url)
         
+        print("✅ Received \(data.count) bytes")
+        
+        // Debug: Print raw JSON
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📦 Raw JSON (first 500 chars): \(String(jsonString.prefix(500)))")
+        }
+        
         // Parse the response
-        let apiResponse = try decoder.decode(WalletBalanceResponse.self, from: data)
-        return apiResponse.data
+        do {
+            let apiResponse = try decoder.decode(WalletBalanceResponse.self, from: data)
+            print("✅ Decoded \(apiResponse.data.count) stamps")
+            return apiResponse.data
+        } catch {
+            print("❌ Decoding error: \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("❌ Missing key: \(key.stringValue) - \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    print("❌ Type mismatch for \(type): \(context.debugDescription)")
+                case .valueNotFound(let type, let context):
+                    print("❌ Value not found for \(type): \(context.debugDescription)")
+                case .dataCorrupted(let context):
+                    print("❌ Data corrupted: \(context.debugDescription)")
+                @unknown default:
+                    print("❌ Unknown decoding error")
+                }
+            }
+            throw error
+        }
     }
     
     /// Fetch details for a specific stamp
