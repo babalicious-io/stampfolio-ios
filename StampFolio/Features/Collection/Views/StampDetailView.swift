@@ -26,6 +26,7 @@ struct StampDetailView: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
+    @State private var dragOffset: CGSize = .zero
     
     // MARK: - Body
     
@@ -35,13 +36,19 @@ struct StampDetailView: View {
                 // Dark background for immersive viewing
                 Color.black
                     .ignoresSafeArea()
+                    .onTapGesture {
+                        // Tap background to dismiss
+                        dismiss()
+                    }
                 
                 // Content based on type
                 contentView
                     .scaleEffect(scale)
                     .offset(offset)
+                    .offset(y: dragOffset.height)
+                    .opacity(1.0 - abs(dragOffset.height) / 500)
                     .gesture(magnificationGesture)
-                    .gesture(dragGesture)
+                    .gesture(combinedDragGesture)
                     .onTapGesture(count: 2) {
                         // Double tap to reset zoom
                         withAnimation(.spring(response: 0.3)) {
@@ -49,10 +56,28 @@ struct StampDetailView: View {
                             offset = .zero
                         }
                     }
-                    .onTapGesture(count: 1) {
-                        // Single tap to dismiss
-                        dismiss()
+                
+                // Close button overlay (always visible)
+                VStack {
+                    HStack {
+                        Spacer()
+                        
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .background(Color.black.opacity(0.3))
+                                .clipShape(Circle())
+                        }
+                        .padding(.top, 50)
+                        .padding(.trailing, 20)
+                        .accessibilityLabel("Close")
                     }
+                    
+                    Spacer()
+                }
             }
         }
         .ignoresSafeArea()
@@ -60,7 +85,7 @@ struct StampDetailView: View {
         .persistentSystemOverlays(.hidden)
         .accessibilityAddTraits(.isImage)
         .accessibilityLabel(stamp.formattedNumber)
-        .accessibilityHint("Double tap to zoom, tap to close")
+        .accessibilityHint("Swipe down or tap X to close, double tap to zoom")
     }
     
     // MARK: - Content View
@@ -104,25 +129,34 @@ struct StampDetailView: View {
             }
     }
     
-    private var dragGesture: some Gesture {
+    // Combined drag gesture - pans when zoomed, dismisses when at normal scale
+    private var combinedDragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                // Only allow dragging when zoomed in
-                guard scale > 1.0 else { return }
-                
-                offset = CGSize(
-                    width: lastOffset.width + value.translation.width,
-                    height: lastOffset.height + value.translation.height
-                )
+                if scale > 1.0 {
+                    // Pan when zoomed in
+                    offset = CGSize(
+                        width: lastOffset.width + value.translation.width,
+                        height: lastOffset.height + value.translation.height
+                    )
+                } else {
+                    // Dismiss drag when at normal scale
+                    dragOffset = CGSize(width: 0, height: value.translation.height)
+                }
             }
             .onEnded { value in
-                lastOffset = offset
-                
-                // Reset offset if zoomed back to 1.0
-                if scale <= 1.0 {
-                    withAnimation(.spring(response: 0.3)) {
-                        offset = .zero
-                        lastOffset = .zero
+                if scale > 1.0 {
+                    // Save pan offset
+                    lastOffset = offset
+                } else {
+                    // Dismiss if dragged far enough
+                    if abs(value.translation.height) > 100 || abs(value.velocity.height) > 500 {
+                        dismiss()
+                    } else {
+                        // Snap back
+                        withAnimation(.spring(response: 0.3)) {
+                            dragOffset = .zero
+                        }
                     }
                 }
             }
