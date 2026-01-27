@@ -105,7 +105,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
         case _balance = "balance"
         case address
         case cpid
-        case _unboundedQuantity = "unbounded_quantity"
+        case _unboundedQuantity = "unbound_quantity"
         case utxos
     }
     
