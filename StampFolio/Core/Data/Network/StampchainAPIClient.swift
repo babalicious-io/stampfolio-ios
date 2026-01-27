@@ -71,7 +71,7 @@ actor StampchainAPIClient {
             throw NetworkError.invalidURL
         }
         
-        let (data, response) = try await performRequest(url)
+        let (data, _) = try await performRequest(url)
         
         // Parse the response
         let apiResponse = try decoder.decode(WalletBalanceResponse.self, from: data)
@@ -88,7 +88,7 @@ actor StampchainAPIClient {
             throw NetworkError.invalidURL
         }
         
-        let (data, response) = try await performRequest(url)
+        let (data, _) = try await performRequest(url)
         
         // Parse the response
         let apiResponse = try decoder.decode(StampDetailResponse.self, from: data)
@@ -115,7 +115,7 @@ actor StampchainAPIClient {
             throw NetworkError.invalidURL
         }
         
-        let (data, response) = try await performRequest(url)
+        let (data, _) = try await performRequest(url)
         
         // Parse the response
         let apiResponse = try decoder.decode(StampsListResponse.self, from: data)
