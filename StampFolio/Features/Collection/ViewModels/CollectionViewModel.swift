@@ -15,8 +15,8 @@ final class CollectionViewModel {
     
     // MARK: - Properties
     
-    /// All stamps from all wallets
-    private(set) var stamps: [Stamp] = []
+    /// All stamps from all wallets with display information
+    private(set) var stamps: [DisplayStamp] = []
     
     /// Loading state
     private(set) var isLoading: Bool = false
@@ -25,10 +25,10 @@ final class CollectionViewModel {
     private(set) var errorMessage: String?
     
     /// Currently selected stamp for detail view
-    var selectedStamp: Stamp?
+    var selectedStamp: DisplayStamp?
     
     /// Stamp for metadata popup
-    var metadataStamp: Stamp?
+    var metadataStamp: DisplayStamp?
     
     /// Whether refresh is in progress
     private(set) var isRefreshing: Bool = false
@@ -55,18 +55,18 @@ final class CollectionViewModel {
         isLoading = stamps.isEmpty
         errorMessage = nil
         
-        var allStamps: [Stamp] = []
+        var allStamps: [DisplayStamp] = []
         var fetchErrors: [String] = []
         
         // Fetch stamps for each wallet concurrently
-        await withTaskGroup(of: Result<[Stamp], Error>.self) { group in
+        await withTaskGroup(of: Result<[DisplayStamp], Error>.self) { group in
             for wallet in wallets {
                 group.addTask {
                     do {
                         let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address)
-                        // Convert StampBalance to Stamp
-                        let stamps = walletBalances.map { $0.toStamp() }
-                        return .success(stamps)
+                        // Convert StampBalance to DisplayStamp
+                        let displayStamps = walletBalances.map { DisplayStamp(from: $0) }
+                        return .success(displayStamps)
                     } catch {
                         return .failure(error)
                     }
@@ -75,8 +75,8 @@ final class CollectionViewModel {
             
             for await result in group {
                 switch result {
-                case .success(let stamps):
-                    allStamps.append(contentsOf: stamps)
+                case .success(let displayStamps):
+                    allStamps.append(contentsOf: displayStamps)
                 case .failure(let error):
                     fetchErrors.append(error.localizedDescription)
                 }
@@ -84,7 +84,15 @@ final class CollectionViewModel {
         }
         
         // Remove duplicates (same stamp might be in multiple wallets)
-        let uniqueStamps = Array(Set(allStamps))
+        // Use stamp ID for uniqueness
+        var seen = Set<Int>()
+        let uniqueStamps = allStamps.filter { stamp in
+            if seen.contains(stamp.id) {
+                return false
+            }
+            seen.insert(stamp.id)
+            return true
+        }
         
         // Sort by stamp number (newest first)
         stamps = uniqueStamps.sorted { $0.id > $1.id }

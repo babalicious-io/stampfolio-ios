@@ -14,9 +14,12 @@ struct StampCardView: View {
     
     // MARK: - Properties
     
-    let stamp: Stamp
+    let displayStamp: DisplayStamp
     let onTap: () -> Void
     let onInfoTap: () -> Void
+    
+    // Convenience accessor
+    private var stamp: Stamp { displayStamp.stamp }
     
     // MARK: - Environment
     
@@ -166,7 +169,7 @@ struct StampCardView: View {
     // MARK: - Edition Badge
     
     private var editionBadge: some View {
-        Text(stamp.formattedQuantity)
+        Text(displayStamp.formattedQuantity)
             .font(.caption)
             .fontWeight(.semibold)
             .foregroundStyle(Color.primaryText(for: colorScheme))
@@ -242,13 +245,13 @@ struct StampWebView: UIViewRepresentable {
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
         StampCardView(
-            stamp: .sample,
+            displayStamp: DisplayStamp(from: .sample),
             onTap: {},
             onInfoTap: {}
         )
         
         StampCardView(
-            stamp: .samples[1],
+            displayStamp: DisplayStamp(from: .samples[1]),
             onTap: {},
             onInfoTap: {}
         )

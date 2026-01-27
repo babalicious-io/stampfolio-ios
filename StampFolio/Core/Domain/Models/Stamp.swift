@@ -36,9 +36,6 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     /// Whether the stamp is divisible (0 = false, 1 = true)
     let divisible: Int
     
-    /// Balance owned by wallet (optional - only from balance endpoint)
-    let balance: Double?
-    
     /// Block timestamp when stamp was created (optional - not in balance endpoint)
     let blockTime: Date?
     
@@ -139,25 +136,6 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     var isDivisible: Bool {
         divisible == 1
     }
-    
-    /// Formatted quantity for display in wallet
-    var formattedQuantity: String {
-        let quantity = balance ?? Double(supply)
-        
-        // If divisible, convert from satoshi-like units (100,000,000 = 1)
-        if isDivisible {
-            let actualAmount = quantity / 100_000_000.0
-            // Remove decimals if it's a whole number
-            if actualAmount.truncatingRemainder(dividingBy: 1) == 0 {
-                return String(format: "%.0f", actualAmount)
-            } else {
-                return String(format: "%g", actualAmount)
-            }
-        } else {
-            // Non-divisible stamps - show as integer
-            return String(format: "%.0f", quantity)
-        }
-    }
 }
 
 // MARK: - Sample Data
@@ -174,7 +152,6 @@ extension Stamp {
         stampMimetype: "image/png",
         supply: 1,
         divisible: 0,
-        balance: 1,
         blockTime: Date(),
         blockIndex: 933837,
         txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
@@ -196,7 +173,6 @@ extension Stamp {
             stampMimetype: "image/gif",
             supply: 42,
             divisible: 0,
-            balance: 111,
             blockTime: Date().addingTimeInterval(-86400),
             blockIndex: 933836,
             txHash: "def456abc789",
@@ -214,7 +190,6 @@ extension Stamp {
             stampMimetype: "image/png",
             supply: 1_000_000_000,
             divisible: 1,
-            balance: 6_900_000_000,
             blockTime: Date().addingTimeInterval(-172800),
             blockIndex: 933835,
             txHash: "test123",

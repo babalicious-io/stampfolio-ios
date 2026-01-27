@@ -39,8 +39,8 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     /// Creator's display name (if available)
     let creatorName: String?
     
-    /// Total balance owned by the address
-    let balance: Double
+    /// Total balance owned by the address (can be number or string in API)
+    private let _balance: BalanceValue
     
     /// Address owning the stamps
     let address: String
@@ -48,8 +48,8 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     /// Counterparty ID
     let cpid: String
     
-    /// Quantity not bound to specific UTXOs
-    let unboundedQuantity: Double
+    /// Quantity not bound to specific UTXOs (can be number or string in API)
+    private let _unboundedQuantity: BalanceValue
     
     /// UTXOs containing stamps
     let utxos: [StampUTXO]
@@ -57,6 +57,16 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     // MARK: - Computed Properties
     
     var id: Int { stamp }
+    
+    /// Balance as Double
+    var balance: Double {
+        _balance.doubleValue
+    }
+    
+    /// Unbounded quantity as Double
+    var unboundedQuantity: Double {
+        _unboundedQuantity.doubleValue
+    }
     
     /// Whether the stamp is divisible (converts int to bool)
     var isDivisible: Bool {
@@ -80,28 +90,6 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
         }
     }
     
-    /// Convert to Stamp model for compatibility
-    func toStamp() -> Stamp {
-        Stamp(
-            id: stamp,
-            cpid: cpid,
-            creator: creator,
-            creatorName: creatorName,
-            stampUrl: stampUrl,
-            stampMimetype: stampMimetype,
-            supply: supply ?? Int(balance),
-            divisible: divisible,
-            balance: balance,
-            blockTime: nil,
-            blockIndex: nil,
-            txHash: txHash,
-            ident: "STAMP",
-            fileHash: nil,
-            fileSizeBytes: nil,
-            marketData: nil
-        )
-    }
-    
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
@@ -114,75 +102,106 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
         case locked
         case creator
         case creatorName = "creator_name"
-        case balance
+        case _balance = "balance"
         case address
         case cpid
-        case unboundedQuantity = "unbounded_quantity"
+        case _unboundedQuantity = "unbounded_quantity"
         case utxos
+    }
+    
+    // MARK: - Custom Decoding
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        stamp = try container.decode(Int.self, forKey: .stamp)
+        txHash = try container.decode(String.self, forKey: .txHash)
+        stampUrl = try container.decode(String.self, forKey: .stampUrl)
+        stampMimetype = try container.decode(String.self, forKey: .stampMimetype)
+        divisible = try container.decode(Int.self, forKey: .divisible)
+        supply = try container.decodeIfPresent(Int.self, forKey: .supply)
+        locked = try container.decodeIfPresent(Int.self, forKey: .locked)
+        creator = try container.decode(String.self, forKey: .creator)
+        creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
+        address = try container.decode(String.self, forKey: .address)
+        cpid = try container.decode(String.self, forKey: .cpid)
+        utxos = try container.decode([StampUTXO].self, forKey: .utxos)
+        
+        // Decode balance (can be number or string)
+        _balance = try container.decode(BalanceValue.self, forKey: ._balance)
+        _unboundedQuantity = try container.decode(BalanceValue.self, forKey: ._unboundedQuantity)
+    }
+}
+
+/// Helper type to handle balance being either number or string
+enum BalanceValue: Codable, Hashable {
+    case number(Double)
+    case string(String)
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if let doubleValue = try? container.decode(Double.self) {
+            self = .number(doubleValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else {
+            throw DecodingError.typeMismatch(
+                BalanceValue.self,
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Expected Double or String"
+                )
+            )
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .number(let value):
+            try container.encode(value)
+        case .string(let value):
+            try container.encode(value)
+        }
+    }
+    
+    var doubleValue: Double {
+        switch self {
+        case .number(let value):
+            return value
+        case .string(let value):
+            return Double(value) ?? 0
+        }
     }
 }
 
 /// UTXO containing stamps
 struct StampUTXO: Codable, Hashable, Sendable {
     let utxo: String
-    let quantity: Double
+    private let _quantity: BalanceValue
+    
+    var quantity: Double {
+        _quantity.doubleValue
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case utxo
+        case _quantity = "quantity"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        utxo = try container.decode(String.self, forKey: .utxo)
+        _quantity = try container.decode(BalanceValue.self, forKey: ._quantity)
+    }
+    
+    init(utxo: String, quantity: Double) {
+        self.utxo = utxo
+        self._quantity = .number(quantity)
+    }
 }
 
 // MARK: - Sample Data
 
-extension StampBalance {
-    /// Sample balance for previews
-    static let sample = StampBalance(
-        stamp: 1384303,
-        txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
-        stampUrl: "https://stampchain.io/stamps/e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca.png",
-        stampMimetype: "image/png",
-        divisible: 0,
-        supply: 1,
-        locked: 0,
-        creator: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
-        creatorName: "babalicious",
-        balance: 1,
-        address: "1GotRejB6XsGgMsM79TvcypeanDJRJbMtg",
-        cpid: "A888354448084788958",
-        unboundedQuantity: 1,
-        utxos: []
-    )
-    
-    /// Sample balances for previews
-    static let samples: [StampBalance] = [
-        sample,
-        StampBalance(
-            stamp: 1384302,
-            txHash: "def456",
-            stampUrl: "https://stampchain.io/stamps/1384302.gif",
-            stampMimetype: "image/gif",
-            divisible: 0,
-            supply: 42,
-            locked: 0,
-            creator: "bc1qabc123",
-            creatorName: nil,
-            balance: 111,
-            address: "1GotRejB6XsGgMsM79TvcypeanDJRJbMtg",
-            cpid: "A888354448084788957",
-            unboundedQuantity: 111,
-            utxos: []
-        ),
-        StampBalance(
-            stamp: 74705,
-            txHash: "test123",
-            stampUrl: "https://stampchain.io/stamps/test.png",
-            stampMimetype: "image/png",
-            divisible: 1,
-            supply: 1_000_000_000,
-            locked: 0,
-            creator: "bc1qtest",
-            creatorName: nil,
-            balance: 6_900_000_000,
-            address: "1GotRejB6XsGgMsM79TvcypeanDJRJbMtg",
-            cpid: "A888354448084788999",
-            unboundedQuantity: 6_900_000_000,
-            utxos: []
-        )
-    ]
-}
+// Sample data is removed since we can't easily create instances with the private _balance field

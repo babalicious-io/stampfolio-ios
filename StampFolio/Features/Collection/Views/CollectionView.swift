@@ -64,11 +64,11 @@ struct CollectionView: View {
             .onChange(of: networkMonitor.isConnected) { _, isConnected in
                 showOfflineBanner = !isConnected
             }
-            .fullScreenCover(item: Bindable(viewModel).selectedStamp) { stamp in
-                StampDetailView(stamp: stamp)
+            .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
+                StampDetailView(stamp: displayStamp.stamp)
             }
-            .sheet(item: Bindable(viewModel).metadataStamp) { stamp in
-                StampMetadataPopup(stamp: stamp)
+            .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
+                StampMetadataPopup(stamp: displayStamp.stamp)
                     .presentationDetents([.medium])
                     .presentationBackground(.ultraThinMaterial)
             }
@@ -208,14 +208,14 @@ struct CollectionView: View {
             }
             
             LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(viewModel.stamps) { stamp in
+                ForEach(viewModel.stamps) { displayStamp in
                     StampCardView(
-                        stamp: stamp,
+                        displayStamp: displayStamp,
                         onTap: {
-                            viewModel.selectedStamp = stamp
+                            viewModel.selectedStamp = displayStamp
                         },
                         onInfoTap: {
-                            viewModel.metadataStamp = stamp
+                            viewModel.metadataStamp = displayStamp
                         }
                     )
                 }
