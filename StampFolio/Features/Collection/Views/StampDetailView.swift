@@ -61,21 +61,27 @@ struct StampDetailView: View {
                     }
                 
                 // Content based on type
-                contentView
-                    .scaleEffect(scale)
-                    .offset(offset)
-                    .offset(y: dragOffset.height)
-                    .offset(x: horizontalDragOffset.width)
-                    .opacity(1.0 - Double(abs(dragOffset.height)) / 500.0)
-                    .gesture(magnificationGesture)
-                    .gesture(unifiedDragGesture)
-                    .onTapGesture(count: 2) {
-                        // Double tap to reset zoom
-                        withAnimation(.spring(response: 0.3)) {
-                            scale = 1.0
-                            offset = .zero
-                        }
+                ZStack {
+                    contentView
+                        .scaleEffect(scale)
+                        .offset(offset)
+                        .offset(y: dragOffset.height)
+                        .offset(x: horizontalDragOffset.width)
+                        .opacity(1.0 - Double(abs(dragOffset.height)) / 500.0)
+                    
+                    // Invisible overlay to capture gestures (especially for GIFs)
+                    Color.clear
+                        .contentShape(Rectangle())
+                }
+                .gesture(magnificationGesture)
+                .gesture(unifiedDragGesture)
+                .onTapGesture(count: 2) {
+                    // Double tap to reset zoom
+                    withAnimation(.spring(response: 0.3)) {
+                        scale = 1.0
+                        offset = .zero
                     }
+                }
             }
         }
         .ignoresSafeArea(.all, edges: .all)
