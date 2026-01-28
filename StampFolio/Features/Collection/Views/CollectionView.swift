@@ -25,6 +25,7 @@ struct CollectionView: View {
     @State private var showOfflineBanner = false
     @State private var showSettings = false
     @State private var showTitle = true
+    @State private var initialScrollOffset: CGFloat?
     
     // MARK: - Layout
     
@@ -102,13 +103,15 @@ struct CollectionView: View {
                     .tint(.purple)
             }
             
-            // Settings button
+            // Settings button with glass effect
             Button {
                 showSettings = true
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .font(.title3)
                     .foregroundStyle(.purple)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: Circle())
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Opens the settings screen")
@@ -243,17 +246,6 @@ struct CollectionView: View {
     
     private var stampsGrid: some View {
         ScrollView {
-            GeometryReader { geometry in
-                Color.clear
-                    .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .named("scroll")).minY)
-            }
-            .frame(height: 0)
-            
-            // Offline banner
-            if showOfflineBanner {
-                offlineBanner
-            }
-            
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(viewModel.stamps) { displayStamp in
                     StampCardView(
@@ -268,11 +260,25 @@ struct CollectionView: View {
                 }
             }
             .padding()
+            .background(
+                GeometryReader { geometry in
+                    Color.clear
+                        .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .global).minY)
+                }
+            )
+            
+            // Offline banner
+            if showOfflineBanner {
+                offlineBanner
+            }
         }
-        .coordinateSpace(name: "scroll")
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                showTitle = value >= -10
+            if initialScrollOffset == nil {
+                initialScrollOffset = value
+            }
+            let scrolled = (initialScrollOffset ?? value) - value
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showTitle = scrolled < 20
             }
         }
     }
