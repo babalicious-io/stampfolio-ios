@@ -262,19 +262,7 @@ struct CollectionView: View {
             .background(
                 GeometryReader { proxy in
                     Color.clear
-                        .onChange(of: proxy.frame(in: .named("scroll")).minY) { oldVal, newVal in
-                            // Scrolling down (content moving up) = newVal < oldVal = hide
-                            // Scrolling up (content moving down) = newVal > oldVal = show
-                            if showTitle && newVal < oldVal - 10 {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    showTitle = false
-                                }
-                            } else if !showTitle && newVal > oldVal + 10 {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    showTitle = true
-                                }
-                            }
-                        }
+                        .preference(key: ScrollOffsetKey.self, value: proxy.frame(in: .named("scroll")).minY)
                 }
             )
             
@@ -284,6 +272,15 @@ struct CollectionView: View {
             }
         }
         .coordinateSpace(name: "scroll")
+        .onPreferenceChange(ScrollOffsetKey.self) { value in
+            // Hide when scrolled down more than 20 points from top
+            let shouldShow = value > -20
+            if shouldShow != showTitle {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showTitle = shouldShow
+                }
+            }
+        }
     }
     
     // MARK: - Offline Banner
@@ -300,6 +297,15 @@ struct CollectionView: View {
         .background(Color.orange.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
+    }
+}
+
+// MARK: - Scroll Offset Key
+
+private struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
