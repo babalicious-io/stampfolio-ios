@@ -172,7 +172,7 @@ struct StampCardView: View {
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(.primary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 6)
                 .background(
                     Capsule()
