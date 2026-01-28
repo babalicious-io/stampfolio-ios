@@ -250,7 +250,7 @@ struct CollectionView: View {
                 GeometryReader { geo in
                     Color.clear
                         .onChange(of: geo.frame(in: .global).minY) { _, newValue in
-                            let shouldShow = newValue > 200
+                            let shouldShow = newValue > -100
                             if shouldShow != showTitle {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     showTitle = shouldShow
