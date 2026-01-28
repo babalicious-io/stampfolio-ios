@@ -108,9 +108,9 @@ struct CollectionView: View {
         
         return HStack(spacing: 0) {
             Text("STAMP")
-                .font(.system(size: isLandscape ? 20 : 16, weight: .black))
+                .font(.system(size: isLandscape ? 24 : 20, weight: .black))
             Text("FOLIO")
-                .font(.system(size: isLandscape ? 20 : 16, weight: .ultraLight))
+                .font(.system(size: isLandscape ? 24 : 20, weight: .light))
         }
         .foregroundStyle(.purple)
         .frame(maxWidth: .infinity, alignment: isLandscape ? .leading : .center)

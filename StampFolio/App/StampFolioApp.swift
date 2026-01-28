@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 /// Main entry point for the StampFolio application.
-/// A portfolio viewer for Bitcoin Stamps (Art/NFTs) on iPad and iPhone.
+/// A portfolio viewer for Bitcoin Stamps on iPad and iPhone.
 @main
 struct StampFolioApp: App {
     
