@@ -105,12 +105,12 @@ struct StampCardView: View {
                     
                     HStack(alignment: .bottom) {
                         // Stamp number - bottom left
-                        stampNumberPill
+                        stampNumber
                         
                         Spacer()
                         
                         // Edition balance - bottom right
-                        editionBalancePill
+                        stampEditions
                     }
                     .padding(12)
                 }
@@ -164,7 +164,7 @@ struct StampCardView: View {
     
     // MARK: - Stamp Number Pill
     
-    private var stampNumberPill: some View {
+    private var stampNumber: some View {
         Button {
             onInfoTap()
         } label: {
@@ -172,7 +172,7 @@ struct StampCardView: View {
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(.primary)
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
                     Capsule()
@@ -184,17 +184,17 @@ struct StampCardView: View {
         .accessibilityHint("Opens stamp metadata popup")
     }
     
-    // MARK: - Edition Balance Pill
+    // MARK: - Stamp Editions Pill
     
-    private var editionBalancePill: some View {
+    private var stampEditions: some View {
         Button {
             onInfoTap()
         } label: {
             Text(displayStamp.formattedQuantity)
                 .font(.caption)
-                .fontWeight(.semibold)
+                .fontWeight(.bold)
                 .foregroundStyle(.primary)
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
                     Capsule()
@@ -202,7 +202,7 @@ struct StampCardView: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Balance: \(displayStamp.formattedQuantity)")
+        .accessibilityLabel("Editions: \(displayStamp.formattedQuantity)")
         .accessibilityHint("Opens stamp metadata popup")
     }
 }
