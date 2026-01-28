@@ -15,6 +15,7 @@ struct SettingsView: View {
     
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
