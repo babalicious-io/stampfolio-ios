@@ -25,7 +25,6 @@ struct CollectionView: View {
     @State private var showOfflineBanner = false
     @State private var showSettings = false
     @State private var showTitle = true
-    @State private var initialScrollOffset: CGFloat?
     
     // MARK: - Layout
     
@@ -261,9 +260,21 @@ struct CollectionView: View {
             }
             .padding()
             .background(
-                GeometryReader { geometry in
+                GeometryReader { proxy in
                     Color.clear
-                        .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .global).minY)
+                        .onChange(of: proxy.frame(in: .named("scroll")).minY) { oldVal, newVal in
+                            // Scrolling down (content moving up) = newVal < oldVal = hide
+                            // Scrolling up (content moving down) = newVal > oldVal = show
+                            if showTitle && newVal < oldVal - 10 {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showTitle = false
+                                }
+                            } else if !showTitle && newVal > oldVal + 10 {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showTitle = true
+                                }
+                            }
+                        }
                 }
             )
             
@@ -272,15 +283,7 @@ struct CollectionView: View {
                 offlineBanner
             }
         }
-        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-            if initialScrollOffset == nil {
-                initialScrollOffset = value
-            }
-            let scrolled = (initialScrollOffset ?? value) - value
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showTitle = scrolled < 20
-            }
-        }
+        .coordinateSpace(name: "scroll")
     }
     
     // MARK: - Offline Banner
@@ -297,16 +300,6 @@ struct CollectionView: View {
         .background(Color.orange.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
-    }
-}
-
-// MARK: - Scroll Offset Preference Key
-
-struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
     }
 }
 
