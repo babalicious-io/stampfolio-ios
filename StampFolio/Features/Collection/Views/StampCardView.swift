@@ -30,10 +30,6 @@ struct StampCardView: View {
     @State private var isPressed = false
     @State private var imageLoadFailed = false
     
-    // MARK: - Layout
-    
-    @ScaledMetric(relativeTo: .body) private var infoButtonSize: CGFloat = 24
-    
     // MARK: - Body
     
     var body: some View {
@@ -103,18 +99,18 @@ struct StampCardView: View {
                         .clipped()
                 }
                 
-                // Overlay: Edition count (bottom left) and Info button (bottom right)
+                // Overlay: Stamp number (bottom left) and Edition balance (bottom right)
                 VStack {
                     Spacer()
                     
                     HStack(alignment: .bottom) {
-                        // Edition count - bottom left
-                        editionBadge
+                        // Stamp number - bottom left
+                        stampNumberPill
                         
                         Spacer()
                         
-                        // Info button - bottom right
-                        infoButton
+                        // Edition balance - bottom right
+                        editionBalancePill
                     }
                     .padding(12)
                 }
@@ -166,46 +162,47 @@ struct StampCardView: View {
         }
     }
     
-    // MARK: - Edition Badge
+    // MARK: - Stamp Number Pill
     
-    private var editionBadge: some View {
-        Text(displayStamp.formattedQuantity)
-            .font(.caption)
-            .fontWeight(.semibold)
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                Color(uiColor: .systemBackground).opacity(0.8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.purple.opacity(0.3), lineWidth: 1)
-                    )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-    }
-    
-    // MARK: - Info Button
-    
-    private var infoButton: some View {
+    private var stampNumberPill: some View {
         Button {
             onInfoTap()
         } label: {
-            Image(systemName: "info.circle.fill")
-                .font(.system(size: infoButtonSize * 0.85))
-                .foregroundStyle(
-                    colorScheme == .dark 
-                        ? Color.purple 
-                        : Color.purple.opacity(0.85)
-                )
+            Text("#\(stamp.id)")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
                 .background(
-                    Circle()
-                        .fill(Color(uiColor: .systemBackground).opacity(0.8))
-                        .frame(width: infoButtonSize + 4, height: infoButtonSize + 4)
+                    Capsule()
+                        .fill(Color(uiColor: .systemBackground).opacity(0.85))
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Show stamp details")
+        .accessibilityLabel("Stamp number \(stamp.id)")
+        .accessibilityHint("Opens stamp metadata popup")
+    }
+    
+    // MARK: - Edition Balance Pill
+    
+    private var editionBalancePill: some View {
+        Button {
+            onInfoTap()
+        } label: {
+            Text(displayStamp.formattedQuantity)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(Color(uiColor: .systemBackground).opacity(0.85))
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Balance: \(displayStamp.formattedQuantity)")
         .accessibilityHint("Opens stamp metadata popup")
     }
 }
