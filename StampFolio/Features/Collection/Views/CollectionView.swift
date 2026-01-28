@@ -44,32 +44,9 @@ struct CollectionView: View {
                 
                 content
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if showTitle {
-                        customTitle
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .tint(.purple)
-                        }
-                        
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
-                                .font(.title3)
-                                .foregroundStyle(.purple)
-                        }
-                        .accessibilityLabel("Settings")
-                        .accessibilityHint("Opens the settings screen")
-                    }
-                }
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top) {
+                customHeader
             }
             .task {
                 await viewModel.fetchStamps(for: wallets)
@@ -100,18 +77,44 @@ struct CollectionView: View {
         .stampchainBackground()
     }
     
-    // MARK: - Custom Title
+    // MARK: - Custom Header
     
-    private var customTitle: some View {
+    private var customHeader: some View {
         let isLandscape = verticalSizeClass == .compact
         
-        return HStack(spacing: 0) {
-            Text("STAMP")
-                .font(.system(size: isLandscape ? 20 : 16, weight: .black))
-            Text("FOLIO")
-                .font(.system(size: isLandscape ? 20 : 16, weight: .ultraLight))
+        return HStack {
+            // Title
+            if showTitle {
+                HStack(spacing: 0) {
+                    Text("STAMP")
+                        .font(.system(size: isLandscape ? 24 : 20, weight: .black))
+                    Text("FOLIO")
+                        .font(.system(size: isLandscape ? 24 : 20, weight: .light))
+                }
+                .foregroundStyle(.purple)
+            }
+            
+            Spacer()
+            
+            // Loading indicator
+            if viewModel.isLoading {
+                ProgressView()
+                    .tint(.purple)
+            }
+            
+            // Settings button
+            Button {
+                showSettings = true
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.title3)
+                    .foregroundStyle(.purple)
+            }
+            .accessibilityLabel("Settings")
+            .accessibilityHint("Opens the settings screen")
         }
-        .foregroundStyle(.purple)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
     
     // MARK: - Content
@@ -268,8 +271,8 @@ struct CollectionView: View {
         }
         .coordinateSpace(name: "scroll")
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showTitle = value >= -20
+            withAnimation(.easeInOut(duration: 0.15)) {
+                showTitle = value >= -10
             }
         }
     }
