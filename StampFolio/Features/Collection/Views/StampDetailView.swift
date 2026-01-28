@@ -93,7 +93,6 @@ struct StampDetailView: View {
         if currentStamp.isSVG || currentStamp.isHTML {
             // WebView for SVG/HTML content
             WebContentView(url: currentStamp.imageURL)
-                .allowsHitTesting(false)
         } else if currentStamp.isAnimated {
             // KFAnimatedImage for animated GIFs
             KFAnimatedImage(currentStamp.imageURL)
