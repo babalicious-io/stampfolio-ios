@@ -135,7 +135,7 @@ struct StampCardView: View {
                     .foregroundStyle(Color.secondaryText(for: colorScheme))
                 
                 ProgressView()
-                    .tint(Color.stampchainPurple)
+                    .tint(Color.accent)
             }
         }
     }
@@ -149,7 +149,7 @@ struct StampCardView: View {
             VStack(spacing: 8) {
                 Image(systemName: "photo.badge.exclamationmark")
                     .font(.title)
-                    .foregroundStyle(Color.stampchainOrange)
+                    .foregroundStyle(Color.warning)
                 
                 Text("Failed to load")
                     .font(.caption2)
@@ -160,7 +160,7 @@ struct StampCardView: View {
                 } label: {
                     Text("Retry")
                         .font(.caption2)
-                        .foregroundStyle(Color.stampchainPurple)
+                        .foregroundStyle(Color.accent)
                 }
             }
         }
@@ -179,7 +179,7 @@ struct StampCardView: View {
                 Color.adaptiveBackground(for: colorScheme).opacity(0.8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.stampchainPurple.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.accent.opacity(0.3), lineWidth: 1)
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -195,8 +195,8 @@ struct StampCardView: View {
                 .font(.system(size: infoButtonSize * 0.85))
                 .foregroundStyle(
                     colorScheme == .dark 
-                        ? Color.stampchainPurple 
-                        : Color.stampchainPurple.opacity(0.85)
+                        ? Color.accent 
+                        : Color.accent.opacity(0.85)
                 )
                 .background(
                     Circle()
@@ -214,6 +214,7 @@ struct StampCardView: View {
 
 struct StampWebView: UIViewRepresentable {
     let url: URL?
+    @Environment(\.colorScheme) private var colorScheme
     
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -221,8 +222,9 @@ struct StampWebView: UIViewRepresentable {
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
-        webView.backgroundColor = UIColor(Color.stampchainBackground)
-        webView.scrollView.backgroundColor = UIColor(Color.stampchainBackground)
+        let backgroundColor = UIColor(Color.adaptiveBackground(for: colorScheme))
+        webView.backgroundColor = backgroundColor
+        webView.scrollView.backgroundColor = backgroundColor
         webView.scrollView.isScrollEnabled = false
         webView.isUserInteractionEnabled = false // Disable interaction in grid
         
@@ -231,6 +233,11 @@ struct StampWebView: UIViewRepresentable {
     
     func updateUIView(_ webView: WKWebView, context: Context) {
         guard let url = url else { return }
+        
+        // Update background color for color scheme changes
+        let backgroundColor = UIColor(Color.adaptiveBackground(for: colorScheme))
+        webView.backgroundColor = backgroundColor
+        webView.scrollView.backgroundColor = backgroundColor
         
         // Only load if URL changed
         if webView.url != url {

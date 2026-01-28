@@ -22,19 +22,15 @@ struct GlassCardModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(.ultraThinMaterial)
                     .background {
-                        // Subtle Stampchain tint showing through Material
+                        // Subtle tint showing through Material
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .fill(Color.cardTint(for: colorScheme))
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-            .overlay {
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(Color.stampchainBorder.opacity(0.3), lineWidth: 1)
-            }
             .shadow(
                 color: colorScheme == .dark 
-                    ? Color.stampchainPurple.opacity(0.15) 
+                    ? Color.accent.opacity(0.15) 
                     : Color.black.opacity(0.1),
                 radius: shadowRadius,
                 y: shadowRadius / 2
@@ -44,27 +40,15 @@ struct GlassCardModifier: ViewModifier {
 
 // MARK: - Stampchain Background Modifier
 
-/// Applies the Stampchain gradient background
+/// Applies the Stampchain background
 struct StampchainBackgroundModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     
     func body(content: Content) -> some View {
         content
             .background {
-                if colorScheme == .dark {
-                    LinearGradient.stampchainBackground
-                        .ignoresSafeArea()
-                } else {
-                    LinearGradient(
-                        colors: [
-                            Color.stampchainGreyLight,
-                            Color.stampchainGreySemilight.opacity(0.5)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+                Color.adaptiveBackground(for: colorScheme)
                     .ignoresSafeArea()
-                }
             }
     }
 }
@@ -92,15 +76,15 @@ struct GlassButtonModifier: ViewModifier {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(
                                 isPressed 
-                                    ? Color.stampchainPurple.opacity(0.2) 
-                                    : Color.stampchainPurple.opacity(0.1)
+                                    ? Color.accent.opacity(0.2) 
+                                    : Color.accent.opacity(0.1)
                             )
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.stampchainPurple.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.accent.opacity(0.3), lineWidth: 1)
             }
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)
@@ -150,7 +134,7 @@ extension View {
         modifier(GlassCardModifier(cornerRadius: cornerRadius, shadowRadius: shadowRadius))
     }
     
-    /// Apply Stampchain gradient background
+    /// Apply Stampchain background
     func stampchainBackground() -> some View {
         modifier(StampchainBackgroundModifier())
     }

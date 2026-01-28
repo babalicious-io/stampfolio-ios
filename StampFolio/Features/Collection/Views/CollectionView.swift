@@ -46,7 +46,7 @@ struct CollectionView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     if viewModel.isLoading {
                         ProgressView()
-                            .tint(Color.stampchainPurpleLight)
+                            .tint(Color.accentLight)
                     }
                 }
             }
@@ -99,7 +99,7 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "wallet.pass")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.stampchainPurple)
+                .foregroundStyle(Color.accent)
             
             Text("No Wallets Added")
                 .font(.title2)
@@ -132,7 +132,7 @@ struct CollectionView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-                .tint(Color.stampchainPurpleLight)
+                .tint(Color.accentLight)
             
             Text("Loading stamps...")
                 .font(.body)
@@ -146,7 +146,7 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.stampchainError)
+                .foregroundStyle(Color.error)
             
             Text("Unable to Load Stamps")
                 .font(.title2)
@@ -182,7 +182,7 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "photo.on.rectangle.angled")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.stampchainPurple)
+                .foregroundStyle(Color.accent)
             
             Text("No Stamps Found")
                 .font(.title2)
@@ -235,7 +235,7 @@ struct CollectionView: View {
         .foregroundStyle(Color.primaryText(for: colorScheme))
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
-        .background(Color.stampchainOrange.opacity(0.8))
+        .background(Color.warning.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
     }

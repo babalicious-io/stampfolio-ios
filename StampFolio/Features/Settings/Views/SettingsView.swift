@@ -80,11 +80,11 @@ struct SettingsView: View {
         Toggle(isOn: $isDarkMode) {
             HStack {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
-                    .foregroundStyle(isDarkMode ? Color.stampchainPurpleLight : Color.stampchainOrangeLight)
+                    .foregroundStyle(Color.accentLight)
                 Text("Dark Mode")
             }
         }
-        .tint(Color.stampchainPurple)
+        .tint(Color.accent)
         .accessibilityLabel("Dark mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle dark mode")
@@ -95,9 +95,9 @@ struct SettingsView: View {
     private var emptyWalletsRow: some View {
         HStack {
             Image(systemName: "wallet.pass")
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
             Text("No wallets added")
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
         }
     }
     
@@ -109,7 +109,7 @@ struct SettingsView: View {
         } label: {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(Color.stampchainPurple)
+                    .foregroundStyle(Color.accent)
                 Text("Add Wallet")
             }
         }
@@ -127,12 +127,12 @@ struct SettingsView: View {
                 Spacer()
                 Text("v1.0")
                     .font(.caption)
-                    .foregroundStyle(Color.stampchainGrey)
+                    .foregroundStyle(Color.secondaryText(for: colorScheme))
             }
             
             Text("A portfolio viewer for Bitcoin Stamps")
                 .font(.caption)
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
             
             Link(destination: URL(string: "https://stampchain.io")!) {
                 HStack {
@@ -141,7 +141,7 @@ struct SettingsView: View {
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption2)
                 }
-                .foregroundStyle(Color.stampchainPurple)
+                .foregroundStyle(Color.accent)
             }
             .accessibilityLabel("Visit Stampchain.io")
         }
@@ -161,6 +161,7 @@ struct SettingsView: View {
 
 struct WalletRow: View {
     let wallet: Wallet
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -173,26 +174,26 @@ struct WalletRow: View {
                 if let count = wallet.cachedStampCount {
                     Text("\(count) stamps")
                         .font(.caption)
-                        .foregroundStyle(Color.stampchainGrey)
+                        .foregroundStyle(Color.secondaryText(for: colorScheme))
                 }
             }
             
             Text(wallet.address)
                 .font(.monospace)
-                .foregroundStyle(Color.stampchainGrey)
+                .foregroundStyle(Color.secondaryText(for: colorScheme))
                 .lineLimit(1)
                 .truncationMode(.middle)
             
             HStack {
                 Text(wallet.addressType.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(Color.stampchainPurple)
+                    .foregroundStyle(Color.accent)
                 
                 Spacer()
                 
                 Text("Added \(wallet.addedDate, format: .relative(presentation: .named))")
                     .font(.caption2)
-                    .foregroundStyle(Color.stampchainGrey)
+                    .foregroundStyle(Color.secondaryText(for: colorScheme))
             }
         }
         .padding(.vertical, 4)

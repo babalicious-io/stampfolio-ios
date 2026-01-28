@@ -30,13 +30,11 @@ struct StampMetadataPopup: View {
                     headerSection
                     
                     Divider()
-                        .background(Color.stampchainBorder)
                     
                     // Metadata Grid
                     metadataSection
                     
                     Divider()
-                        .background(Color.stampchainBorder)
                     
                     // View on Stampchain Button
                     stampchainLinkButton
@@ -51,7 +49,7 @@ struct StampMetadataPopup: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Color.stampchainGrey)
+                            .foregroundStyle(Color.secondaryText(for: colorScheme))
                     }
                     .accessibilityLabel("Close")
                 }
@@ -72,7 +70,7 @@ struct StampMetadataPopup: View {
                 if let creatorName = stamp.creatorName {
                     Text("by \(creatorName)")
                         .font(.subheadline)
-                        .foregroundStyle(Color.stampchainPurple)
+                        .foregroundStyle(Color.accent)
                 }
             }
             
@@ -85,7 +83,7 @@ struct StampMetadataPopup: View {
                 .foregroundStyle(Color.primaryText(for: colorScheme))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.stampchainPurple.opacity(0.8))
+                .background(Color.accent.opacity(0.8))
                 .clipShape(Capsule())
         }
     }
@@ -233,10 +231,10 @@ struct MetadataRow: View {
                 } label: {
                     if showCopied {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(Color.stampchainSuccess)
+                            .foregroundStyle(Color.success)
                     } else {
                         Image(systemName: "doc.on.doc")
-                            .foregroundStyle(Color.stampchainGrey)
+                            .foregroundStyle(Color.secondaryText(for: colorScheme))
                     }
                 }
                 .font(.caption)
