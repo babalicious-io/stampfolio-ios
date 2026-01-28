@@ -46,16 +46,13 @@ struct CollectionView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Group {
-                        if showTitle {
-                            customTitle
-                        }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if showTitle {
+                        customTitle
                     }
-                    .buttonStyle(.plain)
                 }
                 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
                         if viewModel.isLoading {
                             ProgressView()
@@ -110,9 +107,9 @@ struct CollectionView: View {
         
         return HStack(spacing: 0) {
             Text("STAMP")
-                .font(.system(size: isLandscape ? 24 : 20, weight: .black))
+                .font(.system(size: isLandscape ? 20 : 16, weight: .black))
             Text("FOLIO")
-                .font(.system(size: isLandscape ? 24 : 20, weight: .light))
+                .font(.system(size: isLandscape ? 20 : 16, weight: .ultraLight))
         }
         .foregroundStyle(.purple)
     }
