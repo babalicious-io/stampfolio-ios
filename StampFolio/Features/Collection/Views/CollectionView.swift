@@ -46,7 +46,7 @@ struct CollectionView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     if viewModel.isLoading {
                         ProgressView()
-                            .tint(Color.accentLight)
+                            .tint(Color.brandLight)
                     }
                 }
             }
@@ -99,7 +99,7 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "wallet.pass")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.accent)
+                .foregroundStyle(Color.brand)
             
             Text("No Wallets Added")
                 .font(.title2)
@@ -132,7 +132,7 @@ struct CollectionView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-                .tint(Color.accentLight)
+                .tint(Color.brandLight)
             
             Text("Loading stamps...")
                 .font(.body)
@@ -182,7 +182,7 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "photo.on.rectangle.angled")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.accent)
+                .foregroundStyle(Color.brand)
             
             Text("No Stamps Found")
                 .font(.title2)

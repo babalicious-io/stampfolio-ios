@@ -120,7 +120,7 @@ struct AddWalletView: View {
         
         return HStack {
             Image(systemName: addressTypeIcon(for: addressType))
-                .foregroundStyle(Color.accent)
+                .foregroundStyle(Color.brand)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(addressType.rawValue)
@@ -158,7 +158,7 @@ struct AddWalletView: View {
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(Color.accent)
+                    .tint(Color.brand)
                 
                 Text("Validating wallet...")
                     .font(.body)

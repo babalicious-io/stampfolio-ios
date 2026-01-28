@@ -37,13 +37,13 @@ extension Color {
     /// Private light mode secondary text color
     private static let _textSecondaryLight = Color(hex: "#817e78")
     
-    // MARK: - Public Accent Properties
+    // MARK: - Public Brand Colors
     
     /// Primary brand color (purple) - consistent across themes
-    static var accent: Color { _accent }
+    static var brand: Color { _accent }
     
-    /// Light purple for highlights and icons - consistent across themes
-    static var accentLight: Color { _accentLight }
+    /// Light brand color for highlights and icons - consistent across themes
+    static var brandLight: Color { _accentLight }
     
     // MARK: - Public Semantic Colors
     

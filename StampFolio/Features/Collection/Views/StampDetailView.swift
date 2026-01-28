@@ -100,7 +100,7 @@ struct StampDetailView: View {
             KFAnimatedImage(stamp.imageURL)
                 .placeholder {
                     ProgressView()
-                        .tint(Color.accent)
+                        .tint(Color.brand)
                 }
                 .cacheOriginalImage()
                 .aspectRatio(contentMode: .fit)
@@ -109,7 +109,7 @@ struct StampDetailView: View {
             KFImage(stamp.imageURL)
                 .placeholder {
                     ProgressView()
-                        .tint(Color.accent)
+                        .tint(Color.brand)
                 }
                 .retry(maxCount: 3)
                 .resizable()

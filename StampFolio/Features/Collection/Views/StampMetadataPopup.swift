@@ -70,7 +70,7 @@ struct StampMetadataPopup: View {
                 if let creatorName = stamp.creatorName {
                     Text("by \(creatorName)")
                         .font(.subheadline)
-                        .foregroundStyle(Color.accent)
+                        .foregroundStyle(Color.brand)
                 }
             }
             
@@ -83,7 +83,7 @@ struct StampMetadataPopup: View {
                 .foregroundStyle(Color.primaryText(for: colorScheme))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.accent.opacity(0.8))
+                .background(Color.brand.opacity(0.8))
                 .clipShape(Capsule())
         }
     }

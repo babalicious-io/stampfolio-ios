@@ -135,7 +135,7 @@ struct StampCardView: View {
                     .foregroundStyle(Color.secondaryText(for: colorScheme))
                 
                 ProgressView()
-                    .tint(Color.accent)
+                    .tint(Color.brand)
             }
         }
     }
@@ -160,7 +160,7 @@ struct StampCardView: View {
                 } label: {
                     Text("Retry")
                         .font(.caption2)
-                        .foregroundStyle(Color.accent)
+                        .foregroundStyle(Color.brand)
                 }
             }
         }
@@ -179,7 +179,7 @@ struct StampCardView: View {
                 Color.adaptiveBackground(for: colorScheme).opacity(0.8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.accent.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.brand.opacity(0.3), lineWidth: 1)
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -195,8 +195,8 @@ struct StampCardView: View {
                 .font(.system(size: infoButtonSize * 0.85))
                 .foregroundStyle(
                     colorScheme == .dark 
-                        ? Color.accent 
-                        : Color.accent.opacity(0.85)
+                        ? Color.brand 
+                        : Color.brand.opacity(0.85)
                 )
                 .background(
                     Circle()

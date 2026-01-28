@@ -80,11 +80,11 @@ struct SettingsView: View {
         Toggle(isOn: $isDarkMode) {
             HStack {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
-                    .foregroundStyle(Color.accentLight)
+                    .foregroundStyle(Color.brandLight)
                 Text("Dark Mode")
             }
         }
-        .tint(Color.accent)
+        .tint(Color.brand)
         .accessibilityLabel("Dark mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle dark mode")
@@ -109,7 +109,7 @@ struct SettingsView: View {
         } label: {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(Color.accent)
+                    .foregroundStyle(Color.brand)
                 Text("Add Wallet")
             }
         }
@@ -141,7 +141,7 @@ struct SettingsView: View {
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption2)
                 }
-                .foregroundStyle(Color.accent)
+                .foregroundStyle(Color.brand)
             }
             .accessibilityLabel("Visit Stampchain.io")
         }
@@ -187,7 +187,7 @@ struct WalletRow: View {
             HStack {
                 Text(wallet.addressType.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(Color.accent)
+                    .foregroundStyle(Color.brand)
                 
                 Spacer()
                 

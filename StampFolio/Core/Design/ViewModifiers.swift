@@ -30,7 +30,7 @@ struct GlassCardModifier: ViewModifier {
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .shadow(
                 color: colorScheme == .dark 
-                    ? Color.accent.opacity(0.15) 
+                    ? Color.brand.opacity(0.15) 
                     : Color.black.opacity(0.1),
                 radius: shadowRadius,
                 y: shadowRadius / 2
@@ -76,15 +76,15 @@ struct GlassButtonModifier: ViewModifier {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(
                                 isPressed 
-                                    ? Color.accent.opacity(0.2) 
-                                    : Color.accent.opacity(0.1)
+                                    ? Color.brand.opacity(0.2) 
+                                    : Color.brand.opacity(0.1)
                             )
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.accent.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.brand.opacity(0.3), lineWidth: 1)
             }
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)
