@@ -68,8 +68,7 @@ struct StampDetailView: View {
                     .offset(x: horizontalDragOffset.width)
                     .opacity(1.0 - Double(abs(dragOffset.height)) / 500.0)
                     .gesture(magnificationGesture)
-                    .gesture(combinedDragGesture)
-                    .gesture(horizontalSwipeGesture)
+                    .gesture(unifiedDragGesture)
                     .onTapGesture(count: 2) {
                         // Double tap to reset zoom
                         withAnimation(.spring(response: 0.3)) {
@@ -138,8 +137,8 @@ struct StampDetailView: View {
             }
     }
     
-    // Combined drag gesture - pans when zoomed, dismisses when at normal scale
-    private var combinedDragGesture: some Gesture {
+    // Unified drag gesture - handles pan when zoomed, navigation and dismiss when not zoomed
+    private var unifiedDragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
                 if scale > 1.0 {
@@ -149,54 +148,58 @@ struct StampDetailView: View {
                         height: lastOffset.height + value.translation.height
                     )
                 } else {
-                    // Only vertical drag for dismiss
-                    dragOffset = CGSize(width: 0, height: value.translation.height)
+                    // Determine drag direction when not zoomed
+                    let horizontalAmount = abs(value.translation.width)
+                    let verticalAmount = abs(value.translation.height)
+                    
+                    if horizontalAmount > verticalAmount {
+                        // Horizontal drag - navigation
+                        horizontalDragOffset = CGSize(width: value.translation.width, height: 0)
+                        dragOffset = .zero
+                    } else {
+                        // Vertical drag - dismiss
+                        dragOffset = CGSize(width: 0, height: value.translation.height)
+                        horizontalDragOffset = .zero
+                    }
                 }
             }
             .onEnded { value in
                 if scale > 1.0 {
-                    // Save pan offset
+                    // Save pan offset when zoomed
                     lastOffset = offset
                 } else {
-                    // Dismiss if dragged down far enough
-                    if abs(value.translation.height) > 100 || abs(value.velocity.height) > 500 {
-                        dismiss()
-                    } else {
-                        // Snap back
-                        withAnimation(.spring(response: 0.3)) {
-                            dragOffset = .zero
-                        }
-                    }
-                }
-            }
-    }
-    
-    // Horizontal swipe gesture for navigation
-    private var horizontalSwipeGesture: some Gesture {
-        DragGesture()
-            .onChanged { value in
-                // Only handle horizontal swipes when not zoomed
-                if scale <= 1.0 {
-                    horizontalDragOffset = CGSize(width: value.translation.width, height: 0)
-                }
-            }
-            .onEnded { value in
-                if scale <= 1.0 {
-                    let swipeDistance = value.translation.width
-                    let swipeVelocity = value.velocity.width
+                    // Determine drag direction when not zoomed
+                    let horizontalAmount = abs(value.translation.width)
+                    let verticalAmount = abs(value.translation.height)
                     
-                    // Swipe left (next stamp)
-                    if swipeDistance < -swipeThreshold || swipeVelocity < -500 {
-                        navigateToNext()
-                    }
-                    // Swipe right (previous stamp)
-                    else if swipeDistance > swipeThreshold || swipeVelocity > 500 {
-                        navigateToPrevious()
-                    }
-                    else {
-                        // Snap back
-                        withAnimation(.spring(response: 0.3)) {
-                            horizontalDragOffset = .zero
+                    if horizontalAmount > verticalAmount {
+                        // Horizontal swipe - navigation
+                        let swipeDistance = value.translation.width
+                        let swipeVelocity = value.velocity.width
+                        
+                        // Swipe left (next stamp)
+                        if swipeDistance < -swipeThreshold || swipeVelocity < -500 {
+                            navigateToNext()
+                        }
+                        // Swipe right (previous stamp)
+                        else if swipeDistance > swipeThreshold || swipeVelocity > 500 {
+                            navigateToPrevious()
+                        }
+                        else {
+                            // Snap back
+                            withAnimation(.spring(response: 0.3)) {
+                                horizontalDragOffset = .zero
+                            }
+                        }
+                    } else {
+                        // Vertical swipe - dismiss
+                        if abs(value.translation.height) > 100 || abs(value.velocity.height) > 500 {
+                            dismiss()
+                        } else {
+                            // Snap back
+                            withAnimation(.spring(response: 0.3)) {
+                                dragOffset = .zero
+                            }
                         }
                     }
                 }
