@@ -87,9 +87,9 @@ struct CollectionView: View {
             if showTitle {
                 HStack(spacing: 0) {
                     Text("STAMP")
-                        .font(.system(size: isLandscape ? 24 : 20, weight: .black))
+                        .font(.system(size: isLandscape ? 32 : 24, weight: .black))
                     Text("FOLIO")
-                        .font(.system(size: isLandscape ? 24 : 20, weight: .light))
+                        .font(.system(size: isLandscape ? 32 : 24, weight: .light))
                 }
                 .foregroundStyle(.purple)
             }
@@ -250,7 +250,7 @@ struct CollectionView: View {
                 GeometryReader { geo in
                     Color.clear
                         .onChange(of: geo.frame(in: .global).minY) { _, newValue in
-                            let shouldShow = newValue > 80
+                            let shouldShow = newValue > 120
                             if shouldShow != showTitle {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     showTitle = shouldShow
