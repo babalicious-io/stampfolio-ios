@@ -24,7 +24,7 @@ struct GlassCardModifier: ViewModifier {
                     .background {
                         // Subtle tint showing through Material
                         RoundedRectangle(cornerRadius: cornerRadius)
-                            .fill(.quaternarySystemFill)
+                            .fill(Color(uiColor: .quaternarySystemFill))
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
