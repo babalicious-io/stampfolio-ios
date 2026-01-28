@@ -16,12 +16,16 @@ struct CollectionView: View {
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
     @State private var showSettings = false
+    @State private var scrollOffset: CGFloat = 0
+    @State private var showTitle = true
     
     // MARK: - Layout
     
@@ -41,8 +45,14 @@ struct CollectionView: View {
                 
                 content
             }
-            .navigationTitle("StampFolio")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    if showTitle {
+                        customTitle
+                    }
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
                         if viewModel.isLoading {
@@ -89,6 +99,22 @@ struct CollectionView: View {
             }
         }
         .stampchainBackground()
+    }
+    
+    // MARK: - Custom Title
+    
+    private var customTitle: some View {
+        let isLandscape = verticalSizeClass == .compact
+        
+        return HStack(spacing: 0) {
+            Text("STAMP")
+                .font(.system(size: isLandscape ? 20 : 16, weight: .black))
+            Text("FOLIO")
+                .font(.system(size: isLandscape ? 20 : 16, weight: .ultraLight))
+        }
+        .foregroundStyle(.purple)
+        .frame(maxWidth: .infinity, alignment: isLandscape ? .leading : .center)
+        .padding(.leading, isLandscape ? 16 : 0)
     }
     
     // MARK: - Content
@@ -217,6 +243,12 @@ struct CollectionView: View {
     
     private var stampsGrid: some View {
         ScrollView {
+            GeometryReader { geometry in
+                Color.clear
+                    .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .named("scroll")).minY)
+            }
+            .frame(height: 0)
+            
             // Offline banner
             if showOfflineBanner {
                 offlineBanner
@@ -237,6 +269,13 @@ struct CollectionView: View {
             }
             .padding()
         }
+        .coordinateSpace(name: "scroll")
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+            scrollOffset = value
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showTitle = value >= -10
+            }
+        }
     }
     
     // MARK: - Offline Banner
@@ -253,6 +292,16 @@ struct CollectionView: View {
         .background(Color.orange.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
+    }
+}
+
+// MARK: - Scroll Offset Preference Key
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
