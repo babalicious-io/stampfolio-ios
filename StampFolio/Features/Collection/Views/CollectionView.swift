@@ -245,39 +245,39 @@ struct CollectionView: View {
     
     private var stampsGrid: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(viewModel.stamps) { displayStamp in
-                    StampCardView(
-                        displayStamp: displayStamp,
-                        onTap: {
-                            viewModel.selectedStamp = displayStamp
-                        },
-                        onInfoTap: {
-                            viewModel.metadataStamp = displayStamp
-                        }
-                    )
-                }
-            }
-            .padding()
-            .background(
-                GeometryReader { proxy in
+            VStack(spacing: 0) {
+                // Scroll detector at the very top
+                GeometryReader { geo in
                     Color.clear
-                        .preference(key: ScrollOffsetKey.self, value: proxy.frame(in: .named("scroll")).minY)
+                        .onChange(of: geo.frame(in: .global).minY) { _, newValue in
+                            let shouldShow = newValue > 80
+                            if shouldShow != showTitle {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showTitle = shouldShow
+                                }
+                            }
+                        }
                 }
-            )
-            
-            // Offline banner
-            if showOfflineBanner {
-                offlineBanner
-            }
-        }
-        .coordinateSpace(name: "scroll")
-        .onPreferenceChange(ScrollOffsetKey.self) { value in
-            // Hide when scrolled down more than 20 points from top
-            let shouldShow = value > -20
-            if shouldShow != showTitle {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showTitle = shouldShow
+                .frame(height: 1)
+                
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(viewModel.stamps) { displayStamp in
+                        StampCardView(
+                            displayStamp: displayStamp,
+                            onTap: {
+                                viewModel.selectedStamp = displayStamp
+                            },
+                            onInfoTap: {
+                                viewModel.metadataStamp = displayStamp
+                            }
+                        )
+                    }
+                }
+                .padding()
+                
+                // Offline banner
+                if showOfflineBanner {
+                    offlineBanner
                 }
             }
         }
@@ -297,15 +297,6 @@ struct CollectionView: View {
         .background(Color.orange.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
-    }
-}
-
-// MARK: - Scroll Offset Key
-
-private struct ScrollOffsetKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
     }
 }
 
