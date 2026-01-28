@@ -19,6 +19,7 @@ struct AddWalletView: View {
     
     // MARK: - State
     
+    @State private var walletName: String = ""
     @FocusState private var isAddressFocused: Bool
     
     // MARK: - Body
@@ -28,10 +29,21 @@ struct AddWalletView: View {
         
         NavigationStack {
             Form {
+                // Wallet Name Section
+                Section {
+                    TextField("Wallet Name (Optional)", text: $walletName)
+                        .textInputAutocapitalization(.words)
+                        .accessibilityLabel("Wallet name")
+                        .accessibilityHint("Enter a custom name for this wallet")
+                } header: {
+                    Text("Wallet Name")
+                } footer: {
+                    Text("Give this wallet a custom name to easily identify it. Leave empty to use the truncated address.")
+                }
+                
                 // Address Input Section
                 Section {
                     TextField("Bitcoin Address", text: $viewModel.walletAddressInput)
-                        .font(.monospace)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .focused($isAddressFocused)
@@ -78,6 +90,7 @@ struct AddWalletView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
                         viewModel.walletAddressInput = ""
+                        walletName = ""
                         viewModel.resetValidation()
                         dismiss()
                     }
@@ -86,10 +99,17 @@ struct AddWalletView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add") {
                         Task {
+                            let trimmedName = walletName.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let label = trimmedName.isEmpty ? nil : trimmedName
                             await viewModel.addWallet(
                                 address: viewModel.walletAddressInput,
+                                label: label,
                                 context: modelContext
                             )
+                            if !viewModel.showAddWallet {
+                                // Reset wallet name if successfully added
+                                walletName = ""
+                            }
                         }
                     }
                     .disabled(viewModel.walletAddressInput.isEmpty || viewModel.isValidating)
@@ -126,7 +146,7 @@ struct AddWalletView: View {
                     .font(.body)
                 
                 Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 8, suffixLength: 8))
-                    .font(.monospaceSm)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }

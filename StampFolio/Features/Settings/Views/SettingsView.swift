@@ -21,6 +21,7 @@ struct SettingsView: View {
     // MARK: - State
     
     @AppStorage("isDarkMode") private var isDarkMode = true
+    @State private var editingWallet: Wallet?
     
     // MARK: - Body
     
@@ -43,8 +44,22 @@ struct SettingsView: View {
                     } else {
                         ForEach(wallets) { wallet in
                             WalletRow(wallet: wallet)
+                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                    Button {
+                                        editingWallet = wallet
+                                    } label: {
+                                        Label("Edit", systemImage: "pencil")
+                                    }
+                                    .tint(.blue)
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        deleteWallet(wallet)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
                         }
-                        .onDelete(perform: deleteWallets)
                     }
                     
                     addWalletButton
@@ -77,6 +92,9 @@ struct SettingsView: View {
             .sheet(isPresented: $viewModel.showAddWallet) {
                 AddWalletView()
             }
+            .sheet(item: $editingWallet) { wallet in
+                EditWalletView(wallet: wallet)
+            }
             .alert("Notice", isPresented: $viewModel.showAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -92,7 +110,7 @@ struct SettingsView: View {
     
     private var themeToggle: some View {
         Toggle(isOn: $isDarkMode) {
-            HStack {
+            HStack(spacing: 8) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
                     .foregroundStyle(.purple)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
@@ -164,10 +182,8 @@ struct SettingsView: View {
     
     // MARK: - Actions
     
-    private func deleteWallets(at offsets: IndexSet) {
-        for index in offsets {
-            viewModel.deleteWallet(wallets[index], context: modelContext)
-        }
+    private func deleteWallet(_ wallet: Wallet) {
+        viewModel.deleteWallet(wallet, context: modelContext)
     }
 }
 
@@ -192,22 +208,13 @@ struct WalletRow: View {
             }
             
             Text(wallet.address)
-                .font(.monospace)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
             
-            HStack {
-                Text(wallet.addressType.rawValue)
-                    .font(.caption2)
-                    .foregroundStyle(.purple)
-                
-                Spacer()
-                
-                Text("Added \(wallet.addedDate, format: .relative(presentation: .named))")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
+            Text(wallet.addressType.rawValue)
+                .font(.caption2)
+                .foregroundStyle(.purple)
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
