@@ -85,6 +85,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .preferredColorScheme(isDarkMode ? .dark : .light)
     }
     
     // MARK: - Theme Toggle
@@ -94,13 +95,13 @@ struct SettingsView: View {
             HStack {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
                     .foregroundStyle(.purple)
-                Text("Dark Mode")
+                Text(isDarkMode ? "Dark Mode" : "Light Mode")
             }
         }
         .tint(.purple)
-        .accessibilityLabel("Dark mode toggle")
+        .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
-        .accessibilityHint("Double tap to toggle dark mode")
+        .accessibilityHint("Double tap to toggle theme")
     }
     
     // MARK: - Empty Wallets Row
