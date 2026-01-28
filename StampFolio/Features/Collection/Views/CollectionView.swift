@@ -113,8 +113,8 @@ struct CollectionView: View {
                 .font(.system(size: isLandscape ? 24 : 20, weight: .light))
         }
         .foregroundStyle(.purple)
-        .frame(maxWidth: .infinity, alignment: isLandscape ? .leading : .center)
-        .padding(.leading, isLandscape ? 16 : 0)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, 16)
     }
     
     // MARK: - Content
@@ -273,7 +273,7 @@ struct CollectionView: View {
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
             scrollOffset = value
             withAnimation(.easeInOut(duration: 0.2)) {
-                showTitle = value >= -10
+                showTitle = value > -20
             }
         }
     }
