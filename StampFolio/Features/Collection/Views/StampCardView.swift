@@ -112,7 +112,7 @@ struct StampCardView: View {
                         // Edition balance - bottom right
                         stampEditions
                     }
-                    .padding(8)
+                    .padding(12)
                 }
             }
         }

@@ -63,7 +63,9 @@ struct CollectionView: View {
                 showOfflineBanner = !isConnected
             }
             .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
-                StampDetailView(stamp: displayStamp.stamp)
+                let stamps = viewModel.stamps.map { $0.stamp }
+                let currentIndex = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) ?? 0
+                StampDetailView(stamps: stamps, initialIndex: currentIndex)
             }
             .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
                 StampMetadataPopup(stamp: displayStamp.stamp)

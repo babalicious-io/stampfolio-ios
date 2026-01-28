@@ -14,7 +14,8 @@ struct StampDetailView: View {
     
     // MARK: - Properties
     
-    let stamp: Stamp
+    let stamps: [Stamp]
+    let initialIndex: Int
     
     // MARK: - Environment
     
@@ -22,11 +23,29 @@ struct StampDetailView: View {
     
     // MARK: - State
     
+    @State private var currentIndex: Int
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
     @State private var dragOffset: CGSize = .zero
+    @State private var horizontalDragOffset: CGSize = .zero
+    
+    // MARK: - Computed Properties
+    
+    private var currentStamp: Stamp {
+        stamps[currentIndex]
+    }
+    
+    private let swipeThreshold: CGFloat = 100
+    
+    // MARK: - Initialization
+    
+    init(stamps: [Stamp], initialIndex: Int) {
+        self.stamps = stamps
+        self.initialIndex = initialIndex
+        _currentIndex = State(initialValue: initialIndex)
+    }
     
     // MARK: - Body
     
@@ -35,7 +54,7 @@ struct StampDetailView: View {
             ZStack {
                 // Dark background for immersive viewing
                 Color.black
-                    .ignoresSafeArea()
+                    .ignoresSafeArea(.all, edges: .all)
                     .onTapGesture {
                         // Tap background to dismiss
                         dismiss()
@@ -46,9 +65,11 @@ struct StampDetailView: View {
                     .scaleEffect(scale)
                     .offset(offset)
                     .offset(y: dragOffset.height)
+                    .offset(x: horizontalDragOffset.width)
                     .opacity(1.0 - Double(abs(dragOffset.height)) / 500.0)
                     .gesture(magnificationGesture)
                     .gesture(combinedDragGesture)
+                    .gesture(horizontalSwipeGesture)
                     .onTapGesture(count: 2) {
                         // Double tap to reset zoom
                         withAnimation(.spring(response: 0.3)) {
@@ -56,48 +77,26 @@ struct StampDetailView: View {
                             offset = .zero
                         }
                     }
-                
-                // Close button overlay (always visible)
-                VStack {
-                    HStack {
-                        Spacer()
-                        
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 32))
-                                .foregroundStyle(.white.opacity(0.8))
-                                .background(Color.black.opacity(0.3))
-                                .clipShape(Circle())
-                        }
-                        .padding(.top, 50)
-                        .padding(.trailing, 20)
-                        .accessibilityLabel("Close")
-                    }
-                    
-                    Spacer()
-                }
             }
         }
-        .ignoresSafeArea()
+        .ignoresSafeArea(.all, edges: .all)
         .statusBarHidden()
         .persistentSystemOverlays(.hidden)
         .accessibilityAddTraits(.isImage)
-        .accessibilityLabel(stamp.formattedNumber)
-        .accessibilityHint("Swipe down or tap X to close, double tap to zoom")
+        .accessibilityLabel("\(currentStamp.formattedNumber), \(currentIndex + 1) of \(stamps.count)")
+        .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
     }
     
     // MARK: - Content View
     
     @ViewBuilder
     private var contentView: some View {
-        if stamp.isSVG || stamp.isHTML {
+        if currentStamp.isSVG || currentStamp.isHTML {
             // WebView for SVG/HTML content
-            WebContentView(url: stamp.imageURL)
-        } else if stamp.isAnimated {
+            WebContentView(url: currentStamp.imageURL)
+        } else if currentStamp.isAnimated {
             // KFAnimatedImage for animated GIFs
-            KFAnimatedImage(stamp.imageURL)
+            KFAnimatedImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
                         .tint(.purple)
@@ -106,7 +105,7 @@ struct StampDetailView: View {
                 .aspectRatio(contentMode: .fit)
         } else {
             // KFImage for static images
-            KFImage(stamp.imageURL)
+            KFImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
                         .tint(.purple)
@@ -150,7 +149,7 @@ struct StampDetailView: View {
                         height: lastOffset.height + value.translation.height
                     )
                 } else {
-                    // Dismiss drag when at normal scale
+                    // Only vertical drag for dismiss
                     dragOffset = CGSize(width: 0, height: value.translation.height)
                 }
             }
@@ -159,7 +158,7 @@ struct StampDetailView: View {
                     // Save pan offset
                     lastOffset = offset
                 } else {
-                    // Dismiss if dragged far enough
+                    // Dismiss if dragged down far enough
                     if abs(value.translation.height) > 100 || abs(value.velocity.height) > 500 {
                         dismiss()
                     } else {
@@ -170,6 +169,77 @@ struct StampDetailView: View {
                     }
                 }
             }
+    }
+    
+    // Horizontal swipe gesture for navigation
+    private var horizontalSwipeGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                // Only handle horizontal swipes when not zoomed
+                if scale <= 1.0 {
+                    horizontalDragOffset = CGSize(width: value.translation.width, height: 0)
+                }
+            }
+            .onEnded { value in
+                if scale <= 1.0 {
+                    let swipeDistance = value.translation.width
+                    let swipeVelocity = value.velocity.width
+                    
+                    // Swipe left (next stamp)
+                    if swipeDistance < -swipeThreshold || swipeVelocity < -500 {
+                        navigateToNext()
+                    }
+                    // Swipe right (previous stamp)
+                    else if swipeDistance > swipeThreshold || swipeVelocity > 500 {
+                        navigateToPrevious()
+                    }
+                    else {
+                        // Snap back
+                        withAnimation(.spring(response: 0.3)) {
+                            horizontalDragOffset = .zero
+                        }
+                    }
+                }
+            }
+    }
+    
+    // MARK: - Navigation Methods
+    
+    private func navigateToNext() {
+        guard currentIndex < stamps.count - 1 else {
+            withAnimation(.spring(response: 0.3)) {
+                horizontalDragOffset = .zero
+            }
+            return
+        }
+        
+        withAnimation(.spring(response: 0.3)) {
+            currentIndex += 1
+            horizontalDragOffset = .zero
+            resetZoom()
+        }
+    }
+    
+    private func navigateToPrevious() {
+        guard currentIndex > 0 else {
+            withAnimation(.spring(response: 0.3)) {
+                horizontalDragOffset = .zero
+            }
+            return
+        }
+        
+        withAnimation(.spring(response: 0.3)) {
+            currentIndex -= 1
+            horizontalDragOffset = .zero
+            resetZoom()
+        }
+    }
+    
+    private func resetZoom() {
+        scale = 1.0
+        lastScale = 1.0
+        offset = .zero
+        lastOffset = .zero
     }
 }
 
@@ -188,6 +258,7 @@ struct WebContentView: UIViewRepresentable {
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
         webView.scrollView.isScrollEnabled = false
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
         
         return webView
     }
@@ -202,5 +273,5 @@ struct WebContentView: UIViewRepresentable {
 // MARK: - Preview
 
 #Preview {
-    StampDetailView(stamp: .sample)
+    StampDetailView(stamps: [.sample], initialIndex: 0)
 }
