@@ -17,7 +17,6 @@ struct StampMetadataPopup: View {
     // MARK: - Environment
     
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     
     // MARK: - Body
@@ -49,7 +48,7 @@ struct StampMetadataPopup: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Color.secondaryText(for: colorScheme))
+                            .foregroundStyle(.secondary)
                     }
                     .accessibilityLabel("Close")
                 }
@@ -65,12 +64,12 @@ struct StampMetadataPopup: View {
                 Text(stamp.formattedNumber)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundStyle(Color.primaryText(for: colorScheme))
+                    .foregroundStyle(.primary)
                 
                 if let creatorName = stamp.creatorName {
                     Text("by \(creatorName)")
                         .font(.subheadline)
-                        .foregroundStyle(Color.brand)
+                        .foregroundStyle(.purple)
                 }
             }
             
@@ -80,10 +79,10 @@ struct StampMetadataPopup: View {
             Text(stamp.ident ?? "STAMP")
                 .font(.caption)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.primaryText(for: colorScheme))
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.brand.opacity(0.8))
+                .background(Color.purple.opacity(0.8))
                 .clipShape(Capsule())
         }
     }
@@ -183,7 +182,7 @@ struct StampMetadataPopup: View {
                 
                 Image(systemName: "arrow.up.right.square")
             }
-            .foregroundStyle(Color.primaryText(for: colorScheme))
+            .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .glassButton()
         }
@@ -201,19 +200,18 @@ struct MetadataRow: View {
     var fullValue: String?
     var isMonospace: Bool = false
     
-    @Environment(\.colorScheme) private var colorScheme
     @State private var showCopied = false
     
     var body: some View {
         HStack(alignment: .top) {
             Text(label)
                 .font(.metadataLabel)
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
                 .frame(width: 100, alignment: .leading)
             
             Text(value)
                 .font(isMonospace ? .monospace : .metadataValue)
-                .foregroundStyle(Color.primaryText(for: colorScheme))
+                .foregroundStyle(.primary)
                 .textSelection(.enabled)
             
             Spacer()
@@ -231,10 +229,10 @@ struct MetadataRow: View {
                 } label: {
                     if showCopied {
                         Image(systemName: "checkmark")
-                            .foregroundStyle(Color.success)
+                            .foregroundStyle(.green)
                     } else {
                         Image(systemName: "doc.on.doc")
-                            .foregroundStyle(Color.secondaryText(for: colorScheme))
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .font(.caption)

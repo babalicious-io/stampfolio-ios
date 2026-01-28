@@ -38,7 +38,7 @@ struct ContentView: View {
                 }
                 .tag(Tab.settings)
         }
-        .tint(Color.brandLight)
+        .tint(.purple)
     }
 }
 

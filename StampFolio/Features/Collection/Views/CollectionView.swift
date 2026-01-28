@@ -16,7 +16,6 @@ struct CollectionView: View {
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -36,7 +35,7 @@ struct CollectionView: View {
         NavigationStack {
             ZStack {
                 // Background
-                Color.adaptiveBackground(for: colorScheme)
+                Color(.systemBackground)
                     .ignoresSafeArea()
                 
                 content
@@ -46,7 +45,7 @@ struct CollectionView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     if viewModel.isLoading {
                         ProgressView()
-                            .tint(Color.brandLight)
+                            .tint(.purple)
                     }
                 }
             }
@@ -99,16 +98,16 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "wallet.pass")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.brand)
+                .foregroundStyle(.purple)
             
             Text("No Wallets Added")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.primaryText(for: colorScheme))
+                .foregroundStyle(.primary)
             
             Text("Add a Bitcoin wallet to view your stamp collection")
                 .font(.body)
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             
@@ -117,7 +116,7 @@ struct CollectionView: View {
             } label: {
                 Text("Add Wallet")
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.primaryText(for: colorScheme))
+                    .foregroundStyle(.primary)
                     .glassButton()
             }
             .accessibilityLabel("Add a Bitcoin wallet")
@@ -132,11 +131,11 @@ struct CollectionView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-                .tint(Color.brandLight)
+                .tint(.purple)
             
             Text("Loading stamps...")
                 .font(.body)
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
         }
     }
     
@@ -146,17 +145,17 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.error)
+                .foregroundStyle(.red)
             
             Text("Unable to Load Stamps")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.primaryText(for: colorScheme))
+                .foregroundStyle(.primary)
             
             if let error = viewModel.errorMessage {
                 Text(error)
                     .font(.body)
-                    .foregroundStyle(Color.secondaryText(for: colorScheme))
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
@@ -168,7 +167,7 @@ struct CollectionView: View {
             } label: {
                 Text("Try Again")
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.primaryText(for: colorScheme))
+                    .foregroundStyle(.primary)
                     .glassButton()
             }
             .accessibilityLabel("Retry loading stamps")
@@ -182,16 +181,16 @@ struct CollectionView: View {
         VStack(spacing: 24) {
             Image(systemName: "photo.on.rectangle.angled")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.brand)
+                .foregroundStyle(.purple)
             
             Text("No Stamps Found")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.primaryText(for: colorScheme))
+                .foregroundStyle(.primary)
             
             Text("Your wallets don't contain any Bitcoin Stamps yet")
                 .font(.body)
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
         }
@@ -232,10 +231,10 @@ struct CollectionView: View {
             Text("You're offline. Showing cached content.")
         }
         .font(.caption)
-        .foregroundStyle(Color.primaryText(for: colorScheme))
+        .foregroundStyle(.primary)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
-        .background(Color.warning.opacity(0.8))
+        .background(Color.orange.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding()
     }

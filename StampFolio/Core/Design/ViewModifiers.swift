@@ -24,13 +24,13 @@ struct GlassCardModifier: ViewModifier {
                     .background {
                         // Subtle tint showing through Material
                         RoundedRectangle(cornerRadius: cornerRadius)
-                            .fill(Color.cardTint(for: colorScheme))
+                            .fill(.quaternarySystemFill)
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .shadow(
                 color: colorScheme == .dark 
-                    ? Color.brand.opacity(0.15) 
+                    ? Color.purple.opacity(0.15) 
                     : Color.black.opacity(0.1),
                 radius: shadowRadius,
                 y: shadowRadius / 2
@@ -42,12 +42,10 @@ struct GlassCardModifier: ViewModifier {
 
 /// Applies the Stampchain background
 struct StampchainBackgroundModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-    
     func body(content: Content) -> some View {
         content
             .background {
-                Color.adaptiveBackground(for: colorScheme)
+                Color(.systemBackground)
                     .ignoresSafeArea()
             }
     }
@@ -57,8 +55,6 @@ struct StampchainBackgroundModifier: ViewModifier {
 
 /// Applies a glass button style
 struct GlassButtonModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-    
     let isPressed: Bool
     
     init(isPressed: Bool = false) {
@@ -76,15 +72,15 @@ struct GlassButtonModifier: ViewModifier {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(
                                 isPressed 
-                                    ? Color.brand.opacity(0.2) 
-                                    : Color.brand.opacity(0.1)
+                                    ? Color.purple.opacity(0.2) 
+                                    : Color.purple.opacity(0.1)
                             )
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.brand.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.purple.opacity(0.3), lineWidth: 1)
             }
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)

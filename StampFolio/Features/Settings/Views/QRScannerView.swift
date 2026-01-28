@@ -19,7 +19,6 @@ struct QRScannerView: View {
     // MARK: - Environment
     
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
     
     // MARK: - State
     
@@ -70,12 +69,12 @@ struct QRScannerView: View {
             VStack(spacing: 16) {
                 Image(systemName: "qrcode.viewfinder")
                     .font(.system(size: 48))
-                    .foregroundStyle(Color.brandLight)
+                    .foregroundStyle(.purple)
                 
                 Text("Point your camera at a Bitcoin wallet QR code")
                     .font(.body)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(Color.primaryText(for: colorScheme))
+                    .foregroundStyle(.primary)
             }
             .padding()
             .glassCard()
@@ -92,16 +91,16 @@ struct QRScannerView: View {
         VStack(spacing: 24) {
             Image(systemName: "camera.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
             
             Text("Camera Not Available")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.primaryText(for: colorScheme))
+                .foregroundStyle(.primary)
             
             Text("QR code scanning requires camera access. Please enable camera permissions in Settings.")
                 .font(.body)
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             
@@ -112,7 +111,7 @@ struct QRScannerView: View {
             } label: {
                 Text("Open Settings")
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.primaryText(for: colorScheme))
+                    .foregroundStyle(.primary)
                     .glassButton()
             }
         }

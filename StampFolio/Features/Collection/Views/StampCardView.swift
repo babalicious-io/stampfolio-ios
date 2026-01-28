@@ -127,15 +127,15 @@ struct StampCardView: View {
     
     private var placeholderView: some View {
         ZStack {
-            Color.adaptiveBackground(for: colorScheme)
+            Color(.systemBackground)
             
             VStack(spacing: 8) {
                 Image(systemName: "photo")
                     .font(.title)
-                    .foregroundStyle(Color.secondaryText(for: colorScheme))
+                    .foregroundStyle(.secondary)
                 
                 ProgressView()
-                    .tint(Color.brand)
+                    .tint(.purple)
             }
         }
     }
@@ -144,23 +144,23 @@ struct StampCardView: View {
     
     private var failedImageView: some View {
         ZStack {
-            Color.adaptiveBackground(for: colorScheme)
+            Color(.systemBackground)
             
             VStack(spacing: 8) {
                 Image(systemName: "photo.badge.exclamationmark")
                     .font(.title)
-                    .foregroundStyle(Color.warning)
+                    .foregroundStyle(.orange)
                 
                 Text("Failed to load")
                     .font(.caption2)
-                    .foregroundStyle(Color.secondaryText(for: colorScheme))
+                    .foregroundStyle(.secondary)
                 
                 Button {
                     imageLoadFailed = false
                 } label: {
                     Text("Retry")
                         .font(.caption2)
-                        .foregroundStyle(Color.brand)
+                        .foregroundStyle(.purple)
                 }
             }
         }
@@ -172,14 +172,14 @@ struct StampCardView: View {
         Text(displayStamp.formattedQuantity)
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundStyle(Color.primaryText(for: colorScheme))
+            .foregroundStyle(.primary)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
-                Color.adaptiveBackground(for: colorScheme).opacity(0.8)
+                Color(.systemBackground).opacity(0.8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.brand.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.purple.opacity(0.3), lineWidth: 1)
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -195,12 +195,12 @@ struct StampCardView: View {
                 .font(.system(size: infoButtonSize * 0.85))
                 .foregroundStyle(
                     colorScheme == .dark 
-                        ? Color.brand 
-                        : Color.brand.opacity(0.85)
+                        ? Color.purple 
+                        : Color.purple.opacity(0.85)
                 )
                 .background(
                     Circle()
-                        .fill(Color.adaptiveBackground(for: colorScheme).opacity(0.8))
+                        .fill(Color(.systemBackground).opacity(0.8))
                         .frame(width: infoButtonSize + 4, height: infoButtonSize + 4)
                 )
         }
@@ -214,7 +214,6 @@ struct StampCardView: View {
 
 struct StampWebView: UIViewRepresentable {
     let url: URL?
-    @Environment(\.colorScheme) private var colorScheme
     
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -222,7 +221,7 @@ struct StampWebView: UIViewRepresentable {
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
-        let backgroundColor = UIColor(Color.adaptiveBackground(for: colorScheme))
+        let backgroundColor = UIColor(.systemBackground)
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         webView.scrollView.isScrollEnabled = false
@@ -235,7 +234,7 @@ struct StampWebView: UIViewRepresentable {
         guard let url = url else { return }
         
         // Update background color for color scheme changes
-        let backgroundColor = UIColor(Color.adaptiveBackground(for: colorScheme))
+        let backgroundColor = UIColor(.systemBackground)
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         

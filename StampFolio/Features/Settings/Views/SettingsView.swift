@@ -15,7 +15,6 @@ struct SettingsView: View {
     
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -81,11 +80,11 @@ struct SettingsView: View {
         Toggle(isOn: $isDarkMode) {
             HStack {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
-                    .foregroundStyle(Color.brandLight)
+                    .foregroundStyle(.purple)
                 Text("Dark Mode")
             }
         }
-        .tint(Color.brand)
+        .tint(.purple)
         .accessibilityLabel("Dark mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle dark mode")
@@ -96,9 +95,9 @@ struct SettingsView: View {
     private var emptyWalletsRow: some View {
         HStack {
             Image(systemName: "wallet.pass")
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
             Text("No wallets added")
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
         }
     }
     
@@ -110,7 +109,7 @@ struct SettingsView: View {
         } label: {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(.purple)
                 Text("Add Wallet")
             }
         }
@@ -128,12 +127,12 @@ struct SettingsView: View {
                 Spacer()
                 Text("v1.0")
                     .font(.caption)
-                    .foregroundStyle(Color.secondaryText(for: colorScheme))
+                    .foregroundStyle(.secondary)
             }
             
             Text("A portfolio viewer for Bitcoin Stamps")
                 .font(.caption)
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
             
             Link(destination: URL(string: "https://stampchain.io")!) {
                 HStack {
@@ -142,7 +141,7 @@ struct SettingsView: View {
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption2)
                 }
-                .foregroundStyle(Color.brand)
+                .foregroundStyle(.purple)
             }
             .accessibilityLabel("Visit Stampchain.io")
         }
@@ -162,7 +161,6 @@ struct SettingsView: View {
 
 struct WalletRow: View {
     let wallet: Wallet
-    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -175,26 +173,26 @@ struct WalletRow: View {
                 if let count = wallet.cachedStampCount {
                     Text("\(count) stamps")
                         .font(.caption)
-                        .foregroundStyle(Color.secondaryText(for: colorScheme))
+                        .foregroundStyle(.secondary)
                 }
             }
             
             Text(wallet.address)
                 .font(.monospace)
-                .foregroundStyle(Color.secondaryText(for: colorScheme))
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
             
             HStack {
                 Text(wallet.addressType.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(.purple)
                 
                 Spacer()
                 
                 Text("Added \(wallet.addedDate, format: .relative(presentation: .named))")
                     .font(.caption2)
-                    .foregroundStyle(Color.secondaryText(for: colorScheme))
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)

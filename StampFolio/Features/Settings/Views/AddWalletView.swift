@@ -16,7 +16,6 @@ struct AddWalletView: View {
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
     
     // MARK: - State
     
@@ -56,11 +55,11 @@ struct AddWalletView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         if let error = viewModel.validationError {
                             Text(error)
-                                .foregroundStyle(Color.error)
+                                .foregroundStyle(.red)
                         }
                         
                         Text("Supports all Bitcoin address formats: Legacy (1...), P2SH (3...), SegWit (bc1q...), Taproot (bc1p...)")
-                            .foregroundStyle(Color.secondaryText(for: colorScheme))
+                            .foregroundStyle(.secondary)
                     }
                 }
                 
@@ -120,7 +119,7 @@ struct AddWalletView: View {
         
         return HStack {
             Image(systemName: addressTypeIcon(for: addressType))
-                .foregroundStyle(Color.brand)
+                .foregroundStyle(.purple)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(addressType.rawValue)
@@ -128,7 +127,7 @@ struct AddWalletView: View {
                 
                 Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 8, suffixLength: 8))
                     .font(.monospaceSm)
-                    .foregroundStyle(Color.secondaryText(for: colorScheme))
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -158,11 +157,11 @@ struct AddWalletView: View {
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(Color.brand)
+                    .tint(.purple)
                 
                 Text("Validating wallet...")
                     .font(.body)
-                    .foregroundStyle(Color.primaryText(for: colorScheme))
+                    .foregroundStyle(.primary)
             }
             .padding(32)
             .glassCard()

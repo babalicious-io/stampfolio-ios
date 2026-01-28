@@ -54,35 +54,31 @@ extension Font {
 extension View {
     
     /// Apply primary text styling with appropriate color
-    /// - Parameter colorScheme: Current color scheme
-    func primaryTextStyle(for colorScheme: ColorScheme) -> some View {
+    func primaryTextStyle() -> some View {
         self
             .font(.bodyPrimary)
-            .foregroundStyle(Color.primaryText(for: colorScheme))
+            .foregroundStyle(.primary)
     }
     
     /// Apply secondary text styling with appropriate color
-    /// - Parameter colorScheme: Current color scheme
-    func secondaryTextStyle(for colorScheme: ColorScheme) -> some View {
+    func secondaryTextStyle() -> some View {
         self
             .font(.bodySecondary)
-            .foregroundStyle(Color.secondaryText(for: colorScheme))
+            .foregroundStyle(.secondary)
     }
     
     /// Apply monospace text styling for addresses
-    /// - Parameter colorScheme: Current color scheme
-    func addressTextStyle(for colorScheme: ColorScheme) -> some View {
+    func addressTextStyle() -> some View {
         self
             .font(.monospace)
-            .foregroundStyle(Color.secondaryText(for: colorScheme))
+            .foregroundStyle(.secondary)
     }
     
     /// Apply card title styling
-    /// - Parameter colorScheme: Current color scheme
-    func cardTitleStyle(for colorScheme: ColorScheme) -> some View {
+    func cardTitleStyle() -> some View {
         self
             .font(.cardTitle)
-            .foregroundStyle(Color.primaryText(for: colorScheme))
+            .foregroundStyle(.primary)
     }
 }
 
