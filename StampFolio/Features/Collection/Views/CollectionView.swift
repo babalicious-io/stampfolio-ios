@@ -47,7 +47,7 @@ struct CollectionView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
+                ToolbarItem(placement: .topBarLeading) {
                     if showTitle {
                         customTitle
                     }
@@ -113,8 +113,6 @@ struct CollectionView: View {
                 .font(.system(size: isLandscape ? 24 : 20, weight: .light))
         }
         .foregroundStyle(.purple)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, 16)
     }
     
     // MARK: - Content
@@ -273,7 +271,7 @@ struct CollectionView: View {
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
             scrollOffset = value
             withAnimation(.easeInOut(duration: 0.2)) {
-                showTitle = value > -20
+                showTitle = value > -5
             }
         }
     }
