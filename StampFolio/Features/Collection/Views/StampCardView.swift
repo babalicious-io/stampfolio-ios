@@ -112,7 +112,7 @@ struct StampCardView: View {
                         // Edition balance - bottom right
                         stampEditions
                     }
-                    .padding(12)
+                    .padding(8)
                 }
             }
         }
@@ -194,7 +194,7 @@ struct StampCardView: View {
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.primary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 6)
                 .background(
                     Capsule()
