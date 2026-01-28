@@ -271,9 +271,8 @@ struct CollectionView: View {
         }
         .coordinateSpace(name: "scroll")
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-            scrollOffset = value
             withAnimation(.easeInOut(duration: 0.2)) {
-                showTitle = value > -20
+                showTitle = value >= -20
             }
         }
     }
