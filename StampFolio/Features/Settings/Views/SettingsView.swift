@@ -65,8 +65,6 @@ struct SettingsView: View {
                     addWalletButton
                 } header: {
                     Text("Wallets")
-                } footer: {
-                    Text("Add Bitcoin wallets to view your stamp collection. Supports all address formats.")
                 }
                 
                 // About Section
@@ -110,7 +108,7 @@ struct SettingsView: View {
     
     private var themeToggle: some View {
         Toggle(isOn: $isDarkMode) {
-            HStack(spacing: isDarkMode ? 12 : 8) {
+            HStack(spacing: isDarkMode ? 14 : 8) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
                     .foregroundStyle(.purple)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
