@@ -35,7 +35,7 @@ struct CollectionView: View {
         NavigationStack {
             ZStack {
                 // Background
-                Color(.systemBackground)
+                Color(uiColor: .systemBackground)
                     .ignoresSafeArea()
                 
                 content

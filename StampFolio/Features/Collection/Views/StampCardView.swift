@@ -127,7 +127,7 @@ struct StampCardView: View {
     
     private var placeholderView: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(uiColor: .systemBackground)
             
             VStack(spacing: 8) {
                 Image(systemName: "photo")
@@ -144,7 +144,7 @@ struct StampCardView: View {
     
     private var failedImageView: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(uiColor: .systemBackground)
             
             VStack(spacing: 8) {
                 Image(systemName: "photo.badge.exclamationmark")
@@ -176,7 +176,7 @@ struct StampCardView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
-                Color(.systemBackground).opacity(0.8)
+                Color(uiColor: .systemBackground).opacity(0.8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(Color.purple.opacity(0.3), lineWidth: 1)
@@ -200,7 +200,7 @@ struct StampCardView: View {
                 )
                 .background(
                     Circle()
-                        .fill(Color(.systemBackground).opacity(0.8))
+                        .fill(Color(uiColor: .systemBackground).opacity(0.8))
                         .frame(width: infoButtonSize + 4, height: infoButtonSize + 4)
                 )
         }
@@ -221,7 +221,7 @@ struct StampWebView: UIViewRepresentable {
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
-        let backgroundColor = UIColor(.systemBackground)
+        let backgroundColor = UIColor.systemBackground
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         webView.scrollView.isScrollEnabled = false
@@ -234,7 +234,7 @@ struct StampWebView: UIViewRepresentable {
         guard let url = url else { return }
         
         // Update background color for color scheme changes
-        let backgroundColor = UIColor(.systemBackground)
+        let backgroundColor = UIColor.systemBackground
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         
