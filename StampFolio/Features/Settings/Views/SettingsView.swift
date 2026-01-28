@@ -110,7 +110,7 @@ struct SettingsView: View {
     
     private var themeToggle: some View {
         Toggle(isOn: $isDarkMode) {
-            HStack(spacing: 8) {
+            HStack(spacing: isDarkMode ? 12 : 8) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
                     .foregroundStyle(.purple)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
@@ -200,22 +200,14 @@ struct WalletRow: View {
                 
                 Spacer()
                 
-                if let count = wallet.cachedStampCount {
-                    Text("\(count) stamps")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Text(wallet.addressType.rawValue)
+                    .font(.caption2)
+                    .foregroundStyle(.purple)
             }
             
-            Text(wallet.address)
+            Text(wallet.address.truncatedAddress(prefixLength: 8, suffixLength: 8))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-            
-            Text(wallet.addressType.rawValue)
-                .font(.caption2)
-                .foregroundStyle(.purple)
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
