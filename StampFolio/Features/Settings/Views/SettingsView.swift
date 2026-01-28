@@ -216,9 +216,11 @@ struct WalletRow: View {
             }
             
             HStack {
-                Text(wallet.address.truncatedAddress(prefixLength: 8, suffixLength: 8))
+                Text(wallet.address)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
                 
                 Spacer()
                 
