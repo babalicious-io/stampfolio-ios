@@ -21,6 +21,7 @@ struct CollectionView: View {
     // MARK: - State
     
     @State private var showOfflineBanner = false
+    @State private var showSettings = false
     
     // MARK: - Layout
     
@@ -40,12 +41,24 @@ struct CollectionView: View {
                 
                 content
             }
-            .navigationTitle("Collection")
+            .navigationTitle("StampFolio")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.purple)
+                    HStack(spacing: 16) {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(.purple)
+                        }
+                        
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.title3)
+                                .foregroundStyle(.purple)
+                        }
+                        .accessibilityLabel("Settings")
+                        .accessibilityHint("Opens the settings screen")
                     }
                 }
             }
@@ -70,6 +83,9 @@ struct CollectionView: View {
                 StampMetadataPopup(stamp: displayStamp.stamp)
                     .presentationDetents([.medium])
                     .presentationBackground(.ultraThinMaterial)
+            }
+            .fullScreenCover(isPresented: $showSettings) {
+                SettingsView()
             }
         }
         .stampchainBackground()
@@ -111,8 +127,8 @@ struct CollectionView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             
-            NavigationLink {
-                SettingsView()
+            Button {
+                showSettings = true
             } label: {
                 Text("Add Wallet")
                     .fontWeight(.semibold)
