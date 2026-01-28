@@ -50,7 +50,7 @@ struct SettingsView: View {
                                     } label: {
                                         Label("Edit", systemImage: "pencil")
                                     }
-                                    .tint(.blue)
+                                    .tint(.purple)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
@@ -192,10 +192,20 @@ struct SettingsView: View {
 struct WalletRow: View {
     let wallet: Wallet
     
+    private var displayName: String {
+        let name = wallet.displayName
+        if name.count > 24 {
+            let prefix = name.prefix(8)
+            let suffix = name.suffix(8)
+            return "\(prefix)...\(suffix)"
+        }
+        return name
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(wallet.displayName)
+                Text(displayName)
                     .font(.body)
                 
                 Spacer()
@@ -205,9 +215,19 @@ struct WalletRow: View {
                     .foregroundStyle(.purple)
             }
             
-            Text(wallet.address.truncatedAddress(prefixLength: 8, suffixLength: 8))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack {
+                Text(wallet.address.truncatedAddress(prefixLength: 8, suffixLength: 8))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                
+                Spacer()
+                
+                if let count = wallet.cachedStampCount {
+                    Text("\(count) stamps")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
