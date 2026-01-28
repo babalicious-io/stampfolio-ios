@@ -24,7 +24,6 @@ struct CollectionView: View {
     
     @State private var showOfflineBanner = false
     @State private var showSettings = false
-    @State private var scrollOffset: CGFloat = 0
     @State private var showTitle = true
     
     // MARK: - Layout
@@ -48,9 +47,12 @@ struct CollectionView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if showTitle {
-                        customTitle
+                    Group {
+                        if showTitle {
+                            customTitle
+                        }
                     }
+                    .buttonStyle(.plain)
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -271,7 +273,7 @@ struct CollectionView: View {
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
             scrollOffset = value
             withAnimation(.easeInOut(duration: 0.2)) {
-                showTitle = value > -5
+                showTitle = value > -20
             }
         }
     }
