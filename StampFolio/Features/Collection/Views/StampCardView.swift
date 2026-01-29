@@ -130,7 +130,6 @@ struct StampCardView: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
-        // .clipShape(RoundedRectangle(cornerRadius: 24))
     }
     
     // MARK: - Placeholder View
@@ -251,60 +250,17 @@ struct StampCardView: View {
 struct StampWebView: UIViewRepresentable {
     let url: URL?
     
-    // Shared process pool for all stamp WebViews - improves caching consistency
-    // and reduces memory usage when displaying multiple HTML stamps
-    private static let sharedProcessPool = WKProcessPool()
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-    
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
-        config.processPool = Self.sharedProcessPool
-        
-        // Use default persistent data store for caching (fonts, CSS, etc.)
-        config.websiteDataStore = .default()
-        
-        // Only add viewport meta if one doesn't exist (many HTML stamps already have one)
-        // This prevents duplicate viewport tags which can cause rendering issues
-        let viewportScript = """
-        if (!document.querySelector('meta[name="viewport"]')) {
-            var meta = document.createElement('meta');
-            meta.name = 'viewport';
-            meta.content = 'width=device-width, initial-scale=1.0';
-            document.getElementsByTagName('head')[0].appendChild(meta);
-        }
-        """
-        let userScript = WKUserScript(
-            source: viewportScript,
-            injectionTime: .atDocumentEnd,
-            forMainFrameOnly: true
-        )
-        config.userContentController.addUserScript(userScript)
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
         let backgroundColor = UIColor.systemBackground
         webView.backgroundColor = backgroundColor
-        
-        // Configure scrollView to prevent zoom/shrink behavior
-        let scrollView = webView.scrollView
-        scrollView.backgroundColor = backgroundColor
-        scrollView.isScrollEnabled = false
-        scrollView.bounces = false
-        scrollView.bouncesZoom = false
-        scrollView.minimumZoomScale = 1.0
-        scrollView.maximumZoomScale = 1.0
-        scrollView.zoomScale = 1.0
-        scrollView.contentInsetAdjustmentBehavior = .never
-        scrollView.delegate = context.coordinator // Prevent zoom changes
-        
+        webView.scrollView.backgroundColor = backgroundColor
+        webView.scrollView.isScrollEnabled = false
         webView.isUserInteractionEnabled = false // Disable interaction in grid
-        
-        // Lock page zoom (iOS 14+)
-        webView.pageZoom = 1.0
         
         return webView
     }
@@ -317,34 +273,10 @@ struct StampWebView: UIViewRepresentable {
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         
-        // Ensure zoom stays locked
-        webView.scrollView.zoomScale = 1.0
-        webView.pageZoom = 1.0
-        
-        // Track loaded URL in coordinator to prevent unnecessary reloads
-        // webView.url can be nil or different during loading, causing race conditions
-        if context.coordinator.loadedURL != url {
-            context.coordinator.loadedURL = url
-            let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
+        // Only load if URL changed
+        if webView.url != url {
+            let request = URLRequest(url: url)
             webView.load(request)
-        }
-    }
-    
-    // MARK: - Coordinator
-    
-    class Coordinator: NSObject, UIScrollViewDelegate {
-        var loadedURL: URL?
-        
-        // Prevent any zooming by returning nil
-        func viewForZooming(in scrollView: UIScrollView) -> UIView? {
-            return nil
-        }
-        
-        // Force reset zoom if it changes
-        func scrollViewDidZoom(_ scrollView: UIScrollView) {
-            if scrollView.zoomScale != 1.0 {
-                scrollView.zoomScale = 1.0
-            }
         }
     }
 }
