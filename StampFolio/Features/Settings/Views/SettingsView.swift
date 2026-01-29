@@ -45,26 +45,14 @@ struct SettingsView: View {
                         ForEach(wallets) { wallet in
                             WalletRow(wallet: wallet)
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                    Button {
+                                    Button("Edit", systemImage: "pencil") {
                                         editingWallet = wallet
-                                    } label: {
-                                        VStack(spacing: 2) {
-                                            Image(systemName: "pencil")
-                                            Text("Edit")
-                                                .font(.caption2)
-                                        }
                                     }
                                     .tint(.purple)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
+                                    Button("Delete", systemImage: "trash", role: .destructive) {
                                         deleteWallet(wallet)
-                                    } label: {
-                                        VStack(spacing: 2) {
-                                            Image(systemName: "trash")
-                                            Text("Delete")
-                                                .font(.caption2)
-                                        }
                                     }
                                 }
                         }
