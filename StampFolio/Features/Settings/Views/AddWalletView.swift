@@ -38,8 +38,6 @@ struct AddWalletView: View {
                         .accessibilityHint("Enter a custom name for this wallet")
                 } header: {
                     Text("Wallet Name")
-                } footer: {
-                    Text("Give this wallet a custom name to easily identify it. Leave empty to use the truncated address.")
                 }
                 
                 // Wallet Color Section
@@ -90,7 +88,7 @@ struct AddWalletView: View {
                         viewModel.showQRScanner = true
                     } label: {
                         HStack {
-                            Image(systemName: "qrcode.viewfinder")
+                            Image(systemName: "qrcode")
                             Text("Scan QR Code")
                         }
                     }
@@ -105,7 +103,7 @@ struct AddWalletView: View {
                                 .foregroundStyle(.red)
                         }
                         
-                        Text("Supports all Bitcoin address formats: Legacy (1...), P2SH (3...), SegWit (bc1q...), Taproot (bc1p...)")
+                        Text("Supports all Bitcoin address formats.")
                             .foregroundStyle(.secondary)
                     }
                 }

@@ -71,7 +71,7 @@ struct QRScannerView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(.purple)
                 
-                Text("Point your camera at a Bitcoin wallet QR code")
+                Text("Point your camera at the wallet QR code")
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.primary)
@@ -89,9 +89,9 @@ struct QRScannerView: View {
     
     private var unsupportedView: some View {
         VStack(spacing: 24) {
-            Image(systemName: "camera.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.secondary)
+            Image(systemName: "camera")
+                .font(.system(size: 60))
+                .foregroundStyle(.primary)
             
             Text("Camera Not Available")
                 .font(.title2)
