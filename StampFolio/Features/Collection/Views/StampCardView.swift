@@ -255,39 +255,28 @@ struct StampCardView: View {
 
 // MARK: - Stamp WebView Store
 
-final class StampWebViewStore: ObservableObject {
+final class StampWebViewStore: NSObject, ObservableObject, WKNavigationDelegate {
     private static let sharedProcessPool = WKProcessPool()
     let webView: WKWebView
     private var loadedURL: URL?
     
-    init() {
+    override init() {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.processPool = Self.sharedProcessPool
         config.websiteDataStore = .default()
         
-        let viewportScript = """
-        if (!document.querySelector('meta[name="viewport"]')) {
-            var meta = document.createElement('meta');
-            meta.name = 'viewport';
-            meta.content = 'width=device-width, initial-scale=1.0';
-            document.getElementsByTagName('head')[0].appendChild(meta);
-        }
-        """
-        let userScript = WKUserScript(
-            source: viewportScript,
-            injectionTime: .atDocumentEnd,
-            forMainFrameOnly: true
-        )
-        config.userContentController.addUserScript(userScript)
-        
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
         webView.scrollView.isScrollEnabled = false
         webView.isUserInteractionEnabled = false
+        webView.scrollView.bouncesZoom = false
+        webView.scrollView.minimumZoomScale = 1.0
+        webView.scrollView.maximumZoomScale = 1.0
         let backgroundColor = UIColor.systemBackground
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
+        webView.navigationDelegate = self
         self.webView = webView
     }
     
@@ -298,6 +287,28 @@ final class StampWebViewStore: ObservableObject {
             let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
             webView.load(request)
         }
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        // Force viewport to the actual webview width to prevent post-load shrinking.
+        let viewportScript = """
+        (function() {
+            var meta = document.querySelector('meta[name="viewport"]');
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = 'viewport';
+                document.getElementsByTagName('head')[0].appendChild(meta);
+            }
+            var width = Math.max(1, Math.round(window.innerWidth));
+            meta.setAttribute('content', 'width=' + width + ', initial-scale=1.0, viewport-fit=cover');
+            document.documentElement.style.width = '100%';
+            document.documentElement.style.height = '100%';
+            document.body.style.width = '100%';
+            document.body.style.height = '100%';
+        })();
+        """
+        webView.evaluateJavaScript(viewportScript, completionHandler: nil)
+        webView.scrollView.setZoomScale(1.0, animated: false)
     }
 }
 
