@@ -33,6 +33,8 @@ struct CollectionView: View {
     // MARK: - Body
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+
         NavigationStack {
             ZStack {
                 // Background
@@ -75,10 +77,10 @@ struct CollectionView: View {
             .onChange(of: networkMonitor.isConnected) { _, isConnected in
                 showOfflineBanner = !isConnected
             }
-            .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
+            .fullScreenCover(item: $viewModel.selectedStamp) { displayStamp in
                 StampDetailView(stamp: displayStamp.stamp)
             }
-            .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
+            .sheet(item: $viewModel.metadataStamp) { displayStamp in
                 StampMetadataPopup(stamp: displayStamp.stamp)
                     .presentationDetents([.medium])
                     .presentationBackground(.ultraThinMaterial)
