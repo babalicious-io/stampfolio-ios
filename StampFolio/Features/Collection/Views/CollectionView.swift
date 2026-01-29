@@ -48,7 +48,7 @@ struct CollectionView: View {
                         Button {
                             showSettings = true
                         } label: {
-                            Image(systemName: "ellipsis.circle")
+                            Image(systemName: "ellipsis")
                                 .font(.title3)
                         }
                         .accessibilityLabel("Settings")
