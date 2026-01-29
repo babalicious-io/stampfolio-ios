@@ -76,9 +76,9 @@ struct QRScannerView: View {
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.primary)
             }
-            .padding()
+            .padding(.horizontal, 32)
+            .padding(.vertical, 16) 
             .glassEffect(in: .rect(cornerRadius: 24))
-            .padding()
             
             Spacer()
                 .frame(height: 100)
