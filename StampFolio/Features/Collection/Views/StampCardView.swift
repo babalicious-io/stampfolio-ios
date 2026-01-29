@@ -32,6 +32,7 @@ struct StampCardView: View {
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @State private var isPressed = false
     @State private var imageLoadFailed = false
+    @StateObject private var webViewStore = StampWebViewStore()
     
     // MARK: - Body
     
@@ -63,8 +64,14 @@ struct StampCardView: View {
                     failedImageView
                 } else if stamp.isHTML || stamp.isSVG {
                     // Use WebView for HTML and SVG content
-                    StampWebView(url: stamp.imageURL)
+                    StampWebView(webView: webViewStore.webView)
                         .frame(width: geometry.size.width, height: geometry.size.width)
+                        .onAppear {
+                            webViewStore.loadIfNeeded(url: stamp.imageURL)
+                        }
+                        .onChange(of: stamp.id) { _, _ in
+                            webViewStore.loadIfNeeded(url: stamp.imageURL)
+                        }
                 } else if stamp.isAnimated {
                     // Use KFAnimatedImage for GIFs
                     KFAnimatedImage(stamp.imageURL)
@@ -246,29 +253,19 @@ struct StampCardView: View {
     }
 }
 
-// MARK: - Stamp WebView for HTML/SVG Content
+// MARK: - Stamp WebView Store
 
-struct StampWebView: UIViewRepresentable {
-    let url: URL?
-    
-    // Shared process pool for all stamp WebViews - improves caching consistency
-    // and reduces memory usage when displaying multiple HTML stamps
+final class StampWebViewStore: ObservableObject {
     private static let sharedProcessPool = WKProcessPool()
+    let webView: WKWebView
+    private var loadedURL: URL?
     
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-    
-    func makeUIView(context: Context) -> WKWebView {
+    init() {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.processPool = Self.sharedProcessPool
-        
-        // Use default persistent data store for caching (fonts, CSS, etc.)
         config.websiteDataStore = .default()
         
-        // Only add viewport meta if one doesn't exist (many HTML stamps already have one)
-        // This prevents duplicate viewport tags which can cause rendering issues
         let viewportScript = """
         if (!document.querySelector('meta[name="viewport"]')) {
             var meta = document.createElement('meta');
@@ -286,36 +283,37 @@ struct StampWebView: UIViewRepresentable {
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
+        webView.scrollView.isScrollEnabled = false
+        webView.isUserInteractionEnabled = false
         let backgroundColor = UIColor.systemBackground
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
-        webView.scrollView.isScrollEnabled = false
-        webView.isUserInteractionEnabled = false // Disable interaction in grid
-        
-        return webView
+        self.webView = webView
     }
     
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        guard let url = url else { return }
-        
-        // Update background color for color scheme changes
-        let backgroundColor = UIColor.systemBackground
-        webView.backgroundColor = backgroundColor
-        webView.scrollView.backgroundColor = backgroundColor
-        
-        // Track loaded URL in coordinator to prevent unnecessary reloads
-        // webView.url can be nil or different during loading, causing race conditions
-        if context.coordinator.loadedURL != url {
-            context.coordinator.loadedURL = url
+    func loadIfNeeded(url: URL?) {
+        guard let url else { return }
+        if loadedURL != url {
+            loadedURL = url
             let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
             webView.load(request)
         }
     }
+}
+
+// MARK: - Stamp WebView for HTML/SVG Content
+
+struct StampWebView: UIViewRepresentable {
+    let webView: WKWebView
     
-    // MARK: - Coordinator
+    func makeUIView(context: Context) -> WKWebView {
+        return webView
+    }
     
-    class Coordinator {
-        var loadedURL: URL?
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        let backgroundColor = UIColor.systemBackground
+        webView.backgroundColor = backgroundColor
+        webView.scrollView.backgroundColor = backgroundColor
     }
 }
 
