@@ -34,12 +34,12 @@ struct QRScannerView: View {
                 if DataScannerViewController.isSupported && DataScannerViewController.isAvailable {
                     DataScannerRepresentable(onScan: handleScan)
                         .ignoresSafeArea()
+                    
+                    // Scanning overlay - only when scanner is available
+                    scanningOverlay
                 } else {
                     unsupportedView
                 }
-                
-                // Scanning overlay
-                scanningOverlay
             }
             .navigationTitle("Scan QR Code")
             .navigationBarTitleDisplayMode(.inline)
