@@ -251,17 +251,31 @@ struct StampCardView: View {
 struct StampWebView: UIViewRepresentable {
     let url: URL?
     
+    // Shared process pool for all stamp WebViews - improves caching consistency
+    // and reduces memory usage when displaying multiple HTML stamps
+    private static let sharedProcessPool = WKProcessPool()
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
+        config.processPool = Self.sharedProcessPool
         
-        // Inject viewport meta tag to make content responsive to container size
-        // This is the standard approach recommended for WKWebView scaling
+        // Use default persistent data store for caching (fonts, CSS, etc.)
+        config.websiteDataStore = .default()
+        
+        // Only add viewport meta if one doesn't exist (many HTML stamps already have one)
+        // This prevents duplicate viewport tags which can cause rendering issues
         let viewportScript = """
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, initial-scale=1.0, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
+        if (!document.querySelector('meta[name="viewport"]')) {
+            var meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, initial-scale=1.0';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+        }
         """
         let userScript = WKUserScript(
             source: viewportScript,
@@ -289,11 +303,19 @@ struct StampWebView: UIViewRepresentable {
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         
-        // Only load if URL changed
-        if webView.url != url {
-            let request = URLRequest(url: url)
+        // Track loaded URL in coordinator to prevent unnecessary reloads
+        // webView.url can be nil or different during loading, causing race conditions
+        if context.coordinator.loadedURL != url {
+            context.coordinator.loadedURL = url
+            let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
             webView.load(request)
         }
+    }
+    
+    // MARK: - Coordinator
+    
+    class Coordinator {
+        var loadedURL: URL?
     }
 }
 
