@@ -44,17 +44,12 @@ struct CollectionView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .tint(.purple)
-                        }
                         
                         Button {
                             showSettings = true
                         } label: {
                             Image(systemName: "ellipsis.circle")
                                 .font(.title3)
-                                .foregroundStyle(.purple)
                         }
                         .accessibilityLabel("Settings")
                         .accessibilityHint("Opens the settings screen")
@@ -111,6 +106,7 @@ struct CollectionView: View {
             stampsGrid
         }
     }
+    
     
     // MARK: - Empty Wallets View
     
