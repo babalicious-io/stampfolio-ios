@@ -24,8 +24,8 @@ final class Wallet {
     /// Optional user-provided label for the wallet
     var label: String?
     
-    /// User-selected color for the wallet icon
-    var colorName: String
+    /// User-selected color for the wallet icon (defaults to purple for existing wallets)
+    var colorName: String?
     
     /// Cached stamp count (updated on refresh)
     var cachedStampCount: Int?
@@ -35,7 +35,7 @@ final class Wallet {
     
     // MARK: - Initialization
     
-    init(address: String, label: String? = nil, colorName: String = WalletColor.purple.rawValue) {
+    init(address: String, label: String? = nil, colorName: String? = WalletColor.purple.rawValue) {
         self.address = address
         self.addedDate = Date()
         self.label = label
@@ -59,6 +59,11 @@ final class Wallet {
     /// Detected address type
     var addressType: BitcoinAddressType {
         BitcoinAddressType.detect(from: address)
+    }
+    
+    /// Wallet color with fallback to purple for existing wallets
+    var walletColor: WalletColor {
+        WalletColor.from(name: colorName ?? WalletColor.purple.rawValue)
     }
 }
 

@@ -205,7 +205,7 @@ struct WalletRow: View {
             HStack {
                 Image(systemName: "wallet.bifold.fill")
                     .font(.body)
-                    .foregroundStyle(WalletColor.from(name: wallet.colorName).color)
+                    .foregroundStyle(wallet.walletColor.color)
                 
                 Text(displayName)
                     .font(.body)

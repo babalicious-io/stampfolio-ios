@@ -115,7 +115,7 @@ struct EditWalletView: View {
             }
             .onAppear {
                 walletName = wallet.label ?? ""
-                selectedColor = WalletColor.from(name: wallet.colorName)
+                selectedColor = wallet.walletColor
                 isNameFocused = true
             }
         }
