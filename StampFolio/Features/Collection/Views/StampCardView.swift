@@ -61,12 +61,10 @@ struct StampCardView: View {
                 // Stamp image
                 if imageLoadFailed {
                     failedImageView
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 } else if stamp.isHTML || stamp.isSVG {
                     // Use WebView for HTML and SVG content
                     StampWebView(url: stamp.imageURL)
                         .frame(width: geometry.size.width, height: geometry.size.width)
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 } else if stamp.isAnimated {
                     // Use KFAnimatedImage for GIFs
                     KFAnimatedImage(stamp.imageURL)
@@ -81,7 +79,6 @@ struct StampCardView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width, height: geometry.size.width)
                         .clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 } else {
                     // Use KFImage for regular images
                     KFImage(stamp.imageURL)
@@ -104,7 +101,6 @@ struct StampCardView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width, height: geometry.size.width)
                         .clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 }
                 
                 // Overlay: Wallet icon (top right), Stamp number (bottom left) and Edition balance (bottom right)
@@ -134,6 +130,7 @@ struct StampCardView: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
     
     // MARK: - Placeholder View
@@ -151,7 +148,6 @@ struct StampCardView: View {
                     .tint(.purple)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
     
     // MARK: - Failed Image View
@@ -255,6 +251,10 @@ struct StampCardView: View {
 struct StampWebView: UIViewRepresentable {
     let url: URL?
     
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
@@ -266,6 +266,7 @@ struct StampWebView: UIViewRepresentable {
         webView.scrollView.backgroundColor = backgroundColor
         webView.scrollView.isScrollEnabled = false
         webView.isUserInteractionEnabled = false // Disable interaction in grid
+        webView.navigationDelegate = context.coordinator
         
         return webView
     }
@@ -282,6 +283,59 @@ struct StampWebView: UIViewRepresentable {
         if webView.url != url {
             let request = URLRequest(url: url)
             webView.load(request)
+        }
+    }
+    
+    // MARK: - Coordinator
+    
+    class Coordinator: NSObject, WKNavigationDelegate {
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            // Inject JavaScript to scale content to fill the WebView
+            let scaleScript = """
+            (function() {
+                // Get the content element (body or first child)
+                var content = document.body;
+                if (!content) return;
+                
+                // Reset any existing transforms and ensure content is visible
+                document.body.style.margin = '0';
+                document.body.style.padding = '0';
+                document.body.style.overflow = 'hidden';
+                
+                // Get the actual content dimensions
+                var contentWidth = Math.max(
+                    document.documentElement.scrollWidth,
+                    document.body.scrollWidth,
+                    document.body.offsetWidth
+                );
+                var contentHeight = Math.max(
+                    document.documentElement.scrollHeight,
+                    document.body.scrollHeight,
+                    document.body.offsetHeight
+                );
+                
+                // Get the viewport dimensions
+                var viewportWidth = window.innerWidth;
+                var viewportHeight = window.innerHeight;
+                
+                // Calculate scale to fill (cover) the viewport
+                if (contentWidth > 0 && contentHeight > 0) {
+                    var scaleX = viewportWidth / contentWidth;
+                    var scaleY = viewportHeight / contentHeight;
+                    var scale = Math.max(scaleX, scaleY); // Use max for "fill" behavior
+                    
+                    // Apply transform to scale and center
+                    document.body.style.transformOrigin = 'center center';
+                    document.body.style.transform = 'scale(' + scale + ')';
+                    document.body.style.display = 'flex';
+                    document.body.style.justifyContent = 'center';
+                    document.body.style.alignItems = 'center';
+                    document.body.style.width = '100vw';
+                    document.body.style.height = '100vh';
+                }
+            })();
+            """
+            webView.evaluateJavaScript(scaleScript, completionHandler: nil)
         }
     }
 }
