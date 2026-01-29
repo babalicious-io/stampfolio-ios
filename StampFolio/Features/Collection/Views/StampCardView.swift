@@ -267,15 +267,15 @@ struct StampWebView: UIViewRepresentable {
         // Use default persistent data store for caching (fonts, CSS, etc.)
         config.websiteDataStore = .default()
         
-        // Only add viewport meta if one doesn't exist (many HTML stamps already have one)
-        // This prevents duplicate viewport tags which can cause rendering issues
+        // Override viewport for ALL stamps to ensure consistent scaling
+        // This replaces any existing viewport to prevent shrinking issues
         let viewportScript = """
-        if (!document.querySelector('meta[name="viewport"]')) {
-            var meta = document.createElement('meta');
-            meta.name = 'viewport';
-            meta.content = 'width=device-width, initial-scale=1.0';
-            document.getElementsByTagName('head')[0].appendChild(meta);
-        }
+        var existing = document.querySelector('meta[name="viewport"]');
+        if (existing) existing.remove();
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.getElementsByTagName('head')[0].appendChild(meta);
         """
         let userScript = WKUserScript(
             source: viewportScript,
@@ -288,9 +288,23 @@ struct StampWebView: UIViewRepresentable {
         webView.isOpaque = false
         let backgroundColor = UIColor.systemBackground
         webView.backgroundColor = backgroundColor
-        webView.scrollView.backgroundColor = backgroundColor
-        webView.scrollView.isScrollEnabled = false
+        
+        // Configure scrollView to prevent zoom/shrink behavior
+        let scrollView = webView.scrollView
+        scrollView.backgroundColor = backgroundColor
+        scrollView.isScrollEnabled = false
+        scrollView.bounces = false
+        scrollView.bouncesZoom = false
+        scrollView.minimumZoomScale = 1.0
+        scrollView.maximumZoomScale = 1.0
+        scrollView.zoomScale = 1.0
+        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.delegate = context.coordinator // Prevent zoom changes
+        
         webView.isUserInteractionEnabled = false // Disable interaction in grid
+        
+        // Lock page zoom (iOS 14+)
+        webView.pageZoom = 1.0
         
         return webView
     }
@@ -303,6 +317,10 @@ struct StampWebView: UIViewRepresentable {
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         
+        // Ensure zoom stays locked
+        webView.scrollView.zoomScale = 1.0
+        webView.pageZoom = 1.0
+        
         // Track loaded URL in coordinator to prevent unnecessary reloads
         // webView.url can be nil or different during loading, causing race conditions
         if context.coordinator.loadedURL != url {
@@ -314,8 +332,20 @@ struct StampWebView: UIViewRepresentable {
     
     // MARK: - Coordinator
     
-    class Coordinator {
+    class Coordinator: NSObject, UIScrollViewDelegate {
         var loadedURL: URL?
+        
+        // Prevent any zooming by returning nil
+        func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+            return nil
+        }
+        
+        // Force reset zoom if it changes
+        func scrollViewDidZoom(_ scrollView: UIScrollView) {
+            if scrollView.zoomScale != 1.0 {
+                scrollView.zoomScale = 1.0
+            }
+        }
     }
 }
 
