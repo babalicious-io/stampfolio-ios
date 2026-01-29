@@ -130,7 +130,7 @@ struct StampCardView: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
+        // .clipShape(RoundedRectangle(cornerRadius: 24))
     }
     
     // MARK: - Placeholder View
