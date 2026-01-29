@@ -47,7 +47,9 @@ struct AddWalletView: View {
                     HStack(spacing: 16) {
                         ForEach(WalletColor.allCases) { color in
                             Button {
-                                selectedColor = color
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedColor = color
+                                }
                             } label: {
                                 ZStack {
                                     Circle()
@@ -59,9 +61,11 @@ struct AddWalletView: View {
                                             .font(.body)
                                             .fontWeight(.semibold)
                                             .foregroundStyle(.white)
+                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                                     }
                                 }
                             }
+                            .buttonStyle(.plain)
                             .accessibilityLabel("\(color.displayName) color")
                             .accessibilityHint(selectedColor == color ? "Selected" : "Select this color")
                         }
