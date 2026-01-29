@@ -237,6 +237,7 @@ struct CollectionView: View {
                             viewModel.metadataStamp = displayStamp
                         }
                     )
+                    .id(displayStamp.id) // Stable identity helps SwiftUI track views in LazyVGrid
                 }
             }
             .padding()
