@@ -34,11 +34,7 @@ struct StampCardView: View {
     
     var body: some View {
         stampContent
-            .background {
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(.ultraThinMaterial)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .glassEffect(in: .rect(cornerRadius: 24))
             .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)

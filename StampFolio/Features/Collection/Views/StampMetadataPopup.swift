@@ -186,8 +186,7 @@ struct StampMetadataPopup: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(.glass.regular)
-            .clipShape(Capsule())
+            .glassEffect(in: .capsule)
         }
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")

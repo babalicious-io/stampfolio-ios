@@ -135,8 +135,7 @@ struct CollectionView: View {
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(.glass.regular)
-                    .clipShape(Capsule())
+                    .glassEffect(in: .capsule)
             }
             .accessibilityLabel("Add a Bitcoin wallet")
             .accessibilityHint("Opens the settings screen to add a wallet")
@@ -189,8 +188,7 @@ struct CollectionView: View {
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(.glass.regular)
-                    .clipShape(Capsule())
+                    .glassEffect(in: .capsule)
             }
             .accessibilityLabel("Retry loading stamps")
         }
