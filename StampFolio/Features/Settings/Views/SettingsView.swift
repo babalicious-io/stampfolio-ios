@@ -138,7 +138,7 @@ struct SettingsView: View {
             viewModel.showAddWallet = true
         } label: {
             HStack {
-                Image(systemName: "wallet.badge.plus.fill")
+                Image(systemName: "plus.circle.fill")
                     .foregroundStyle(.purple)
                 Text("Add Wallet")
             }
@@ -203,6 +203,9 @@ struct WalletRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
+                Image(systemName: "wallet.bifold.fill")
+                    .font(.body)
+                
                 Text(displayName)
                     .font(.body)
                 
