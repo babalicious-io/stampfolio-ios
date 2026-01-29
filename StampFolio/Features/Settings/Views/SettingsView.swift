@@ -48,7 +48,12 @@ struct SettingsView: View {
                                     Button {
                                         editingWallet = wallet
                                     } label: {
-                                        Label("Edit", systemImage: "pencil")
+                                        VStack(spacing: 4) {
+                                            Image(systemName: "pencil")
+                                                .font(.title3)
+                                            Text("Edit")
+                                                .font(.caption)
+                                        }
                                     }
                                     .tint(.purple)
                                 }
@@ -56,7 +61,12 @@ struct SettingsView: View {
                                     Button(role: .destructive) {
                                         deleteWallet(wallet)
                                     } label: {
-                                        Label("Delete", systemImage: "trash")
+                                        VStack(spacing: 4) {
+                                            Image(systemName: "trash")
+                                                .font(.title3)
+                                            Text("Delete")
+                                                .font(.caption)
+                                        }
                                     }
                                 }
                         }
