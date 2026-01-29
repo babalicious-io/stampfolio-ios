@@ -71,10 +71,10 @@ final class Wallet {
 
 /// Bitcoin address format types
 enum BitcoinAddressType: String, CaseIterable {
-    case legacy = "Legacy (P2PKH)"
-    case segwitP2SH = "SegWit (P2SH)"
-    case nativeSegwit = "Native SegWit (Bech32)"
-    case taproot = "Taproot (Bech32m)"
+    case legacy = "Legacy"
+    case segwitP2SH = "SegWit"
+    case nativeSegwit = "Native SegWit"
+    case taproot = "Taproot"
     case unknown = "Unknown"
     
     /// Detect address type from a Bitcoin address string

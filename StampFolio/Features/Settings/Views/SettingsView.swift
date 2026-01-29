@@ -237,8 +237,7 @@ struct WalletRow: View {
                 
                 Text(wallet.addressType.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(.purple)
-                    .opacity(0.7)
+                    .foregroundStyle(.purple.secondary)
             }
             
             HStack {
