@@ -57,7 +57,7 @@ Simply mention a rule with `@` in your message:
 
 #### 1️⃣ **Starting a New Feature**
 ```
-"I need to implement user authentication. @prepare @propose"
+"I need to implement user authentication. x$"
 ```
 Then implement:
 ```
