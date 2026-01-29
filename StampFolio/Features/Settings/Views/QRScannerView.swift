@@ -94,7 +94,7 @@ struct QRScannerView: View {
             Text("Camera Not Available")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(.purple.primary)
+                .foregroundStyle(.purple)
             
             Text("QR code scanning requires camera access. Please enable camera permissions in Settings.")
                 .font(.body)
