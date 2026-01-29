@@ -24,6 +24,9 @@ final class Wallet {
     /// Optional user-provided label for the wallet
     var label: String?
     
+    /// User-selected color for the wallet icon
+    var colorName: String
+    
     /// Cached stamp count (updated on refresh)
     var cachedStampCount: Int?
     
@@ -32,10 +35,11 @@ final class Wallet {
     
     // MARK: - Initialization
     
-    init(address: String, label: String? = nil) {
+    init(address: String, label: String? = nil, colorName: String = WalletColor.purple.rawValue) {
         self.address = address
         self.addedDate = Date()
         self.label = label
+        self.colorName = colorName
         self.cachedStampCount = nil
         self.lastFetchDate = nil
     }
@@ -81,6 +85,41 @@ enum BitcoinAddressType: String, CaseIterable {
         } else {
             return .unknown
         }
+    }
+}
+
+// MARK: - Wallet Color
+
+import SwiftUI
+
+/// Predefined wallet colors using native SwiftUI colors
+enum WalletColor: String, CaseIterable, Identifiable {
+    case purple
+    case orange
+    case red
+    case green
+    case blue
+    case gray
+    
+    var id: String { rawValue }
+    
+    var color: Color {
+        switch self {
+        case .purple: return .purple
+        case .orange: return .orange
+        case .red: return .red
+        case .green: return .green
+        case .blue: return .blue
+        case .gray: return .gray
+        }
+    }
+    
+    var displayName: String {
+        rawValue.capitalized
+    }
+    
+    static func from(name: String) -> WalletColor {
+        WalletColor.allCases.first { $0.rawValue == name } ?? .purple
     }
 }
 

@@ -20,6 +20,7 @@ struct AddWalletView: View {
     // MARK: - State
     
     @State private var walletName: String = ""
+    @State private var selectedColor: WalletColor = .purple
     @FocusState private var isAddressFocused: Bool
     
     // MARK: - Body
@@ -39,6 +40,36 @@ struct AddWalletView: View {
                     Text("Wallet Name")
                 } footer: {
                     Text("Give this wallet a custom name to easily identify it. Leave empty to use the truncated address.")
+                }
+                
+                // Wallet Color Section
+                Section {
+                    HStack(spacing: 16) {
+                        ForEach(WalletColor.allCases) { color in
+                            Button {
+                                selectedColor = color
+                            } label: {
+                                ZStack {
+                                    Circle()
+                                        .fill(color.color)
+                                        .frame(width: 40, height: 40)
+                                    
+                                    if selectedColor == color {
+                                        Image(systemName: "checkmark")
+                                            .font(.body)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(.white)
+                                    }
+                                }
+                            }
+                            .accessibilityLabel("\(color.displayName) color")
+                            .accessibilityHint(selectedColor == color ? "Selected" : "Select this color")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                } header: {
+                    Text("Wallet Color")
                 }
                 
                 // Address Input Section
@@ -91,6 +122,7 @@ struct AddWalletView: View {
                     Button("Cancel") {
                         viewModel.walletAddressInput = ""
                         walletName = ""
+                        selectedColor = .purple
                         viewModel.resetValidation()
                         dismiss()
                     }
@@ -104,11 +136,13 @@ struct AddWalletView: View {
                             await viewModel.addWallet(
                                 address: viewModel.walletAddressInput,
                                 label: label,
+                                colorName: selectedColor.rawValue,
                                 context: modelContext
                             )
                             if !viewModel.showAddWallet {
-                                // Reset wallet name if successfully added
+                                // Reset wallet name and color if successfully added
                                 walletName = ""
+                                selectedColor = .purple
                             }
                         }
                     }

@@ -23,6 +23,7 @@ struct EditWalletView: View {
     // MARK: - State
     
     @State private var walletName: String = ""
+    @State private var selectedColor: WalletColor = .purple
     @FocusState private var isNameFocused: Bool
     
     // MARK: - Body
@@ -41,13 +42,32 @@ struct EditWalletView: View {
                 } 
                 
                 Section {
-                    ColorPicker("Color", selection: $walletColor)
-                        .textInputAutocapitalization(.words)
-                        .focused($isColorFocused)
-                        .accessibilityLabel("Wallet color")
-                        .accessibilityHint("Select a color for this wallet")
+                    HStack(spacing: 16) {
+                        ForEach(WalletColor.allCases) { color in
+                            Button {
+                                selectedColor = color
+                            } label: {
+                                ZStack {
+                                    Circle()
+                                        .fill(color.color)
+                                        .frame(width: 40, height: 40)
+                                    
+                                    if selectedColor == color {
+                                        Image(systemName: "checkmark")
+                                            .font(.body)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(.white)
+                                    }
+                                }
+                            }
+                            .accessibilityLabel("\(color.displayName) color")
+                            .accessibilityHint(selectedColor == color ? "Selected" : "Select this color")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
                 } header: {
-                    Text("WalletColor")
+                    Text("Wallet Color")
                 } 
 
                 Section {
@@ -95,6 +115,7 @@ struct EditWalletView: View {
             }
             .onAppear {
                 walletName = wallet.label ?? ""
+                selectedColor = WalletColor.from(name: wallet.colorName)
                 isNameFocused = true
             }
         }
@@ -106,12 +127,15 @@ struct EditWalletView: View {
         // Update wallet label (empty string becomes nil)
         wallet.label = walletName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : walletName.trimmingCharacters(in: .whitespacesAndNewlines)
         
+        // Update wallet color
+        wallet.colorName = selectedColor.rawValue
+        
         do {
             try modelContext.save()
             dismiss()
         } catch {
             // Handle error silently for now
-            print("Failed to save wallet name: \(error)")
+            print("Failed to save wallet: \(error)")
         }
     }
 }

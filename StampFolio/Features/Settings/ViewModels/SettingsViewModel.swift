@@ -51,9 +51,10 @@ final class SettingsViewModel {
     /// - Parameters:
     ///   - address: The Bitcoin address to add
     ///   - label: Optional custom name for the wallet
+    ///   - colorName: Color name for the wallet icon
     ///   - context: SwiftData model context
     @MainActor
-    func addWallet(address: String, label: String? = nil, context: ModelContext) async {
+    func addWallet(address: String, label: String? = nil, colorName: String = WalletColor.purple.rawValue, context: ModelContext) async {
         let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Local validation first
@@ -92,7 +93,7 @@ final class SettingsViewModel {
             }
             
             // Create and save wallet
-            let wallet = Wallet(address: trimmedAddress, label: label)
+            let wallet = Wallet(address: trimmedAddress, label: label, colorName: colorName)
             context.insert(wallet)
             try context.save()
             
@@ -102,7 +103,7 @@ final class SettingsViewModel {
             
         } catch {
             // If API validation fails, still add the wallet
-            let wallet = Wallet(address: trimmedAddress, label: label)
+            let wallet = Wallet(address: trimmedAddress, label: label, colorName: colorName)
             context.insert(wallet)
             
             do {
