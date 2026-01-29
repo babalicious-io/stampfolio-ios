@@ -79,9 +79,7 @@ struct QRScannerView: View {
             .padding(.horizontal, 32)
             .padding(.vertical, 16) 
             .glassEffect(in: .rect(cornerRadius: 24))
-            
-            Spacer()
-                .frame(height: 100)
+
         }
     }
     
@@ -91,12 +89,12 @@ struct QRScannerView: View {
         VStack(spacing: 24) {
             Image(systemName: "camera")
                 .font(.system(size: 60))
-                .foregroundStyle(.primary)
+                .foregroundStyle(.purple.secondary)
             
             Text("Camera Not Available")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.purple.primary)
             
             Text("QR code scanning requires camera access. Please enable camera permissions in Settings.")
                 .font(.body)
@@ -112,8 +110,8 @@ struct QRScannerView: View {
                 Text("Open Settings")
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
                     .glassEffect(in: .capsule)
             }
         }
