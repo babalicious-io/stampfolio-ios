@@ -45,17 +45,19 @@ struct SettingsView: View {
                         ForEach(wallets) { wallet in
                             WalletRow(wallet: wallet)
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                    Button("Edit", systemImage: "pencil") {
+                                    Button {
                                         editingWallet = wallet
+                                    } label: {
+                                        Label("Edit", systemImage: "pencil")
                                     }
-                                    .labelStyle(.titleAndIcon)
                                     .tint(.purple)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button("Delete", systemImage: "trash", role: .destructive) {
+                                    Button(role: .destructive) {
                                         deleteWallet(wallet)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
-                                    .labelStyle(.titleAndIcon)
                                 }
                         }
                     }
@@ -232,7 +234,7 @@ struct WalletRow: View {
                 }
             }
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Wallet \(wallet.displayName)")
         .accessibilityValue("\(wallet.cachedStampCount ?? 0) stamps")

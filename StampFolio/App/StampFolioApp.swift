@@ -16,7 +16,7 @@ struct StampFolioApp: App {
     // MARK: - State
     
     /// App-level Observable objects declared here to avoid re-initialization
-    /// when SwiftUI rebuilds view hierarchy (iOS 17 @Observable best practice)
+    /// when SwiftUI rebuilds view hierarchy (@Observable best practice)
     @State private var settingsViewModel = SettingsViewModel()
     @State private var collectionViewModel = CollectionViewModel()
     @State private var networkMonitor = NetworkMonitor()

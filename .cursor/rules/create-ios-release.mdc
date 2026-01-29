@@ -266,12 +266,8 @@ jobs:
 ```swift
 // Example of requesting a review at appropriate time
 if shouldRequestReview() {
-    if #available(iOS 14.0, *) {
-        if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
-            SKStoreReviewController.requestReview(in: scene)
-        }
-    } else {
-        SKStoreReviewController.requestReview()
+    if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+        SKStoreReviewController.requestReview(in: scene)
     }
 }
 ```

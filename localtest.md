@@ -7,7 +7,7 @@ This guide covers how to run and test StampFolio on your physical iPhone or iPad
 - Mac with Xcode installed
 - Apple ID (free account works for personal testing)
 - USB cable (Lightning or USB-C depending on device)
-- iOS 17+ device (iPhone or iPad)
+- iOS 26+ device (iPhone or iPad)
 
 ---
 
@@ -191,7 +191,7 @@ If Xcode shows your iPad/iPhone as "unpaired", follow these steps to re-pair:
 ### Build Succeeds but App Crashes
 
 1. Check the Xcode console for error messages
-2. Ensure your device is running iOS 17 or later
+2. Ensure your device is running iOS 26 or later
 3. Try cleaning the build: **Product → Clean Build Folder** (⇧⌘K)
 
 ---

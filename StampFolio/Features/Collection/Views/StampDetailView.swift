@@ -54,7 +54,7 @@ struct StampDetailView: View {
             ZStack {
                 // Dark background for immersive viewing
                 Color.black
-                    .ignoresSafeArea(.all, edges: .all)
+                    .ignoresSafeArea()
                     .onTapGesture {
                         // Tap background to dismiss
                         dismiss()
@@ -84,8 +84,7 @@ struct StampDetailView: View {
                 }
             }
         }
-        .ignoresSafeArea(.all, edges: .all)
-        .statusBarHidden()
+        .ignoresSafeArea()
         .persistentSystemOverlays(.hidden)
         .accessibilityAddTraits(.isImage)
         .accessibilityLabel("\(currentStamp.formattedNumber), \(currentIndex + 1) of \(stamps.count)")

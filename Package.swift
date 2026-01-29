@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "StampFolio",
     platforms: [
-        .iOS(.v17)
+        .iOS(.v26)
     ],
     dependencies: [
         // Kingfisher - Image caching and loading

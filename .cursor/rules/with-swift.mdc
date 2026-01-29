@@ -171,11 +171,13 @@ class DetailViewController: UIViewController {
 
 ## Modern Swift Features
 
-- Use `async/await` for asynchronous code when targeting iOS 15+
-- Use SwiftUI for new UI development when targeting iOS 14+
-- Use Combine for reactive programming when targeting iOS 13+
+- Use `async/await` for all asynchronous code
+- Use SwiftUI for all UI development
+- Use Combine or async/await for reactive programming
 - Use property wrappers like `@State`, `@Binding`, `@Published` in SwiftUI
 - Use Swift's built-in `Result` type for handling asynchronous operations
+- Use `@Observable` macro for observable objects (preferred over ObservableObject)
+- Use SwiftData for data persistence (preferred over Core Data for new projects)
 
 ```swift
 // Modern async/await pattern

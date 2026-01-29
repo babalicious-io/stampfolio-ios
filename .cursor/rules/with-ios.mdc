@@ -58,13 +58,13 @@ AppProject/
 ## UIKit vs SwiftUI
 
 ### When to Use UIKit
-- When targeting iOS 12 or earlier
 - For complex custom UI that's difficult to implement in SwiftUI
 - When you need precise control over UI performance optimization
 - For apps heavily dependent on UIKit-specific features
+- When integrating with legacy code or third-party UIKit libraries
 
 ### When to Use SwiftUI
-- For new apps targeting iOS 14+
+- For all new development (recommended for iOS 26+)
 - For rapid development and prototyping
 - When you want to share UI code across Apple platforms
 - For list-based interfaces and standard UI components
@@ -94,14 +94,11 @@ struct MapViewWrapper: UIViewRepresentable {
 
 ## iOS App Lifecycle Management
 
-### Modern App Lifecycle (iOS 13+)
+### Modern App Lifecycle
 - Use SceneDelegate for apps supporting multiple windows
 - Properly handle state transitions in `sceneWillResignActive`, `sceneDidEnterBackground`, etc.
 - Save user data during state transitions
-
-### Legacy App Lifecycle
-- For iOS 12 and earlier, use AppDelegate for lifecycle events
-- Handle all state transitions appropriately: `applicationWillResignActive`, `applicationDidEnterBackground`, etc.
+- For SwiftUI apps, use the `@main` App protocol with scene-based lifecycle
 
 ### Background Tasks
 - Register background tasks with identifiers in your app delegate
@@ -215,7 +212,7 @@ UIAccessibility.post(notification: .announcement, argument: "Data successfully s
 - Cache network responses when appropriate
 
 ```swift
-// Modern networking with async/await (iOS 15+)
+// Modern networking with async/await
 func fetchUsers() async throws -> [User] {
     guard let url = URL(string: "https://api.example.com/users") else {
         throw NetworkError.invalidURL
@@ -330,7 +327,7 @@ UNUserNotificationCenter.current().setNotificationCategories([category])
 - Use Result type for operations that can succeed or fail
 
 ### Combine/Reactive Patterns
-- Use Combine for reactive data streams when targeting iOS 13+
+- Use Combine for reactive data streams
 - Implement publishers for data that changes over time
 - Use appropriate operators to transform data streams
 - Always handle subscription lifecycle to avoid memory leaks
