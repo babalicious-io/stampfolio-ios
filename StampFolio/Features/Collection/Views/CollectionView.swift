@@ -16,15 +16,12 @@ struct CollectionView: View {
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
     @State private var showSettings = false
-    @State private var showTitle = true
     
     // MARK: - Layout
     
@@ -44,9 +41,25 @@ struct CollectionView: View {
                 
                 content
             }
-            .toolbar(.hidden, for: .navigationBar)
-            .safeAreaInset(edge: .top) {
-                customHeader
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 16) {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(.purple)
+                        }
+                        
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.title3)
+                                .foregroundStyle(.purple)
+                        }
+                        .accessibilityLabel("Settings")
+                        .accessibilityHint("Opens the settings screen")
+                    }
+                }
             }
             .task {
                 await viewModel.fetchStamps(for: wallets)
@@ -63,9 +76,7 @@ struct CollectionView: View {
                 showOfflineBanner = !isConnected
             }
             .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
-                let stamps = viewModel.stamps.map { $0.stamp }
-                let currentIndex = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) ?? 0
-                StampDetailView(stamps: stamps, initialIndex: currentIndex)
+                StampDetailView(stamp: displayStamp.stamp)
             }
             .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
                 StampMetadataPopup(stamp: displayStamp.stamp)
@@ -77,48 +88,6 @@ struct CollectionView: View {
             }
         }
         .stampchainBackground()
-    }
-    
-    // MARK: - Custom Header
-    
-    private var customHeader: some View {
-        let isLandscape = verticalSizeClass == .compact
-        
-        return HStack {
-            // Title
-            if showTitle {
-                HStack(spacing: 0) {
-                    Text("STAMP")
-                        .font(.system(size: isLandscape ? 32 : 24, weight: .black))
-                    Text("FOLIO")
-                        .font(.system(size: isLandscape ? 32 : 24, weight: .light))
-                }
-                .foregroundStyle(.purple)
-            }
-            
-            Spacer()
-            
-            // Loading indicator
-            if viewModel.isLoading {
-                ProgressView()
-                    .tint(.purple)
-            }
-            
-            // Settings button with glass effect
-            Button {
-                showSettings = true
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.title3)
-                    .foregroundStyle(.purple)
-                    .frame(width: 44, height: 44)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
-            .accessibilityLabel("Settings")
-            .accessibilityHint("Opens the settings screen")
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
     
     // MARK: - Content
@@ -247,41 +216,25 @@ struct CollectionView: View {
     
     private var stampsGrid: some View {
         ScrollView {
-            VStack(spacing: 0) {
-                // Scroll detector at the very top
-                GeometryReader { geo in
-                    Color.clear
-                        .onChange(of: geo.frame(in: .global).minY) { _, newValue in
-                            let shouldShow = newValue > -100
-                            if shouldShow != showTitle {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    showTitle = shouldShow
-                                }
-                            }
+            // Offline banner
+            if showOfflineBanner {
+                offlineBanner
+            }
+            
+            LazyVGrid(columns: columns, spacing: 16) {
+                ForEach(viewModel.stamps) { displayStamp in
+                    StampCardView(
+                        displayStamp: displayStamp,
+                        onTap: {
+                            viewModel.selectedStamp = displayStamp
+                        },
+                        onInfoTap: {
+                            viewModel.metadataStamp = displayStamp
                         }
-                }
-                .frame(height: 1)
-                
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(viewModel.stamps) { displayStamp in
-                        StampCardView(
-                            displayStamp: displayStamp,
-                            onTap: {
-                                viewModel.selectedStamp = displayStamp
-                            },
-                            onInfoTap: {
-                                viewModel.metadataStamp = displayStamp
-                            }
-                        )
-                    }
-                }
-                .padding()
-                
-                // Offline banner
-                if showOfflineBanner {
-                    offlineBanner
+                    )
                 }
             }
+            .padding()
         }
     }
     
