@@ -98,16 +98,12 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     }
     
     /// URL for loading the stamp image
-    /// Note: For HTML content, we use /s/ instead of /stamps/ because
-    /// the /s/ endpoint returns proper content-type headers (text/html)
-    /// while /stamps/ returns binary/octet-stream which breaks WKWebView rendering
+    /// Note: We use /s/ instead of /stamps/ because the /s/ endpoint
+    /// returns correct content-type headers for all content types,
+    /// while /stamps/ returns binary/octet-stream for HTML which breaks WKWebView
     var imageURL: URL? {
-        if isHTML {
-            // Use /s/ endpoint for proper MIME type headers
-            let correctedUrl = stampUrl.replacingOccurrences(of: "/stamps/", with: "/s/")
-            return URL(string: correctedUrl)
-        }
-        return URL(string: stampUrl)
+        let correctedUrl = stampUrl.replacingOccurrences(of: "/stamps/", with: "/s/")
+        return URL(string: correctedUrl)
     }
     
     /// Human-readable file size
