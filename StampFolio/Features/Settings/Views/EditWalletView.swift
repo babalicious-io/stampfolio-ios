@@ -38,10 +38,18 @@ struct EditWalletView: View {
                         .accessibilityHint("Enter a custom name for this wallet")
                 } header: {
                     Text("Wallet Name")
-                } footer: {
-                    Text("Give this wallet a custom name to easily identify it. Leave empty to use the truncated address.")
-                }
+                } 
                 
+                Section {
+                    ColorPicker("Color", selection: $walletColor)
+                        .textInputAutocapitalization(.words)
+                        .focused($isColorFocused)
+                        .accessibilityLabel("Wallet color")
+                        .accessibilityHint("Select a color for this wallet")
+                } header: {
+                    Text("WalletColor")
+                } 
+
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Address")
