@@ -8,6 +8,7 @@
 import SwiftUI
 import Kingfisher
 import WebKit
+import SwiftData
 
 /// Card view displaying a stamp in the collection grid
 struct StampCardView: View {
@@ -24,9 +25,11 @@ struct StampCardView: View {
     // MARK: - Environment
     
     @Environment(\.colorScheme) private var colorScheme
+    @Query(sort: \Wallet.addedDate) private var wallets: [Wallet]
     
     // MARK: - State
     
+    @AppStorage("showWalletIcons") private var showWalletIcons = false
     @State private var isPressed = false
     @State private var imageLoadFailed = false
     
@@ -100,8 +103,17 @@ struct StampCardView: View {
                         .clipped()
                 }
                 
-                // Overlay: Stamp number (bottom left) and Edition balance (bottom right)
+                // Overlay: Wallet icon (top right), Stamp number (bottom left) and Edition balance (bottom right)
                 VStack {
+                    // Wallet icon - top right
+                    if showWalletIcons, displayStamp.walletAddress != nil {
+                        HStack {
+                            Spacer()
+                            walletIcon
+                        }
+                        .padding(12)
+                    }
+                    
                     Spacer()
                     
                     HStack(alignment: .bottom) {
@@ -205,6 +217,31 @@ struct StampCardView: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Editions: \(displayStamp.formattedQuantity)")
         .accessibilityHint("Opens stamp metadata popup")
+    }
+    
+    // MARK: - Wallet Icon Pill
+    
+    private var walletIcon: some View {
+        let wallet = wallets.first { $0.address == displayStamp.walletAddress }
+        let walletColor = wallet?.walletColor.color ?? .gray
+        
+        return Button {
+            onInfoTap()
+        } label: {
+            Image(systemName: "wallet.bifold.fill")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(walletColor)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(Color(uiColor: .systemBackground).opacity(0.85))
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Wallet indicator")
+        .accessibilityHint("Shows which wallet owns this stamp")
     }
 }
 

@@ -12,6 +12,7 @@ struct DisplayStamp: Identifiable {
     let stamp: Stamp
     let balance: Double?
     let divisible: Int
+    let walletAddress: String?
     
     var id: Int { stamp.id }
     
@@ -55,6 +56,7 @@ struct DisplayStamp: Identifiable {
         )
         self.balance = stampBalance.balance
         self.divisible = stampBalance.divisible
+        self.walletAddress = stampBalance.address
     }
     
     /// Create from Stamp (no balance info)
@@ -62,5 +64,6 @@ struct DisplayStamp: Identifiable {
         self.stamp = stamp
         self.balance = nil
         self.divisible = stamp.divisible
+        self.walletAddress = nil
     }
 }

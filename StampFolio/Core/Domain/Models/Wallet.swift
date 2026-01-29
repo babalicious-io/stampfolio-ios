@@ -35,7 +35,7 @@ final class Wallet {
     
     // MARK: - Initialization
     
-    init(address: String, label: String? = nil, colorName: String? = WalletColor.purple.rawValue) {
+    init(address: String, label: String? = nil, colorName: String? = WalletColor.gray.rawValue) {
         self.address = address
         self.addedDate = Date()
         self.label = label
@@ -63,7 +63,7 @@ final class Wallet {
     
     /// Wallet color with fallback to purple for existing wallets
     var walletColor: WalletColor {
-        WalletColor.from(name: colorName ?? WalletColor.purple.rawValue)
+        WalletColor.from(name: colorName ?? WalletColor.gray.rawValue)
     }
 }
 

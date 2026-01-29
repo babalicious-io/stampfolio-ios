@@ -54,7 +54,7 @@ final class SettingsViewModel {
     ///   - colorName: Color name for the wallet icon
     ///   - context: SwiftData model context
     @MainActor
-    func addWallet(address: String, label: String? = nil, colorName: String = WalletColor.purple.rawValue, context: ModelContext) async {
+    func addWallet(address: String, label: String? = nil, colorName: String = WalletColor.gray.rawValue, context: ModelContext) async {
         let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Local validation first

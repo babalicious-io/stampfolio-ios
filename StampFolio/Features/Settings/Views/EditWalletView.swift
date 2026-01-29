@@ -23,7 +23,7 @@ struct EditWalletView: View {
     // MARK: - State
     
     @State private var walletName: String = ""
-    @State private var selectedColor: WalletColor = .purple
+    @State private var selectedColor: WalletColor = .gray
     @FocusState private var isNameFocused: Bool
     
     // MARK: - Body

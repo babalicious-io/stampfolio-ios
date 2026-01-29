@@ -20,7 +20,7 @@ struct AddWalletView: View {
     // MARK: - State
     
     @State private var walletName: String = ""
-    @State private var selectedColor: WalletColor = .purple
+    @State private var selectedColor: WalletColor = .gray
     @FocusState private var isAddressFocused: Bool
     
     // MARK: - Body
@@ -146,7 +146,7 @@ struct AddWalletView: View {
                             if !viewModel.showAddWallet {
                                 // Reset wallet name and color if successfully added
                                 walletName = ""
-                                selectedColor = .purple
+                                selectedColor = .gray
                             }
                         }
                     }

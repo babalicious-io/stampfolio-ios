@@ -21,6 +21,7 @@ struct SettingsView: View {
     // MARK: - State
     
     @AppStorage("isDarkMode") private var isDarkMode = true
+    @AppStorage("showWalletIcons") private var showWalletIcons = false
     @State private var editingWallet: Wallet?
     
     // MARK: - Body
@@ -65,6 +66,15 @@ struct SettingsView: View {
                     addWalletButton
                 } header: {
                     Text("Wallets")
+                }
+                
+                // Wallet Icons Section
+                Section {
+                    walletIconToggle
+                } header: {
+                    Text("Wallet Icons")
+                } footer: {
+                    Text("Show wallet icon with color on stamp cards")
                 }
                 
                 // About Section
@@ -147,6 +157,22 @@ struct SettingsView: View {
         .accessibilityHint("Opens a form to add a new Bitcoin wallet")
     }
     
+    // MARK: - Wallet Icon Toggle
+    
+    private var walletIconToggle: some View {
+        Toggle(isOn: $showWalletIcons) {
+            HStack(spacing: 14) {
+                Image(systemName: "wallet.bifold.fill")
+                    .foregroundStyle(.purple)
+                Text("Display Wallet Icon")
+            }
+        }
+        .tint(.purple)
+        .accessibilityLabel("Display wallet icon toggle")
+        .accessibilityValue(showWalletIcons ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle wallet icon display on stamp cards")
+    }
+    
     // MARK: - About Row
     
     private var aboutRow: some View {
@@ -169,7 +195,7 @@ struct SettingsView: View {
                     Text("Powered by Stampchain.io")
                         .font(.caption)
                     Image(systemName: "arrow.up.right.square")
-                        .font(.caption2)
+                        .font(.caption)
                 }
                 .foregroundStyle(.purple)
             }
