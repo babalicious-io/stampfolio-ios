@@ -184,7 +184,11 @@ struct AddWalletView: View {
                     .foregroundStyle(.primary)
             }
             .padding(32)
-            .glassCard()
+            .background {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24))
         }
     }
 }

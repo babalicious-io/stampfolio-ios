@@ -77,7 +77,11 @@ struct QRScannerView: View {
                     .foregroundStyle(.primary)
             }
             .padding()
-            .glassCard()
+            .background {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24))
             .padding()
             
             Spacer()
@@ -112,7 +116,10 @@ struct QRScannerView: View {
                 Text("Open Settings")
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
-                    .glassButton()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(.glass.regular)
+                    .clipShape(Capsule())
             }
         }
         .stampchainBackground()

@@ -2,41 +2,10 @@
 //  ViewModifiers.swift
 //  StampFolio
 //
-//  Reusable view modifiers using native iOS Materials with Stampchain styling
+//  Reusable custom view modifiers
 //
 
 import SwiftUI
-
-// MARK: - Glass Card Modifier
-
-/// Applies a glassmorphism card effect using native iOS Materials
-struct GlassCardModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-    
-    let cornerRadius: CGFloat
-    let shadowRadius: CGFloat
-    
-    func body(content: Content) -> some View {
-        content
-            .background {
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(.ultraThinMaterial)
-                    .background {
-                        // Subtle tint showing through Material
-                        RoundedRectangle(cornerRadius: cornerRadius)
-                            .fill(Color(uiColor: .quaternarySystemFill))
-                    }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-            .shadow(
-                color: colorScheme == .dark 
-                    ? Color.purple.opacity(0.15) 
-                    : Color.black.opacity(0.1),
-                radius: shadowRadius,
-                y: shadowRadius / 2
-            )
-    }
-}
 
 // MARK: - Stampchain Background Modifier
 
@@ -48,42 +17,6 @@ struct StampchainBackgroundModifier: ViewModifier {
                 Color(uiColor: .systemBackground)
                     .ignoresSafeArea()
             }
-    }
-}
-
-// MARK: - Glass Button Modifier
-
-/// Applies a glass button style
-struct GlassButtonModifier: ViewModifier {
-    let isPressed: Bool
-    
-    init(isPressed: Bool = false) {
-        self.isPressed = isPressed
-    }
-    
-    func body(content: Content) -> some View {
-        content
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.thinMaterial)
-                    .background {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(
-                                isPressed 
-                                    ? Color.purple.opacity(0.2) 
-                                    : Color.purple.opacity(0.1)
-                            )
-                    }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.purple.opacity(0.3), lineWidth: 1)
-            }
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: isPressed)
     }
 }
 
@@ -122,22 +55,9 @@ struct ShimmerModifier: ViewModifier {
 
 extension View {
     
-    /// Apply glassmorphism card styling using native iOS Materials
-    /// - Parameters:
-    ///   - cornerRadius: Corner radius of the card (default: 16)
-    ///   - shadowRadius: Shadow blur radius (default: 8)
-    func glassCard(cornerRadius: CGFloat = 16, shadowRadius: CGFloat = 8) -> some View {
-        modifier(GlassCardModifier(cornerRadius: cornerRadius, shadowRadius: shadowRadius))
-    }
-    
     /// Apply Stampchain background
     func stampchainBackground() -> some View {
         modifier(StampchainBackgroundModifier())
-    }
-    
-    /// Apply glass button styling
-    func glassButton(isPressed: Bool = false) -> some View {
-        modifier(GlassButtonModifier(isPressed: isPressed))
     }
     
     /// Apply shimmer loading effect
