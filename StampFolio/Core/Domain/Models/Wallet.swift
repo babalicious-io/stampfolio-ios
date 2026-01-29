@@ -48,7 +48,7 @@ final class Wallet {
     
     /// Truncated address for display (e.g., "bc1qxy2k...fjhx0wlh")
     var truncatedAddress: String {
-        address.truncatedAddress(prefixLength: 8, suffixLength: 8)
+        address.truncatedAddress(prefixLength: 6, suffixLength: 6)
     }
     
     /// Display name - uses label if available, otherwise truncated address

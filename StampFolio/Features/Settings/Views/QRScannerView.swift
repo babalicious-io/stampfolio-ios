@@ -69,7 +69,7 @@ struct QRScannerView: View {
             VStack(spacing: 16) {
                 Image(systemName: "qrcode.viewfinder")
                     .font(.system(size: 48))
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(.primary)
                 
                 Text("Point your camera at the wallet QR code")
                     .font(.body)

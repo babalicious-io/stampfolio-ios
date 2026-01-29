@@ -96,7 +96,7 @@ extension String {
     }
     
     /// Truncate a hash for display
-    func truncatedHash(length: Int = 8) -> String {
+    func truncatedHash(length: Int = 6) -> String {
         guard self.count > length else { return self }
         return String(self.prefix(length)) + "..."
     }

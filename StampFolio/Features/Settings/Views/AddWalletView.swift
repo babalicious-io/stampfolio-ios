@@ -181,7 +181,7 @@ struct AddWalletView: View {
                 Text(addressType.rawValue)
                     .font(.body)
                 
-                Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 8, suffixLength: 8))
+                Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 6, suffixLength: 6))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

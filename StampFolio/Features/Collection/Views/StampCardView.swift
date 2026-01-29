@@ -61,10 +61,12 @@ struct StampCardView: View {
                 // Stamp image
                 if imageLoadFailed {
                     failedImageView
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 } else if stamp.isHTML || stamp.isSVG {
                     // Use WebView for HTML and SVG content
                     StampWebView(url: stamp.imageURL)
                         .frame(width: geometry.size.width, height: geometry.size.width)
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 } else if stamp.isAnimated {
                     // Use KFAnimatedImage for GIFs
                     KFAnimatedImage(stamp.imageURL)
@@ -79,6 +81,7 @@ struct StampCardView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width, height: geometry.size.width)
                         .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 } else {
                     // Use KFImage for regular images
                     KFImage(stamp.imageURL)
@@ -101,6 +104,7 @@ struct StampCardView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width, height: geometry.size.width)
                         .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 }
                 
                 // Overlay: Wallet icon (top right), Stamp number (bottom left) and Edition balance (bottom right)
@@ -147,6 +151,7 @@ struct StampCardView: View {
                     .tint(.purple)
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
     
     // MARK: - Failed Image View
