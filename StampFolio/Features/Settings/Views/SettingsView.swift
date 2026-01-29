@@ -80,8 +80,8 @@ struct SettingsView: View {
                     Text("About")
                 }
             }
+            .listSectionSpacing(8)
             .navigationTitle("Settings")
-            .listStyle(.plain)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
