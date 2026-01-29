@@ -120,7 +120,7 @@ struct EditWalletView: View {
             .onAppear {
                 walletName = wallet.label ?? ""
                 selectedColor = wallet.walletColor
-                isNameFocused = true
+                isNameFocused = false
             }
         }
     }
