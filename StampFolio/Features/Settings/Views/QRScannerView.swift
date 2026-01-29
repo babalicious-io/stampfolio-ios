@@ -90,7 +90,7 @@ struct QRScannerView: View {
         VStack(spacing: 24) {
             Image(systemName: "camera")
                 .font(.system(size: 60))
-                .foregroundStyle(.purple)
+                .foregroundStyle(.primary)
             
             Text("Camera Not Available")
                 .font(.title2)
@@ -115,7 +115,6 @@ struct QRScannerView: View {
                     .padding(.vertical, 16)
                     .glassEffect(in: .capsule)
             }
-            .buttonStyle(.plain)
         }
         .stampchainBackground()
     }

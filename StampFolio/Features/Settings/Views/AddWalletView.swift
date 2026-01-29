@@ -76,24 +76,24 @@ struct AddWalletView: View {
                 
                 // Address Input Section
                 Section {
-                    TextField("Bitcoin Address", text: $viewModel.walletAddressInput)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($isAddressFocused)
-                        .accessibilityLabel("Bitcoin wallet address")
-                        .accessibilityHint("Enter a Bitcoin address starting with 1, 3, bc1q, or bc1p")
-                    
-                    // QR Scanner Button
-                    Button {
-                        viewModel.showQRScanner = true
-                    } label: {
-                        HStack {
+                    HStack {
+                        TextField("Bitcoin Address", text: $viewModel.walletAddressInput)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .focused($isAddressFocused)
+                            .accessibilityLabel("Bitcoin wallet address")
+                            .accessibilityHint("Enter a Bitcoin address starting with 1, 3, bc1q, or bc1p")
+                        
+                        Button {
+                            viewModel.showQRScanner = true
+                        } label: {
                             Image(systemName: "qrcode")
-                            Text("Scan QR Code")
+                                .foregroundStyle(.purple)
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Scan QR code")
+                        .accessibilityHint("Opens camera to scan a Bitcoin wallet QR code")
                     }
-                    .accessibilityLabel("Scan QR code")
-                    .accessibilityHint("Opens camera to scan a Bitcoin wallet QR code")
                 } header: {
                     Text("Wallet Address")
                 } footer: {
