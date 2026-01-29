@@ -71,10 +71,6 @@ struct SettingsView: View {
                 // Wallet Icons Section
                 Section {
                     walletIconToggle
-                } header: {
-                    Text("Wallet Icons")
-                } footer: {
-                    Text("Show wallet icon with color on stamp cards")
                 }
                 
                 // About Section
@@ -164,13 +160,13 @@ struct SettingsView: View {
             HStack(spacing: 14) {
                 Image(systemName: "wallet.bifold.fill")
                     .foregroundStyle(.purple)
-                Text("Display Wallet Icon")
+                Text(showWalletIcons ? "Display Wallet Icon" : "Hide Wallet Icon")    
             }
         }
         .tint(.purple)
-        .accessibilityLabel("Display wallet icon toggle")
+        .accessibilityLabel(showWalletIcons ? "Display wallet icon toggle" : "Hide wallet icon toggle")
         .accessibilityValue(showWalletIcons ? "On" : "Off")
-        .accessibilityHint("Double tap to toggle wallet icon display on stamp cards")
+        .accessibilityHint(showWalletIcons ? "Double tap to toggle wallet icon display on stamp cards" : "Double tap to toggle wallet icon hide on stamp cards")
     }
     
     // MARK: - About Row
