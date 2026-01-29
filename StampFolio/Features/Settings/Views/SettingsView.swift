@@ -48,12 +48,14 @@ struct SettingsView: View {
                                     Button("Edit", systemImage: "pencil") {
                                         editingWallet = wallet
                                     }
+                                    .labelStyle(.titleAndIcon)
                                     .tint(.purple)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button("Delete", systemImage: "trash", role: .destructive) {
                                         deleteWallet(wallet)
                                     }
+                                    .labelStyle(.titleAndIcon)
                                 }
                         }
                     }
@@ -230,7 +232,7 @@ struct WalletRow: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Wallet \(wallet.displayName)")
         .accessibilityValue("\(wallet.cachedStampCount ?? 0) stamps")
