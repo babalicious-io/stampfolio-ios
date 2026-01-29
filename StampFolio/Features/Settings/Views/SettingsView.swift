@@ -81,6 +81,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .listStyle(.plain)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
