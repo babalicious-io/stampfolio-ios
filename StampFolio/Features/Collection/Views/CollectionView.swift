@@ -112,7 +112,8 @@ struct CollectionView: View {
     private var emptyWalletsView: some View {
         VStack(spacing: 24) {
             Image(systemName: "wallet.bifold")
-                .font(.system(size: 60))
+                .font(.system(size: 64))
+                .fontWeight(.regular)
                 .foregroundStyle(.primary)
             
             Text("No Wallets Added")

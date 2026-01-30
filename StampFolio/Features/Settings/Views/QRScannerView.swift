@@ -89,7 +89,8 @@ struct QRScannerView: View {
     private var unsupportedView: some View {
         VStack(spacing: 24) {
             Image(systemName: "camera")
-                .font(.system(size: 60))
+                .font(.system(size: 64))
+                .fontWeight(.regular)
                 .foregroundStyle(.primary)
             
             Text("Camera Not Available")
