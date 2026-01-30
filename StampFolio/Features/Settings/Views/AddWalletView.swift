@@ -211,8 +211,9 @@ struct AddWalletView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 16) {
-                LoadingSpinner()
-                    .scaleEffect(1.0)
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .tint(.purple)
                 
                 Text("Validating wallet...")
                     .font(.body)

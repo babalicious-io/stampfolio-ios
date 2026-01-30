@@ -146,8 +146,9 @@ struct CollectionView: View {
     
     private var loadingView: some View {
         VStack(spacing: 16) {
-            LoadingSpinner()
-                .scaleEffect(1.0)
+            ProgressView()
+                .scaleEffect(1.5)
+                .tint(.purple)
             
             Text("Loading stamps...")
                 .font(.body)

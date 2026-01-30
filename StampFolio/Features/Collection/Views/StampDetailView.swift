@@ -113,7 +113,8 @@ struct StampDetailView: View {
             // KFAnimatedImage for animated GIFs
             KFAnimatedImage(currentStamp.imageURL)
                 .placeholder {
-                    LoadingSpinner()
+                    ProgressView()
+                        .tint(.purple)
                 }
                 .cacheOriginalImage()
                 .aspectRatio(contentMode: .fit)
@@ -122,7 +123,8 @@ struct StampDetailView: View {
             // KFImage for static images (jpg, png, webp) + SRC-721/cursed stamps
             KFImage(currentStamp.imageURL)
                 .placeholder {
-                    LoadingSpinner()
+                    ProgressView()
+                        .tint(.purple)
                 }
                 .retry(maxCount: 3)
                 .resizable()
