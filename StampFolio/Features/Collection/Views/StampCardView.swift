@@ -295,24 +295,13 @@ struct StampWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         
-        // Inject viewport meta tag for stamps that don't have one
-        // This ensures HTML content scales properly in small containers
+        // Inject viewport meta tag BEFORE HTML parses to prevent resize glitch
+        // Using document.write at atDocumentStart ensures viewport is set before any content renders
         let viewportScript = WKUserScript(
             source: """
-            if (!document.querySelector('meta[name=viewport]')) {
-                var meta = document.createElement('meta');
-                meta.name = 'viewport';
-                meta.content = 'width=device-width, initial-scale=1, shrink-to-fit=yes';
-                if (document.head) {
-                    document.head.appendChild(meta);
-                } else {
-                    var head = document.createElement('head');
-                    head.appendChild(meta);
-                    document.documentElement.insertBefore(head, document.documentElement.firstChild);
-                }
-            }
+            document.write('<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">');
             """,
-            injectionTime: .atDocumentEnd,
+            injectionTime: .atDocumentStart,
             forMainFrameOnly: true
         )
         
