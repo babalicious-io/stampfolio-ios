@@ -7,19 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Stampchain Background Modifier
-
-/// Applies the Stampchain background
-struct StampchainBackgroundModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background {
-                Color(uiColor: .systemBackground)
-                    .ignoresSafeArea()
-            }
-    }
-}
-
 // MARK: - Shimmer Effect Modifier (for loading states)
 
 struct ShimmerModifier: ViewModifier {
@@ -54,11 +41,6 @@ struct ShimmerModifier: ViewModifier {
 // MARK: - View Extensions
 
 extension View {
-    
-    /// Apply Stampchain background
-    func stampchainBackground() -> some View {
-        modifier(StampchainBackgroundModifier())
-    }
     
     /// Apply shimmer loading effect
     func shimmer() -> some View {

@@ -395,5 +395,4 @@ struct TextStampView: View {
         )
     }
     .padding()
-    .stampchainBackground()
 }

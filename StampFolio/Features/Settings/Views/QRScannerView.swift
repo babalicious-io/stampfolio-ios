@@ -116,7 +116,6 @@ struct QRScannerView: View {
                     .glassEffect(in: .capsule)
             }
         }
-        .stampchainBackground()
     }
     
     // MARK: - Handle Scan

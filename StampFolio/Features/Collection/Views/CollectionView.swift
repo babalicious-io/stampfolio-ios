@@ -87,7 +87,6 @@ struct CollectionView: View {
                 SettingsView()
             }
         }
-        .stampchainBackground()
     }
     
     // MARK: - Content
