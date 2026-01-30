@@ -111,9 +111,9 @@ struct CollectionView: View {
     
     private var emptyWalletsView: some View {
         VStack(spacing: 24) {
-            Image(systemName: "wallet.pass")
-                .font(.system(size: 64))
-                .foregroundStyle(.purple)
+            Image(systemName: "wallet.bifold")
+                .font(.system(size: 60))
+                .foregroundStyle(.primary)
             
             Text("No Wallets Added")
                 .font(.title2)
@@ -132,8 +132,8 @@ struct CollectionView: View {
                 Text("Add Wallet")
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
                     .glassEffect(in: .capsule)
             }
             .accessibilityLabel("Add a Bitcoin wallet")
@@ -147,12 +147,8 @@ struct CollectionView: View {
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
-                .scaleEffect(1.5)
+                .scaleEffect(2)
                 .tint(.purple)
-            
-            Text("Loading stamps...")
-                .font(.body)
-                .foregroundStyle(.secondary)
         }
     }
     
