@@ -189,7 +189,7 @@ struct StampCardView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .black, .black, .black, .orange],
+            colors: [.purple, .black, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
@@ -335,7 +335,7 @@ struct TextStampView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .black, .black, .black, .orange],
+            colors: [.purple, .black, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )

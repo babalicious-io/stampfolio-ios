@@ -300,7 +300,7 @@ struct TextContentView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .black, .orange],
+            colors: [.purple, .pink, .black, .yellow, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
@@ -358,7 +358,7 @@ struct AudioContentView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .black, .orange],
+            colors: [.purple, .pink, .black, .yellow, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
@@ -426,7 +426,7 @@ struct VideoContentView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .black, .orange],
+            colors: [.purple, .pink, .black, .yellow, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
