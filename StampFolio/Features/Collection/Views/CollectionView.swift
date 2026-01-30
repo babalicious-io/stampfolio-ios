@@ -96,10 +96,13 @@ struct CollectionView: View {
                             Button {
                                 viewModel.toggleSort(for: .artist, wallets: wallets)
                             } label: {
-                                Text(artistSortIcon)
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.secondary)
-                                + Text("   Artist")
+                                HStack(spacing: 6) {
+                                    Text(artistSortIcon)
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: 20, alignment: .leading)
+                                    Text("Artist")
+                                }
                             }
                             
                             // Balance toggle
@@ -114,10 +117,13 @@ struct CollectionView: View {
                                 Button {
                                     viewModel.toggleSort(for: .wallet, wallets: wallets)
                                 } label: {
-                                    Text(walletSortIcon)
-                                        .font(.caption.bold())
-                                        .foregroundStyle(.secondary)
-                                    + Text("   Wallet")
+                                    HStack(spacing: 6) {
+                                        Text(walletSortIcon)
+                                            .font(.caption.bold())
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 20, alignment: .leading)
+                                        Text("Wallet")
+                                    }
                                 }
                             }
                         } label: {
