@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension ShapeStyle where Self == LinearGradient {
+extension LinearGradient {
     /// Standard stamp gradient - purple to orange with black center
     static var stampCardBackgroundGradient: LinearGradient {
         LinearGradient(
