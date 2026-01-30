@@ -62,22 +62,17 @@ struct ScaledSpacing {
 // MARK: - Reusable Gradients
 
 extension LinearGradient {
-    /// Standard stamp card background gradient - purple to orange with adaptive center
-    /// - Parameter colorScheme: The current color scheme (light or dark)
-    /// - Returns: A gradient with white center in light mode, black center in dark mode
-    static func stampCardBackgroundGradient(for colorScheme: ColorScheme) -> LinearGradient {
-        let centerColor: Color = colorScheme == .dark ? .black : .white
-        return LinearGradient(
-            stops: [
-                Gradient.Stop(color: .purple, location: 0),
-                Gradient.Stop(color: centerColor, location: 0.2),
-                Gradient.Stop(color: centerColor, location: 0.9),
-                Gradient.Stop(color: .orange, location: 1)
-            ],
-            startPoint: .bottomLeading,
-            endPoint: .topTrailing
-        )
-    }
+    /// Standard stamp card background gradient - purple to orange with black center
+    static let stampCardBackgroundGradient = LinearGradient(
+        stops: [
+            Gradient.Stop(color: .purple, location: 0),
+            Gradient.Stop(color: .black, location: 0.2),
+            Gradient.Stop(color: .black, location: 0.9),
+            Gradient.Stop(color: .orange, location: 1)
+        ],
+        startPoint: .bottomLeading,
+        endPoint: .topTrailing
+    )
     
     /// Fullscreen background gradient - purple to orange with black center
     static let stampFullscreenBackgroundGradient = LinearGradient(

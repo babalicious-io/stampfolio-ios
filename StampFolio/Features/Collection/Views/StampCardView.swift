@@ -189,7 +189,7 @@ struct StampCardView: View {
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient(for: colorScheme)
+        LinearGradient.stampCardBackgroundGradient
     }
     
     // MARK: - Audio Placeholder View
@@ -388,10 +388,9 @@ struct TextStampView: View {
     let url: URL?
     @State private var content: String = ""
     @State private var isLoading = true
-    @Environment(\.colorScheme) private var colorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient(for: colorScheme)
+        LinearGradient.stampCardBackgroundGradient
     }
     
     var body: some View {
