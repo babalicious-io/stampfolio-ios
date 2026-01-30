@@ -66,8 +66,9 @@ struct StampCardView: View {
                     StampWebView(url: stamp.imageURL)
                         .frame(width: geometry.size.width, height: geometry.size.width)
                 } else if stamp.isText {
-                    // Plain text stamp - gradient placeholder
-                    textPlaceholderView
+                    // Plain text stamp - fetch and display text
+                    TextStampView(url: stamp.imageURL)
+                        .frame(width: geometry.size.width, height: geometry.size.width)
                 } else if stamp.isAudio {
                     // Audio stamp - gradient placeholder with waveform
                     audioPlaceholderView
@@ -188,29 +189,10 @@ struct StampCardView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .orange],
+            colors: [.purple, .black, .black, .black, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
-    }
-    
-    // MARK: - Text Placeholder View
-    
-    private var textPlaceholderView: some View {
-        ZStack {
-            gradientBackground
-            
-            VStack(spacing: 8) {
-                Image(systemName: "doc.text.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(.white)
-                
-                Text("TXT")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
-            }
-        }
     }
     
     // MARK: - Audio Placeholder View
@@ -340,6 +322,67 @@ struct StampWebView: UIViewRepresentable {
             let request = URLRequest(url: url)
             webView.load(request)
         }
+    }
+}
+
+// MARK: - Text Stamp View
+
+/// Text stamp view for grid - fetches and displays text content
+struct TextStampView: View {
+    let url: URL?
+    @State private var content: String = ""
+    @State private var isLoading = true
+    
+    private var gradientBackground: some View {
+        LinearGradient(
+            colors: [.purple, .black, .black, .black, .orange],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
+    
+    var body: some View {
+        ZStack {
+            gradientBackground
+            
+            if isLoading {
+                ProgressView()
+                    .tint(.white)
+                    .scaleEffect(1.2)
+            } else {
+                Text(content)
+                    .font(.system(.caption2))
+                    .fontWeight(.medium)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(8)
+                    .padding(8)
+            }
+        }
+        .task {
+            await fetchContent()
+        }
+    }
+    
+    private func fetchContent() async {
+        guard let url = url else {
+            content = "No URL"
+            isLoading = false
+            return
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let text = String(data: data, encoding: .utf8) {
+                content = text
+            } else {
+                content = "Failed to decode"
+            }
+        } catch {
+            content = "Failed to load"
+        }
+        
+        isLoading = false
     }
 }
 
