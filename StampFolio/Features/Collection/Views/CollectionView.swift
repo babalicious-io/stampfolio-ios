@@ -64,29 +64,19 @@ struct CollectionView: View {
                             Button {
                                 viewModel.sortStamps(by: .artistAZ, wallets: wallets)
                             } label: {
-                                HStack(spacing: 8) {
-                                    Text("AZ")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(.secondary)
-                                    Text("Artist")
-                                        .font(.body)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                Text("AZ")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.secondary)
+                                + Text("  Artist")
                             }
                             
                             Button {
                                 viewModel.sortStamps(by: .artistZA, wallets: wallets)
                             } label: {
-                                HStack(spacing: 8) {
-                                    Text("ZA")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(.secondary)
-                                    Text("Artist")
-                                        .font(.body)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                Text("ZA")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.secondary)
+                                + Text("  Artist")
                             }
                             
                             Divider()
@@ -109,29 +99,19 @@ struct CollectionView: View {
                                 Button {
                                     viewModel.sortStamps(by: .walletAZ, wallets: wallets)
                                 } label: {
-                                    HStack(spacing: 8) {
-                                        Text("AZ")
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                            .foregroundStyle(.secondary)
-                                        Text("Wallet")
-                                            .font(.body)
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text("AZ")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.secondary)
+                                    + Text("  Wallet")
                                 }
                                 
                                 Button {
                                     viewModel.sortStamps(by: .walletZA, wallets: wallets)
                                 } label: {
-                                    HStack(spacing: 8) {
-                                        Text("ZA")
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                            .foregroundStyle(.secondary)
-                                        Text("Wallet")
-                                            .font(.body)
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text("ZA")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.secondary)
+                                    + Text("  Wallet")
                                 }
                             }
                         } label: {
