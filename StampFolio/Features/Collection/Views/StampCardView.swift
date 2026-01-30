@@ -295,6 +295,35 @@ struct StampWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         
+        // Inject CSS to center HTML content
+        let css = """
+        body {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh !important;
+        }
+        img, svg, canvas {
+            max-width: 100% !important;
+            max-height: 100% !important;
+            object-fit: contain !important;
+        }
+        """
+        
+        let script = WKUserScript(
+            source: """
+            var style = document.createElement('style');
+            style.textContent = `\(css)`;
+            document.head.appendChild(style);
+            """,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        
+        config.userContentController.addUserScript(script)
+        
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
         let backgroundColor = UIColor.systemBackground
