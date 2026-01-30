@@ -188,11 +188,7 @@ struct StampCardView: View {
     // MARK: - Gradient Background
     
     private var gradientBackground: some View {
-        LinearGradient(
-            colors: [.purple, .black, .orange],
-            startPoint: .bottomLeading,
-            endPoint: .topTrailing
-        )
+        .stampCardBackgroundGradient
     }
     
     // MARK: - Audio Placeholder View
@@ -274,7 +270,7 @@ struct StampCardView: View {
         } label: {
             Image(systemName: "wallet.bifold.fill")
                 .font(.caption)
-                .fontWeight(.semibold)
+                .fontWeight(.regular)
                 .foregroundStyle(walletColor)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
@@ -334,11 +330,7 @@ struct TextStampView: View {
     @State private var isLoading = true
     
     private var gradientBackground: some View {
-        LinearGradient(
-            colors: [.purple, .black, .orange],
-            startPoint: .bottomLeading,
-            endPoint: .topTrailing
-        )
+        .stampCardBackgroundGradient
     }
     
     var body: some View {
@@ -348,11 +340,10 @@ struct TextStampView: View {
             if isLoading {
                 ProgressView()
                     .tint(.white)
-                    .scaleEffect(1.2)
             } else {
                 Text(content)
                     .font(.system(.caption2))
-                    .fontWeight(.medium)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(8)

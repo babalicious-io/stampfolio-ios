@@ -299,16 +299,7 @@ struct TextContentView: View {
     @State private var isLoading = true
     
     private var gradientBackground: some View {
-        LinearGradient(
-                stops: [
-                    Gradient.Stop(color: .purple, location: 0), 
-                    Gradient.Stop(color: .black, location: 0.2), 
-                    Gradient.Stop(color: .black, location: 0.9),
-                    Gradient.Stop(color: .orange, location: 1) 
-            ],
-            startPoint: .bottomLeading,
-            endPoint: .topTrailing
-        )
+        .stampCardBackgroundGradient
     }
     
     var body: some View {
@@ -362,11 +353,7 @@ struct AudioContentView: View {
     @State private var player: AVPlayer?
     
     private var gradientBackground: some View {
-        LinearGradient(
-            colors: [.purple, .pink, .black, .yellow, .orange],
-            startPoint: .bottomLeading,
-            endPoint: .topTrailing
-        )
+        .stampCardBackgroundGradient
     }
     
     var body: some View {
@@ -430,11 +417,7 @@ struct VideoContentView: View {
     @State private var player: AVPlayer?
     
     private var gradientBackground: some View {
-        LinearGradient(
-            colors: [.purple, .pink, .black, .yellow, .orange],
-            startPoint: .bottomLeading,
-            endPoint: .topTrailing
-        )
+        .stampCardBackgroundGradient
     }
     
     var body: some View {
