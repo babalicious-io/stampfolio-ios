@@ -291,23 +291,13 @@ struct StampCardView: View {
 struct StampWebView: UIViewRepresentable {
     let url: URL?
     
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
-        
-        // Inject viewport meta tag BEFORE HTML parses to prevent resize glitch
-        // Using document.write at atDocumentStart ensures viewport is set before any content renders
-        let viewportScript = WKUserScript(
-            source: """
-            document.write('<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">');
-            """,
-            injectionTime: .atDocumentStart,
-            forMainFrameOnly: true
-        )
-        
-        let contentController = WKUserContentController()
-        contentController.addUserScript(viewportScript)
-        config.userContentController = contentController
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
@@ -328,10 +318,53 @@ struct StampWebView: UIViewRepresentable {
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         
-        // Only load if URL changed
-        if webView.url != url {
-            let request = URLRequest(url: url)
-            webView.load(request)
+        // Only load if URL changed and not already loading this URL
+        guard context.coordinator.currentURL != url else { return }
+        context.coordinator.currentURL = url
+        
+        // Fetch HTML, inject viewport, then load
+        Task {
+            await context.coordinator.loadWithViewport(webView: webView, url: url)
+        }
+    }
+    
+    class Coordinator {
+        var currentURL: URL?
+        
+        @MainActor
+        func loadWithViewport(webView: WKWebView, url: URL) async {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                guard var htmlString = String(data: data, encoding: .utf8) else {
+                    // Fallback to direct load if not valid UTF-8
+                    webView.load(URLRequest(url: url))
+                    return
+                }
+                
+                // Inject viewport meta tag at the beginning of the HTML
+                let viewportMeta = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">"
+                
+                // Check if viewport already exists
+                if !htmlString.contains("name=\"viewport\"") && !htmlString.contains("name='viewport'") {
+                    // Insert viewport after opening <head> tag, or at the very beginning
+                    if let headRange = htmlString.range(of: "<head>", options: .caseInsensitive) {
+                        htmlString.insert(contentsOf: viewportMeta, at: headRange.upperBound)
+                    } else if let htmlRange = htmlString.range(of: "<html", options: .caseInsensitive) {
+                        // Find the end of <html> tag and insert after
+                        if let closeRange = htmlString[htmlRange.upperBound...].range(of: ">") {
+                            htmlString.insert(contentsOf: "<head>\(viewportMeta)</head>", at: closeRange.upperBound)
+                        }
+                    } else {
+                        // No proper HTML structure, prepend viewport
+                        htmlString = viewportMeta + htmlString
+                    }
+                }
+                
+                webView.loadHTMLString(htmlString, baseURL: url)
+            } catch {
+                // Fallback to direct load on error
+                webView.load(URLRequest(url: url))
+            }
         }
     }
 }
