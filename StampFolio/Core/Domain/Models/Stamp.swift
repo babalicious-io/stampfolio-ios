@@ -98,10 +98,17 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     }
     
     /// URL for loading the stamp image
-    /// Note: We use /s/ instead of /stamps/ because the /s/ endpoint
-    /// returns correct content-type headers for all content types,
-    /// while /stamps/ returns binary/octet-stream for HTML which breaks WKWebView
+    /// Note: HTML stamps use /content/ endpoint which processes and makes them responsive,
+    /// other stamps use /s/ endpoint for correct content-type headers
     var imageURL: URL? {
+        // For HTML stamps, use the /content/ endpoint which processes recursive content
+        // and makes HTML stamps display correctly (responsive, cleaned, etc.)
+        // Uses txHash directly as that's what the /content/ endpoint expects
+        if isHTML {
+            return URL(string: "https://stampchain.io/content/\(txHash)")
+        }
+        
+        // For all other stamps, use /s/ endpoint for correct MIME types
         let correctedUrl = stampUrl.replacingOccurrences(of: "/stamps/", with: "/s/")
         return URL(string: correctedUrl)
     }
