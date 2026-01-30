@@ -295,11 +295,12 @@ struct WebContentView: UIViewRepresentable {
 /// Centered, non-scrollable text content view
 struct TextContentView: View {
     let url: URL?
-    @State private var content: String = "Loading..."
+    @State private var content: String = ""
+    @State private var isLoading = true
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .orange],
+            colors: [.purple, .black, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
@@ -309,11 +310,18 @@ struct TextContentView: View {
         ZStack {
             gradientBackground
             
-            Text(content)
-                .font(.system(.body, design: .monospaced))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .padding()
+            if isLoading {
+                ProgressView()
+                    .tint(.white)
+                    .scaleEffect(1.5)
+            } else {
+                Text(content)
+                    .font(.system(.body))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
         }
         .task { await fetchContent() }
     }
@@ -321,6 +329,7 @@ struct TextContentView: View {
     private func fetchContent() async {
         guard let url = url else {
             content = "No URL"
+            isLoading = false
             return
         }
         
@@ -334,6 +343,8 @@ struct TextContentView: View {
         } catch {
             content = "Failed to load"
         }
+        
+        isLoading = false
     }
 }
 
@@ -415,7 +426,7 @@ struct VideoContentView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .orange],
+            colors: [.purple, .black, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
