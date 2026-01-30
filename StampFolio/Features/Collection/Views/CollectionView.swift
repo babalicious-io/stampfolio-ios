@@ -50,13 +50,13 @@ struct CollectionView: View {
                             Button {
                                 viewModel.sortStamps(by: .stampAscending, wallets: wallets)
                             } label: {
-                                Label("Stamp # (ascending)", systemImage: "arrow.up")
+                                Label("Stamp #", systemImage: "arrow.up")
                             }
                             
                             Button {
                                 viewModel.sortStamps(by: .stampDescending, wallets: wallets)
                             } label: {
-                                Label("Stamp # (descending)", systemImage: "arrow.down")
+                                Label("Stamp #", systemImage: "arrow.down")
                             }
                             
                             Divider()
@@ -70,7 +70,7 @@ struct CollectionView: View {
                             Button {
                                 viewModel.sortStamps(by: .artistZA, wallets: wallets)
                             } label: {
-                                Label("Artist (Z-A)", systemImage: "textformat.abc")
+                                Label("Artist (Z-A)", systemImage: "textformat.zyx")
                             }
                             
                             Divider()
@@ -78,13 +78,13 @@ struct CollectionView: View {
                             Button {
                                 viewModel.sortStamps(by: .balanceAscending, wallets: wallets)
                             } label: {
-                                Label("Balance (ascending)", systemImage: "arrow.up")
+                                Label("Balance", systemImage: "arrow.up")
                             }
                             
                             Button {
                                 viewModel.sortStamps(by: .balanceDescending, wallets: wallets)
                             } label: {
-                                Label("Balance (descending)", systemImage: "arrow.down")
+                                Label("Balance", systemImage: "arrow.down")
                             }
                             
                             if showWalletIcons {
