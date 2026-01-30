@@ -65,6 +65,15 @@ struct StampCardView: View {
                     // Use WebView for HTML and SVG content
                     StampWebView(url: stamp.imageURL)
                         .frame(width: geometry.size.width, height: geometry.size.width)
+                } else if stamp.isText {
+                    // Plain text stamp - gradient placeholder
+                    textPlaceholderView
+                } else if stamp.isAudio {
+                    // Audio stamp - gradient placeholder with waveform
+                    audioPlaceholderView
+                } else if stamp.isVideo {
+                    // Video stamp - gradient placeholder with play icon
+                    videoPlaceholderView
                 } else if stamp.isAnimated {
                     // Use KFAnimatedImage for GIFs
                     KFAnimatedImage(stamp.imageURL)
@@ -80,7 +89,7 @@ struct StampCardView: View {
                         .frame(width: geometry.size.width, height: geometry.size.width)
                         .clipped()
                 } else {
-                    // Use KFImage for regular images
+                    // Use KFImage for regular images (jpg, png, webp) + SRC-721/cursed stamps
                     KFImage(stamp.imageURL)
                         .placeholder {
                             placeholderView
@@ -172,6 +181,59 @@ struct StampCardView: View {
                         .foregroundStyle(.purple)
                 }
             }
+        }
+    }
+    
+    // MARK: - Gradient Background
+    
+    private var gradientBackground: some View {
+        LinearGradient(
+            colors: [.purple, .orange],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
+    
+    // MARK: - Text Placeholder View
+    
+    private var textPlaceholderView: some View {
+        ZStack {
+            gradientBackground
+            
+            VStack(spacing: 8) {
+                Image(systemName: "doc.text.fill")
+                    .font(.largeTitle)
+                    .foregroundStyle(.white)
+                
+                Text("TXT")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+            }
+        }
+    }
+    
+    // MARK: - Audio Placeholder View
+    
+    private var audioPlaceholderView: some View {
+        ZStack {
+            gradientBackground
+            
+            Image(systemName: "waveform")
+                .font(.system(size: 44))
+                .foregroundStyle(.white)
+        }
+    }
+    
+    // MARK: - Video Placeholder View
+    
+    private var videoPlaceholderView: some View {
+        ZStack {
+            gradientBackground
+            
+            Image(systemName: "play.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(.white)
         }
     }
     

@@ -99,18 +99,16 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
     /// URL for loading the stamp image
     /// Note: HTML stamps use /content/ endpoint which processes and makes them responsive,
-    /// other stamps use /s/ endpoint for correct content-type headers
+    /// other stamps use /s/ endpoint with txHash for correct content-type headers
     var imageURL: URL? {
         // For HTML stamps, use the /content/ endpoint which processes recursive content
         // and makes HTML stamps display correctly (responsive, cleaned, etc.)
-        // Uses txHash directly as that's what the /content/ endpoint expects
         if isHTML {
             return URL(string: "https://stampchain.io/content/\(txHash)")
         }
         
-        // For all other stamps, use /s/ endpoint for correct MIME types
-        let correctedUrl = stampUrl.replacingOccurrences(of: "/stamps/", with: "/s/")
-        return URL(string: correctedUrl)
+        // For all other stamps, use /s/ endpoint with txHash
+        return URL(string: "https://stampchain.io/s/\(txHash)")
     }
     
     /// Human-readable file size
@@ -141,6 +139,23 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     /// Whether the stamp content is HTML
     var isHTML: Bool {
         stampMimetype?.lowercased() == "text/html"
+    }
+    
+    /// Whether the stamp content is plain text
+    var isText: Bool {
+        stampMimetype?.lowercased() == "text/plain"
+    }
+    
+    /// Whether the stamp content is audio
+    var isAudio: Bool {
+        guard let mimetype = stampMimetype?.lowercased() else { return false }
+        return mimetype.hasPrefix("audio/")
+    }
+    
+    /// Whether the stamp content is video
+    var isVideo: Bool {
+        guard let mimetype = stampMimetype?.lowercased() else { return false }
+        return mimetype.hasPrefix("video/")
     }
     
     /// Whether the stamp is divisible (converts int to bool)

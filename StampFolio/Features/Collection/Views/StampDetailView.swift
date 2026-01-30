@@ -8,6 +8,8 @@
 import SwiftUI
 import Kingfisher
 import WebKit
+import AVKit
+import AVFoundation
 
 /// Full-screen stamp detail view for immersive viewing
 struct StampDetailView: View {
@@ -95,7 +97,16 @@ struct StampDetailView: View {
     
     @ViewBuilder
     private var contentView: some View {
-        if currentStamp.isSVG || currentStamp.isHTML {
+        if currentStamp.isText {
+            // Plain text content
+            TextContentView(url: currentStamp.imageURL)
+        } else if currentStamp.isAudio {
+            // Audio content
+            AudioContentView(url: currentStamp.imageURL)
+        } else if currentStamp.isVideo {
+            // Video content
+            VideoContentView(url: currentStamp.imageURL)
+        } else if currentStamp.isSVG || currentStamp.isHTML {
             // WebView for SVG/HTML content
             WebContentView(url: currentStamp.imageURL)
         } else if currentStamp.isAnimated {
@@ -109,7 +120,7 @@ struct StampDetailView: View {
                 .aspectRatio(contentMode: .fit)
                 .allowsHitTesting(false)
         } else {
-            // KFImage for static images
+            // KFImage for static images (jpg, png, webp) + SRC-721/cursed stamps
             KFImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
@@ -276,6 +287,161 @@ struct WebContentView: UIViewRepresentable {
         guard let url = url else { return }
         let request = URLRequest(url: url)
         webView.load(request)
+    }
+}
+
+// MARK: - Text Content View
+
+/// Centered, non-scrollable text content view
+struct TextContentView: View {
+    let url: URL?
+    @State private var content: String = "Loading..."
+    
+    private var gradientBackground: some View {
+        LinearGradient(
+            colors: [.purple, .orange],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
+    
+    var body: some View {
+        ZStack {
+            gradientBackground
+            
+            Text(content)
+                .font(.system(.body, design: .monospaced))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .padding()
+        }
+        .task { await fetchContent() }
+    }
+    
+    private func fetchContent() async {
+        guard let url = url else {
+            content = "No URL"
+            return
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let text = String(data: data, encoding: .utf8) {
+                content = text
+            } else {
+                content = "Failed to decode"
+            }
+        } catch {
+            content = "Failed to load"
+        }
+    }
+}
+
+// MARK: - Audio Content View
+
+/// Audio player with waveform icon and play/pause button (no progress bar)
+struct AudioContentView: View {
+    let url: URL?
+    @State private var isPlaying = false
+    @State private var player: AVPlayer?
+    
+    private var gradientBackground: some View {
+        LinearGradient(
+            colors: [.purple, .orange],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
+    
+    var body: some View {
+        ZStack {
+            gradientBackground
+            
+            VStack(spacing: 32) {
+                Image(systemName: "waveform")
+                    .font(.system(size: 80))
+                    .foregroundStyle(.white)
+                
+                Button {
+                    togglePlayback()
+                } label: {
+                    Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(.white)
+                }
+            }
+        }
+        .onAppear {
+            setupPlayer()
+        }
+        .onDisappear {
+            player?.pause()
+        }
+    }
+    
+    private func setupPlayer() {
+        guard let url = url else { return }
+        player = AVPlayer(url: url)
+        
+        // Observe when playback ends
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: player?.currentItem,
+            queue: .main
+        ) { _ in
+            isPlaying = false
+            player?.seek(to: .zero)
+        }
+    }
+    
+    private func togglePlayback() {
+        guard let player = player else { return }
+        
+        if isPlaying {
+            player.pause()
+        } else {
+            player.play()
+        }
+        isPlaying.toggle()
+    }
+}
+
+// MARK: - Video Content View
+
+/// Video player using AVKit
+struct VideoContentView: View {
+    let url: URL?
+    @State private var player: AVPlayer?
+    
+    private var gradientBackground: some View {
+        LinearGradient(
+            colors: [.purple, .orange],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
+    
+    var body: some View {
+        ZStack {
+            if let player = player {
+                VideoPlayer(player: player)
+            } else {
+                // Gradient placeholder while loading
+                gradientBackground
+                
+                Image(systemName: "play.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(.white)
+            }
+        }
+        .onAppear {
+            if let url = url {
+                player = AVPlayer(url: url)
+            }
+        }
+        .onDisappear {
+            player?.pause()
+        }
     }
 }
 

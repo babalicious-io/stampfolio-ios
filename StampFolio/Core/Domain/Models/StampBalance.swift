@@ -12,6 +12,9 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
+    /// Stamp identifier type ("STAMP", "SRC-721", "SRC-101", "CURSED", etc.)
+    let ident: String?
+    
     /// Unique stamp number (primary identifier)
     let stamp: Int
     
@@ -93,6 +96,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
+        case ident
         case stamp
         case txHash = "tx_hash"
         case stampUrl = "stamp_url"
@@ -114,6 +118,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
+        ident = try container.decodeIfPresent(String.self, forKey: .ident)
         stamp = try container.decode(Int.self, forKey: .stamp)
         txHash = try container.decode(String.self, forKey: .txHash)
         stampUrl = try container.decode(String.self, forKey: .stampUrl)
