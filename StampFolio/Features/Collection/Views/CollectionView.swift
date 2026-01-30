@@ -96,12 +96,12 @@ struct CollectionView: View {
                             Button {
                                 viewModel.toggleSort(for: .artist, wallets: wallets)
                             } label: {
-                                HStack(spacing: 6) {
-                                    Text(artistSortIcon)
-                                        .font(.caption.bold())
-                                        .foregroundStyle(.secondary)
-                                        .frame(width: 20, alignment: .leading)
+                                Label {
                                     Text("Artist")
+                                } icon: {
+                                    Text(artistSortIcon)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(.blue)
                                 }
                             }
                             
@@ -117,12 +117,12 @@ struct CollectionView: View {
                                 Button {
                                     viewModel.toggleSort(for: .wallet, wallets: wallets)
                                 } label: {
-                                    HStack(spacing: 6) {
-                                        Text(walletSortIcon)
-                                            .font(.caption.bold())
-                                            .foregroundStyle(.secondary)
-                                            .frame(width: 20, alignment: .leading)
+                                    Label {
                                         Text("Wallet")
+                                    } icon: {
+                                        Text(walletSortIcon)
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(.blue)
                                     }
                                 }
                             }
