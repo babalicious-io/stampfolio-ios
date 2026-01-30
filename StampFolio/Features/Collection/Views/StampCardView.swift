@@ -37,8 +37,8 @@ struct StampCardView: View {
     
     var body: some View {
         stampContent
-            .glassEffect(in: .rect(cornerRadius: 24))
-            .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
+            .background(Color.clear)
+            .cornerRadius(24)
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)
             .onTapGesture {
