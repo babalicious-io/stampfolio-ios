@@ -298,7 +298,7 @@ struct TextContentView: View {
     @State private var content: String = ""
     @State private var isLoading = true
     
-    private var gradientBackground: some View {
+    private var gradientBackground: LinearGradient {
         .stampCardBackgroundGradient
     }
     
@@ -352,7 +352,7 @@ struct AudioContentView: View {
     @State private var isPlaying = false
     @State private var player: AVPlayer?
     
-    private var gradientBackground: some View {
+    private var gradientBackground: LinearGradient {
         .stampCardBackgroundGradient
     }
     
@@ -416,7 +416,7 @@ struct VideoContentView: View {
     let url: URL?
     @State private var player: AVPlayer?
     
-    private var gradientBackground: some View {
+    private var gradientBackground: LinearGradient {
         .stampCardBackgroundGradient
     }
     

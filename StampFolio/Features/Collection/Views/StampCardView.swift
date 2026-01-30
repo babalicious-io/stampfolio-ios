@@ -187,7 +187,7 @@ struct StampCardView: View {
     
     // MARK: - Gradient Background
     
-    private var gradientBackground: some View {
+    private var gradientBackground: LinearGradient {
         .stampCardBackgroundGradient
     }
     
@@ -329,7 +329,7 @@ struct TextStampView: View {
     @State private var content: String = ""
     @State private var isLoading = true
     
-    private var gradientBackground: some View {
+    private var gradientBackground: LinearGradient {
         .stampCardBackgroundGradient
     }
     
