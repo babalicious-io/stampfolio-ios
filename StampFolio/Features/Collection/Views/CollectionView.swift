@@ -64,19 +64,27 @@ struct CollectionView: View {
                             Button {
                                 viewModel.sortStamps(by: .artistAZ, wallets: wallets)
                             } label: {
-                                Text("AZ")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.secondary)
-                                + Text("  Artist")
+                                HStack(spacing: 0) {
+                                    Text("AZ")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                        .frame(width: 16)
+                                    Text("Artist")
+                                }
                             }
                             
                             Button {
                                 viewModel.sortStamps(by: .artistZA, wallets: wallets)
                             } label: {
-                                Text("ZA")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.secondary)
-                                + Text("  Artist")
+                                HStack(spacing: 0) {
+                                    Text("ZA")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                        .frame(width: 16)
+                                    Text("Artist")
+                                }
                             }
                             
                             Divider()
@@ -99,19 +107,27 @@ struct CollectionView: View {
                                 Button {
                                     viewModel.sortStamps(by: .walletAZ, wallets: wallets)
                                 } label: {
-                                    Text("AZ")
-                                        .font(.caption.bold())
-                                        .foregroundStyle(.secondary)
-                                    + Text("  Wallet")
+                                    HStack(spacing: 0) {
+                                        Text("AZ")
+                                            .font(.caption.bold())
+                                            .foregroundStyle(.secondary)
+                                        Spacer()
+                                            .frame(width: 16)
+                                        Text("Wallet")
+                                    }
                                 }
                                 
                                 Button {
                                     viewModel.sortStamps(by: .walletZA, wallets: wallets)
                                 } label: {
-                                    Text("ZA")
-                                        .font(.caption.bold())
-                                        .foregroundStyle(.secondary)
-                                    + Text("  Wallet")
+                                    HStack(spacing: 0) {
+                                        Text("ZA")
+                                            .font(.caption.bold())
+                                            .foregroundStyle(.secondary)
+                                        Spacer()
+                                            .frame(width: 16)
+                                        Text("Wallet")
+                                    }
                                 }
                             }
                         } label: {
