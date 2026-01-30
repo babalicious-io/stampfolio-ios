@@ -64,24 +64,24 @@ struct CollectionView: View {
                             Button {
                                 viewModel.sortStamps(by: .artistAZ, wallets: wallets)
                             } label: {
-                                Label {
-                                    Text("Artist")
-                                } icon: {
+                                HStack {
                                     Text("AZ")
                                         .font(.caption)
                                         .fontWeight(.semibold)
+                                        .foregroundStyle(.secondary)
+                                    Text("Artist")
                                 }
                             }
                             
                             Button {
                                 viewModel.sortStamps(by: .artistZA, wallets: wallets)
                             } label: {
-                                Label {
-                                    Text("Artist")
-                                } icon: {
+                                HStack {
                                     Text("ZA")
                                         .font(.caption)
                                         .fontWeight(.semibold)
+                                        .foregroundStyle(.secondary)
+                                    Text("Artist")
                                 }
                             }
                             
@@ -105,24 +105,24 @@ struct CollectionView: View {
                                 Button {
                                     viewModel.sortStamps(by: .walletAZ, wallets: wallets)
                                 } label: {
-                                    Label {
-                                        Text("Wallet")
-                                    } icon: {
+                                    HStack {
                                         Text("AZ")
                                             .font(.caption)
                                             .fontWeight(.semibold)
+                                            .foregroundStyle(.secondary)
+                                        Text("Wallet")
                                     }
                                 }
                                 
                                 Button {
                                     viewModel.sortStamps(by: .walletZA, wallets: wallets)
                                 } label: {
-                                    Label {
-                                        Text("Wallet")
-                                    } icon: {
+                                    HStack {
                                         Text("ZA")
                                             .font(.caption)
                                             .fontWeight(.semibold)
+                                            .foregroundStyle(.secondary)
+                                        Text("Wallet")
                                     }
                                 }
                             }
