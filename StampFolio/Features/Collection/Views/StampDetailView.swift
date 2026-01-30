@@ -347,7 +347,7 @@ struct AudioContentView: View {
     
     private var gradientBackground: some View {
         LinearGradient(
-            colors: [.purple, .orange],
+            colors: [.purple, .black, .orange],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )
