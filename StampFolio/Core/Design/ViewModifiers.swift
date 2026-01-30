@@ -66,8 +66,8 @@ extension LinearGradient {
     static let stampCardBackgroundGradient = LinearGradient(
         stops: [
             Gradient.Stop(color: .purple, location: 0),
-            Gradient.Stop(color: .black, location: 0.2),
-            Gradient.Stop(color: .black, location: 0.9),
+            Gradient.Stop(color: .black, location: 0.3),
+            Gradient.Stop(color: .black, location: 0.8),
             Gradient.Stop(color: .orange, location: 1)
         ],
         startPoint: .bottomLeading,
