@@ -31,6 +31,44 @@ struct CollectionView: View {
         GridItem(.flexible(), spacing: 16)
     ]
     
+    // MARK: - Computed Properties
+    
+    /// Dynamic icon for Stamp # sort based on current sort option
+    private var stampSortIcon: String {
+        switch viewModel.currentSortOption {
+        case .stampAscending: return "arrow.up"
+        case .stampDescending: return "arrow.down"
+        default: return "arrow.down"
+        }
+    }
+    
+    /// Dynamic icon for Artist sort based on current sort option
+    private var artistSortIcon: String {
+        switch viewModel.currentSortOption {
+        case .artistAZ: return "AZ"
+        case .artistZA: return "ZA"
+        default: return "AZ"
+        }
+    }
+    
+    /// Dynamic icon for Balance sort based on current sort option
+    private var balanceSortIcon: String {
+        switch viewModel.currentSortOption {
+        case .balanceAscending: return "arrow.up"
+        case .balanceDescending: return "arrow.down"
+        default: return "arrow.down"
+        }
+    }
+    
+    /// Dynamic icon for Wallet sort based on current sort option
+    private var walletSortIcon: String {
+        switch viewModel.currentSortOption {
+        case .walletAZ: return "AZ"
+        case .walletZA: return "ZA"
+        default: return "AZ"
+        }
+    }
+    
     // MARK: - Body
     
     var body: some View {
@@ -47,68 +85,36 @@ struct CollectionView: View {
                     HStack(spacing: 16) {
                         // Sort menu
                         Menu {
+                            // Stamp # toggle
                             Button {
-                                viewModel.sortStamps(by: .stampAscending, wallets: wallets)
+                                viewModel.toggleSort(for: .stamp, wallets: wallets)
                             } label: {
-                                Label("Stamp #", systemImage: "arrow.up")
+                                Label("Stamp #", systemImage: stampSortIcon)
                             }
                             
+                            // Artist toggle
                             Button {
-                                viewModel.sortStamps(by: .stampDescending, wallets: wallets)
+                                viewModel.toggleSort(for: .artist, wallets: wallets)
                             } label: {
-                                Label("Stamp #", systemImage: "arrow.down")
-                            }
-                            
-                            Divider()
-                            
-                            Button {
-                                viewModel.sortStamps(by: .artistAZ, wallets: wallets)
-                            } label: {
-                                Text("AZ")
+                                Text(artistSortIcon)
                                     .font(.caption.bold())
                                     .foregroundStyle(.secondary)
                                 + Text("   Artist")
                             }
                             
+                            // Balance toggle
                             Button {
-                                viewModel.sortStamps(by: .artistZA, wallets: wallets)
+                                viewModel.toggleSort(for: .balance, wallets: wallets)
                             } label: {
-                                Text("ZA")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.secondary)
-                                + Text("   Artist")
+                                Label("Balance", systemImage: balanceSortIcon)
                             }
                             
-                            Divider()
-                            
-                            Button {
-                                viewModel.sortStamps(by: .balanceAscending, wallets: wallets)
-                            } label: {
-                                Label("Balance", systemImage: "arrow.up")
-                            }
-                            
-                            Button {
-                                viewModel.sortStamps(by: .balanceDescending, wallets: wallets)
-                            } label: {
-                                Label("Balance", systemImage: "arrow.down")
-                            }
-                            
+                            // Wallet toggle (conditional)
                             if showWalletIcons {
-                                Divider()
-                                
                                 Button {
-                                    viewModel.sortStamps(by: .walletAZ, wallets: wallets)
+                                    viewModel.toggleSort(for: .wallet, wallets: wallets)
                                 } label: {
-                                    Text("AZ")
-                                        .font(.caption.bold())
-                                        .foregroundStyle(.secondary)
-                                    + Text("   Wallet")
-                                }
-                                
-                                Button {
-                                    viewModel.sortStamps(by: .walletZA, wallets: wallets)
-                                } label: {
-                                    Text("ZA")
+                                    Text(walletSortIcon)
                                         .font(.caption.bold())
                                         .foregroundStyle(.secondary)
                                     + Text("   Wallet")

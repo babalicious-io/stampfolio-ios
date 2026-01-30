@@ -9,6 +9,14 @@ import Foundation
 import SwiftData
 import Observation
 
+/// Sort categories for toggle behavior
+enum SortCategory {
+    case stamp
+    case artist
+    case balance
+    case wallet
+}
+
 /// Sorting options for stamp collection
 enum SortOption: String, CaseIterable, Codable {
     case stampAscending = "stamp_asc"
@@ -173,6 +181,25 @@ final class CollectionViewModel {
     func sortStamps(by option: SortOption, wallets: [Wallet]) {
         currentSortOption = option
         stamps = sortedStamps(stamps, by: option, wallets: wallets)
+    }
+    
+    /// Toggle sort for a specific category (Stamp, Artist, Balance, Wallet)
+    /// - Parameter wallets: Array of wallets for mapping wallet addresses to display names
+    func toggleSort(for category: SortCategory, wallets: [Wallet]) {
+        let newOption: SortOption
+        
+        switch category {
+        case .stamp:
+            newOption = currentSortOption == .stampAscending ? .stampDescending : .stampAscending
+        case .artist:
+            newOption = currentSortOption == .artistAZ ? .artistZA : .artistAZ
+        case .balance:
+            newOption = currentSortOption == .balanceAscending ? .balanceDescending : .balanceAscending
+        case .wallet:
+            newOption = currentSortOption == .walletAZ ? .walletZA : .walletAZ
+        }
+        
+        sortStamps(by: newOption, wallets: wallets)
     }
     
     /// Returns sorted stamps based on the given option
