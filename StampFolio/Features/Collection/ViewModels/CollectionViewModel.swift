@@ -22,12 +22,12 @@ enum SortOption: String, CaseIterable, Codable {
     
     var displayName: String {
         switch self {
-        case .stampAscending: return "Stamp #"
-        case .stampDescending: return "Stamp #"
+        case .stampAscending: return "Stamp # (ascending)"
+        case .stampDescending: return "Stamp # (descending)"
         case .artistAZ: return "Artist (A-Z)"
         case .artistZA: return "Artist (Z-A)"
-        case .balanceAscending: return "Balance"
-        case .balanceDescending: return "Balance"
+        case .balanceAscending: return "Balance (ascending)"
+        case .balanceDescending: return "Balance (descending)"
         case .walletAZ: return "Wallet (A-Z)"
         case .walletZA: return "Wallet (Z-A)"
         }
@@ -37,8 +37,7 @@ enum SortOption: String, CaseIterable, Codable {
         switch self {
         case .stampAscending, .balanceAscending: return "arrow.up"
         case .stampDescending, .balanceDescending: return "arrow.down"
-        case .artistAZ, .walletAZ: return "textformat.abc"
-        case .artistZA, .walletZA: return "textformat.zyx"
+        case .artistAZ, .artistZA, .walletAZ, .walletZA: return ""
         }
     }
 }

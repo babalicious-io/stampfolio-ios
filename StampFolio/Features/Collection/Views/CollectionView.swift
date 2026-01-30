@@ -64,13 +64,25 @@ struct CollectionView: View {
                             Button {
                                 viewModel.sortStamps(by: .artistAZ, wallets: wallets)
                             } label: {
-                                Label("Artist (A-Z)", systemImage: "textformat.abc")
+                                Label {
+                                    Text("Artist")
+                                } icon: {
+                                    Text("AZ")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                }
                             }
                             
                             Button {
                                 viewModel.sortStamps(by: .artistZA, wallets: wallets)
                             } label: {
-                                Label("Artist (Z-A)", systemImage: "textformat.zyx")
+                                Label {
+                                    Text("Artist")
+                                } icon: {
+                                    Text("ZA")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                }
                             }
                             
                             Divider()
@@ -93,13 +105,25 @@ struct CollectionView: View {
                                 Button {
                                     viewModel.sortStamps(by: .walletAZ, wallets: wallets)
                                 } label: {
-                                    Label("Wallet (A-Z)", systemImage: "textformat.abc")
+                                    Label {
+                                        Text("Wallet")
+                                    } icon: {
+                                        Text("AZ")
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                    }
                                 }
                                 
                                 Button {
                                     viewModel.sortStamps(by: .walletZA, wallets: wallets)
                                 } label: {
-                                    Label("Wallet (Z-A)", systemImage: "textformat.abc")
+                                    Label {
+                                        Text("Wallet")
+                                    } icon: {
+                                        Text("ZA")
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                    }
                                 }
                             }
                         } label: {
