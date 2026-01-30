@@ -75,3 +75,19 @@ struct ScaledSpacing {
     @ScaledMetric(relativeTo: .body) var large: CGFloat = 24
     @ScaledMetric(relativeTo: .body) var extraLarge: CGFloat = 32
 }
+
+// MARK: - Reusable Gradients
+
+extension LinearGradient {
+    /// Standard stamp card background gradient - purple to orange with black center
+    static let stampCardBackgroundGradient = LinearGradient(
+        stops: [
+            Gradient.Stop(color: .purple, location: 0),
+            Gradient.Stop(color: .black, location: 0.2),
+            Gradient.Stop(color: .black, location: 0.9),
+            Gradient.Stop(color: .orange, location: 1)
+        ],
+        startPoint: .bottomLeading,
+        endPoint: .topTrailing
+    )
+}
