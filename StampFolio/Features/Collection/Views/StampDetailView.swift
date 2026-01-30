@@ -113,8 +113,7 @@ struct StampDetailView: View {
             // KFAnimatedImage for animated GIFs
             KFAnimatedImage(currentStamp.imageURL)
                 .placeholder {
-                    ProgressView()
-                        .tint(.purple)
+                    LoadingSpinner()
                 }
                 .cacheOriginalImage()
                 .aspectRatio(contentMode: .fit)
@@ -123,8 +122,7 @@ struct StampDetailView: View {
             // KFImage for static images (jpg, png, webp) + SRC-721/cursed stamps
             KFImage(currentStamp.imageURL)
                 .placeholder {
-                    ProgressView()
-                        .tint(.purple)
+                    LoadingSpinner()
                 }
                 .retry(maxCount: 3)
                 .resizable()
@@ -299,7 +297,7 @@ struct TextContentView: View {
     @State private var isLoading = true
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient
+        LinearGradient.stampFullscreenBackgroundGradient
     }
     
     var body: some View {
@@ -353,7 +351,7 @@ struct AudioContentView: View {
     @State private var player: AVPlayer?
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient
+        LinearGradient.stampFullscreenBackgroundGradient
     }
     
     var body: some View {
@@ -417,7 +415,7 @@ struct VideoContentView: View {
     @State private var player: AVPlayer?
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient
+        LinearGradient.stampFullscreenBackgroundGradient
     }
     
     var body: some View {

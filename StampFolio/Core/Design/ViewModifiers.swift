@@ -7,6 +7,15 @@
 
 import SwiftUI
 
+// MARK: - Loading Spinner
+
+struct LoadingSpinner: View {
+    var body: some View {
+        ProgressView()
+            .tint(.purple)
+    }
+}
+
 // MARK: - Shimmer Effect Modifier (for loading states)
 
 struct ShimmerModifier: ViewModifier {
@@ -63,6 +72,18 @@ struct ScaledSpacing {
 extension LinearGradient {
     /// Standard stamp card background gradient - purple to orange with black center
     static let stampCardBackgroundGradient = LinearGradient(
+        stops: [
+            Gradient.Stop(color: .purple, location: 0),
+            Gradient.Stop(color: .black, location: 0.3),
+            Gradient.Stop(color: .black, location: 0.8),
+            Gradient.Stop(color: .orange, location: 1)
+        ],
+        startPoint: .bottomLeading,
+        endPoint: .topTrailing
+    )
+    
+    /// Fullscreen background gradient - purple to orange with black center
+    static let stampFullscreenBackgroundGradient = LinearGradient(
         stops: [
             Gradient.Stop(color: .purple, location: 0),
             Gradient.Stop(color: .black, location: 0.2),

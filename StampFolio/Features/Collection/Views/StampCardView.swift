@@ -154,8 +154,7 @@ struct StampCardView: View {
                     .font(.title)
                     .foregroundStyle(.secondary)
                 
-                ProgressView()
-                    .tint(.purple)
+                LoadingSpinner()
             }
         }
     }
