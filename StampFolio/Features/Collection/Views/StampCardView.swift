@@ -295,6 +295,31 @@ struct StampWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         
+        // Inject viewport meta tag for stamps that don't have one
+        // This ensures HTML content scales properly in small containers
+        let viewportScript = WKUserScript(
+            source: """
+            if (!document.querySelector('meta[name=viewport]')) {
+                var meta = document.createElement('meta');
+                meta.name = 'viewport';
+                meta.content = 'width=device-width, initial-scale=1, shrink-to-fit=yes';
+                if (document.head) {
+                    document.head.appendChild(meta);
+                } else {
+                    var head = document.createElement('head');
+                    head.appendChild(meta);
+                    document.documentElement.insertBefore(head, document.documentElement.firstChild);
+                }
+            }
+            """,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        
+        let contentController = WKUserContentController()
+        contentController.addUserScript(viewportScript)
+        config.userContentController = contentController
+        
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
         let backgroundColor = UIColor.systemBackground
