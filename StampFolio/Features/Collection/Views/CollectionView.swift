@@ -22,6 +22,7 @@ struct CollectionView: View {
     
     @State private var showOfflineBanner = false
     @State private var showSettings = false
+    @AppStorage("showWalletIcons") private var showWalletIcons = false
     
     // MARK: - Layout
     
@@ -44,6 +45,69 @@ struct CollectionView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
+                        // Sort menu
+                        Menu {
+                            Button {
+                                viewModel.sortStamps(by: .stampAscending, wallets: wallets)
+                            } label: {
+                                Label("Stamp # (ascending)", systemImage: "arrow.up")
+                            }
+                            
+                            Button {
+                                viewModel.sortStamps(by: .stampDescending, wallets: wallets)
+                            } label: {
+                                Label("Stamp # (descending)", systemImage: "arrow.down")
+                            }
+                            
+                            Divider()
+                            
+                            Button {
+                                viewModel.sortStamps(by: .artistAZ, wallets: wallets)
+                            } label: {
+                                Label("Artist (A-Z)", systemImage: "textformat.abc")
+                            }
+                            
+                            Button {
+                                viewModel.sortStamps(by: .artistZA, wallets: wallets)
+                            } label: {
+                                Label("Artist (Z-A)", systemImage: "textformat.abc")
+                            }
+                            
+                            Divider()
+                            
+                            Button {
+                                viewModel.sortStamps(by: .balanceAscending, wallets: wallets)
+                            } label: {
+                                Label("Balance (ascending)", systemImage: "arrow.up")
+                            }
+                            
+                            Button {
+                                viewModel.sortStamps(by: .balanceDescending, wallets: wallets)
+                            } label: {
+                                Label("Balance (descending)", systemImage: "arrow.down")
+                            }
+                            
+                            if showWalletIcons {
+                                Divider()
+                                
+                                Button {
+                                    viewModel.sortStamps(by: .walletAZ, wallets: wallets)
+                                } label: {
+                                    Label("Wallet (A-Z)", systemImage: "textformat.abc")
+                                }
+                                
+                                Button {
+                                    viewModel.sortStamps(by: .walletZA, wallets: wallets)
+                                } label: {
+                                    Label("Wallet (Z-A)", systemImage: "textformat.abc")
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease")
+                                .font(.title3)
+                        }
+                        .accessibilityLabel("Sort stamps")
+                        .accessibilityHint("Choose how to sort your stamp collection")
                         
                         Button {
                             showSettings = true

@@ -9,6 +9,40 @@ import Foundation
 import SwiftData
 import Observation
 
+/// Sorting options for stamp collection
+enum SortOption: String, CaseIterable, Codable {
+    case stampAscending = "stamp_asc"
+    case stampDescending = "stamp_desc"
+    case artistAZ = "artist_az"
+    case artistZA = "artist_za"
+    case balanceAscending = "balance_asc"
+    case balanceDescending = "balance_desc"
+    case walletAZ = "wallet_az"
+    case walletZA = "wallet_za"
+    
+    var displayName: String {
+        switch self {
+        case .stampAscending: return "Stamp # (ascending)"
+        case .stampDescending: return "Stamp # (descending)"
+        case .artistAZ: return "Artist (A-Z)"
+        case .artistZA: return "Artist (Z-A)"
+        case .balanceAscending: return "Balance (ascending)"
+        case .balanceDescending: return "Balance (descending)"
+        case .walletAZ: return "Wallet (A-Z)"
+        case .walletZA: return "Wallet (Z-A)"
+        }
+    }
+    
+    var iconName: String {
+        switch self {
+        case .stampAscending, .balanceAscending: return "arrow.up"
+        case .stampDescending, .balanceDescending: return "arrow.down"
+        case .artistAZ, .walletAZ: return "textformat.abc"
+        case .artistZA, .walletZA: return "textformat.abc"
+        }
+    }
+}
+
 /// ViewModel managing stamp collection state and data fetching
 @Observable
 final class CollectionViewModel {
@@ -32,6 +66,9 @@ final class CollectionViewModel {
     
     /// Whether refresh is in progress
     private(set) var isRefreshing: Bool = false
+    
+    /// Current sort option
+    var currentSortOption: SortOption = .stampDescending
     
     // MARK: - Private Properties
     
@@ -99,8 +136,8 @@ final class CollectionViewModel {
             return true
         }
         
-        // Sort by stamp number (newest first)
-        stamps = uniqueStamps.sorted { $0.id > $1.id }
+        // Apply current sort option
+        stamps = sortedStamps(uniqueStamps, by: currentSortOption, wallets: wallets)
         
         print("✅ Loaded \(stamps.count) unique stamps")
         
@@ -128,6 +165,80 @@ final class CollectionViewModel {
         errorMessage = nil
         selectedStamp = nil
         metadataStamp = nil
+    }
+    
+    /// Sort stamps by the given option
+    /// - Parameters:
+    ///   - option: The sort option to apply
+    ///   - wallets: Array of wallets for mapping wallet addresses to display names
+    func sortStamps(by option: SortOption, wallets: [Wallet]) {
+        currentSortOption = option
+        stamps = sortedStamps(stamps, by: option, wallets: wallets)
+    }
+    
+    /// Returns sorted stamps based on the given option
+    /// - Parameters:
+    ///   - stamps: The stamps to sort
+    ///   - option: The sort option to apply
+    ///   - wallets: Array of wallets for mapping wallet addresses to display names
+    /// - Returns: Sorted array of stamps
+    private func sortedStamps(_ stamps: [DisplayStamp], by option: SortOption, wallets: [Wallet]) -> [DisplayStamp] {
+        switch option {
+        case .stampAscending:
+            return stamps.sorted { $0.id < $1.id }
+            
+        case .stampDescending:
+            return stamps.sorted { $0.id > $1.id }
+            
+        case .artistAZ:
+            return stamps.sorted { stamp1, stamp2 in
+                let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creator
+                let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creator
+                return artist1.localizedCaseInsensitiveCompare(artist2) == .orderedAscending
+            }
+            
+        case .artistZA:
+            return stamps.sorted { stamp1, stamp2 in
+                let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creator
+                let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creator
+                return artist1.localizedCaseInsensitiveCompare(artist2) == .orderedDescending
+            }
+            
+        case .balanceAscending:
+            return stamps.sorted { ($0.balance ?? 0) < ($1.balance ?? 0) }
+            
+        case .balanceDescending:
+            return stamps.sorted { ($0.balance ?? 0) > ($1.balance ?? 0) }
+            
+        case .walletAZ:
+            return stamps.sorted { stamp1, stamp2 in
+                let wallet1Name = walletDisplayName(for: stamp1.walletAddress, in: wallets)
+                let wallet2Name = walletDisplayName(for: stamp2.walletAddress, in: wallets)
+                return wallet1Name.localizedCaseInsensitiveCompare(wallet2Name) == .orderedAscending
+            }
+            
+        case .walletZA:
+            return stamps.sorted { stamp1, stamp2 in
+                let wallet1Name = walletDisplayName(for: stamp1.walletAddress, in: wallets)
+                let wallet2Name = walletDisplayName(for: stamp2.walletAddress, in: wallets)
+                return wallet1Name.localizedCaseInsensitiveCompare(wallet2Name) == .orderedDescending
+            }
+        }
+    }
+    
+    /// Get display name for a wallet address
+    /// - Parameters:
+    ///   - address: The wallet address
+    ///   - wallets: Array of wallets to search
+    /// - Returns: Display name or address
+    private func walletDisplayName(for address: String?, in wallets: [Wallet]) -> String {
+        guard let address = address else { return "" }
+        
+        if let wallet = wallets.first(where: { $0.address == address }) {
+            return wallet.displayName
+        }
+        
+        return address
     }
     
     /// Check if there are stamps to display
