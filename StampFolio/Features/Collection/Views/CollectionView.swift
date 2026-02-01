@@ -204,6 +204,8 @@ struct CollectionView: View {
                     .accessibilityHint("Choose how to sort your stamp collection")
                 }
                 
+                ToolbarSpacer(.fixed)
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showSettings = true
