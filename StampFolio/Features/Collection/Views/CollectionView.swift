@@ -24,15 +24,17 @@ struct CollectionView: View {
     
     @State private var showOfflineBanner = false
     @State private var showSettings = false
+    @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("isDenseGrid") private var isDenseGrid = false
     
     // MARK: - Layout
     
     /// Computed column count based on device size, orientation, and density preference
+    /// Uses GeometryReader-provided size for accurate orientation detection
     private var columnCount: Int {
         let isIPad = horizontalSizeClass == .regular
-        let isLandscape = verticalSizeClass == .compact
+        let isLandscape = viewSize.width > viewSize.height
         
         switch (isIPad, isLandscape, isDenseGrid) {
         // iPad Landscape
@@ -100,26 +102,36 @@ struct CollectionView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                // Background
-                Color(uiColor: .systemBackground)
-                    .ignoresSafeArea()
-                
-                content
+            GeometryReader { geometry in
+                ZStack {
+                    // Background
+                    Color(uiColor: .systemBackground)
+                        .ignoresSafeArea()
+                    
+                    content
+                }
+                .onAppear {
+                    viewSize = geometry.size
+                }
+                .onChange(of: geometry.size) { _, newSize in
+                    viewSize = newSize
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        isDenseGrid.toggle()
-                    } label: {
-                        Image(systemName: isDenseGrid ? "square.grid.3x3.fill" : "square.grid.2x2.fill")
-                            .font(.title3)
-                            .padding(8)
-                            .background(.ultraThinMaterial, in: .circle)
+                    Picker("Grid Density", selection: $isDenseGrid) {
+                        Image(systemName: "square.grid.2x2.fill")
+                            .tag(false)
+                            .accessibilityLabel("Normal density")
+                        
+                        Image(systemName: "square.grid.3x3.fill")
+                            .tag(true)
+                            .accessibilityLabel("Dense layout")
                     }
-                    .accessibilityLabel("Toggle grid density")
+                    .pickerStyle(.segmented)
+                    .fixedSize()
+                    .accessibilityLabel("Grid density control")
                     .accessibilityValue(isDenseGrid ? "Dense layout, \(columnCount) columns" : "Normal layout, \(columnCount) columns")
-                    .accessibilityHint("Switches between fewer and more columns")
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
