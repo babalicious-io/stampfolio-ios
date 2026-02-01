@@ -8,6 +8,13 @@
 import SwiftUI
 import SwiftData
 
+/// View mode for displaying stamps
+enum ViewMode: String, Codable {
+    case normalGrid = "normal_grid"
+    case denseGrid = "dense_grid"
+    case list = "list"
+}
+
 /// Main collection view showing stamps from all wallets
 struct CollectionView: View {
     
@@ -26,17 +33,23 @@ struct CollectionView: View {
     @State private var showSettings = false
     @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @AppStorage("isDenseGrid") private var isDenseGrid = false
+    @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
     // MARK: - Layout
     
-    /// Computed column count based on device size, orientation, and density preference
+    /// Computed column count based on device size, orientation, and view mode
     /// Uses GeometryReader-provided size for accurate orientation detection
     private var columnCount: Int {
+        // List mode always uses 1 column
+        if viewMode == .list {
+            return 1
+        }
+        
         let isIPad = horizontalSizeClass == .regular
         let isLandscape = viewSize.width > viewSize.height
+        let isDense = viewMode == .denseGrid
         
-        switch (isIPad, isLandscape, isDenseGrid) {
+        switch (isIPad, isLandscape, isDense) {
         // iPad Landscape
         case (true, true, false): return 4   // Normal
         case (true, true, true): return 5    // Dense
@@ -119,19 +132,23 @@ struct CollectionView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Picker("Grid Density", selection: $isDenseGrid) {
+                    Picker("View Mode", selection: $viewMode) {
                         Image(systemName: "square.grid.2x2.fill")
-                            .tag(false)
-                            .accessibilityLabel("Normal density")
+                            .tag(ViewMode.normalGrid)
+                            .accessibilityLabel("Normal grid")
                         
                         Image(systemName: "square.grid.3x3.fill")
-                            .tag(true)
-                            .accessibilityLabel("Dense layout")
+                            .tag(ViewMode.denseGrid)
+                            .accessibilityLabel("Dense grid")
+                        
+                        Image(systemName: "rectangle.grid.1x3.fill")
+                            .tag(ViewMode.list)
+                            .accessibilityLabel("List view")
                     }
                     .pickerStyle(.segmented)
                     .fixedSize()
-                    .accessibilityLabel("Grid density control")
-                    .accessibilityValue(isDenseGrid ? "Dense layout, \(columnCount) columns" : "Normal layout, \(columnCount) columns")
+                    .accessibilityLabel("View mode control")
+                    .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid, \(columnCount) columns" : "Normal grid, \(columnCount) columns")
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -365,20 +382,39 @@ struct CollectionView: View {
                 offlineBanner
             }
             
-            LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(viewModel.stamps) { displayStamp in
-                    StampCardView(
-                        displayStamp: displayStamp,
-                        onTap: {
-                            viewModel.selectedStamp = displayStamp
-                        },
-                        onInfoTap: {
-                            viewModel.metadataStamp = displayStamp
-                        }
-                    )
+            if viewMode == .list {
+                // List view mode
+                LazyVStack(spacing: 12) {
+                    ForEach(viewModel.stamps) { displayStamp in
+                        StampRowView(
+                            displayStamp: displayStamp,
+                            onTap: {
+                                viewModel.selectedStamp = displayStamp
+                            },
+                            onInfoTap: {
+                                viewModel.metadataStamp = displayStamp
+                            }
+                        )
+                    }
                 }
+                .padding()
+            } else {
+                // Grid view modes
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(viewModel.stamps) { displayStamp in
+                        StampCardView(
+                            displayStamp: displayStamp,
+                            onTap: {
+                                viewModel.selectedStamp = displayStamp
+                            },
+                            onInfoTap: {
+                                viewModel.metadataStamp = displayStamp
+                            }
+                        )
+                    }
+                }
+                .padding()
             }
-            .padding()
         }
     }
     
