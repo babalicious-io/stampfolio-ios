@@ -16,6 +16,8 @@ struct CollectionView: View {
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -23,13 +25,38 @@ struct CollectionView: View {
     @State private var showOfflineBanner = false
     @State private var showSettings = false
     @AppStorage("showWalletIcons") private var showWalletIcons = false
+    @AppStorage("isDenseGrid") private var isDenseGrid = false
     
     // MARK: - Layout
     
-    private let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
-    ]
+    /// Computed column count based on device size, orientation, and density preference
+    private var columnCount: Int {
+        let isIPad = horizontalSizeClass == .regular
+        let isLandscape = verticalSizeClass == .compact
+        
+        switch (isIPad, isLandscape, isDenseGrid) {
+        // iPad Landscape
+        case (true, true, false): return 4   // Normal
+        case (true, true, true): return 5    // Dense
+        
+        // iPad Portrait
+        case (true, false, false): return 3  // Normal
+        case (true, false, true): return 4   // Dense
+        
+        // iPhone Landscape
+        case (false, true, false): return 3  // Normal
+        case (false, true, true): return 4   // Dense
+        
+        // iPhone Portrait or iPad Split View
+        case (false, false, false): return 2 // Normal
+        case (false, false, true): return 3  // Dense
+        }
+    }
+    
+    /// Dynamic grid columns based on computed column count
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 16), count: columnCount)
+    }
     
     // MARK: - Computed Properties
     
@@ -81,6 +108,20 @@ struct CollectionView: View {
                 content
             }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        isDenseGrid.toggle()
+                    } label: {
+                        Image(systemName: isDenseGrid ? "square.grid.3x3.fill" : "square.grid.2x2.fill")
+                            .font(.title3)
+                            .padding(8)
+                            .background(.ultraThinMaterial, in: .circle)
+                    }
+                    .accessibilityLabel("Toggle grid density")
+                    .accessibilityValue(isDenseGrid ? "Dense layout, \(columnCount) columns" : "Normal layout, \(columnCount) columns")
+                    .accessibilityHint("Switches between fewer and more columns")
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
                         // Sort menu
@@ -236,7 +277,7 @@ struct CollectionView: View {
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
-                .scaleEffect(2)
+                .scaleEffect(1)
                 .tint(.purple)
         }
     }
