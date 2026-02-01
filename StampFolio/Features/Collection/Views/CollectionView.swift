@@ -135,66 +135,68 @@ struct CollectionView: View {
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 16) {
-                        // Sort menu
-                        Menu {
-                            // Stamp # toggle
-                            Button {
-                                viewModel.toggleSort(for: .stamp, wallets: wallets)
-                            } label: {
-                                Label("Stamp #", systemImage: stampSortIcon)
+                    // Sort menu
+                    Menu {
+                        // Stamp # toggle
+                        Button {
+                            viewModel.toggleSort(for: .stamp, wallets: wallets)
+                        } label: {
+                            Label("Stamp #", systemImage: stampSortIcon)
+                        }
+                        
+                        // Artist toggle
+                        Button {
+                            viewModel.toggleSort(for: .artist, wallets: wallets)
+                        } label: {
+                            Label {
+                                Text("Artist")
+                            } icon: {
+                                Text(artistSortIcon)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.blue)
                             }
-                            
-                            // Artist toggle
+                        }
+                        
+                        // Balance toggle
+                        Button {
+                            viewModel.toggleSort(for: .balance, wallets: wallets)
+                        } label: {
+                            Label("Balance", systemImage: balanceSortIcon)
+                        }
+                        
+                        // Wallet toggle (conditional)
+                        if showWalletIcons {
                             Button {
-                                viewModel.toggleSort(for: .artist, wallets: wallets)
+                                viewModel.toggleSort(for: .wallet, wallets: wallets)
                             } label: {
                                 Label {
-                                    Text("Artist")
+                                    Text("Wallet")
                                 } icon: {
-                                    Text(artistSortIcon)
+                                    Text(walletSortIcon)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(.blue)
                                 }
                             }
-                            
-                            // Balance toggle
-                            Button {
-                                viewModel.toggleSort(for: .balance, wallets: wallets)
-                            } label: {
-                                Label("Balance", systemImage: balanceSortIcon)
-                            }
-                            
-                            // Wallet toggle (conditional)
-                            if showWalletIcons {
-                                Button {
-                                    viewModel.toggleSort(for: .wallet, wallets: wallets)
-                                } label: {
-                                    Label {
-                                        Text("Wallet")
-                                    } icon: {
-                                        Text(walletSortIcon)
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundStyle(.blue)
-                                    }
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "line.3.horizontal.decrease")
-                                .font(.title3)
                         }
-                        .accessibilityLabel("Sort stamps")
-                        .accessibilityHint("Choose how to sort your stamp collection")
-                        
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Image(systemName: "ellipsis")
-                                .font(.title3)
-                        }
-                        .accessibilityLabel("Settings")
-                        .accessibilityHint("Opens the settings screen")
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease")
+                            .font(.title3)
                     }
+                    .buttonStyle(.glass)
+                    .accessibilityLabel("Sort stamps")
+                    .accessibilityHint("Choose how to sort your stamp collection")
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.glass)
+                    .accessibilityLabel("Settings")
+                    .accessibilityHint("Opens the settings screen")
                 }
             }
             .task {
