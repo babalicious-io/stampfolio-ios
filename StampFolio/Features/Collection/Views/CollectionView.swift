@@ -134,17 +134,17 @@ struct CollectionView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Picker("View Mode", selection: $viewMode) {
                         Image(systemName: "square.grid.2x2.fill")
-                            .font(.title3)
+                            .font(.title2)
                             .tag(ViewMode.normalGrid)
                             .accessibilityLabel("Normal grid")
                         
                         Image(systemName: "square.grid.3x3.fill")
-                            .font(.title3)
+                            .font(.title2)
                             .tag(ViewMode.denseGrid)
                             .accessibilityLabel("Dense grid")
                         
                         Image(systemName: "rectangle.grid.1x3.fill")
-                            .font(.title3)
+                            .font(.title2)
                             .tag(ViewMode.list)
                             .accessibilityLabel("List view")
                     }
