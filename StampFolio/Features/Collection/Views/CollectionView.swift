@@ -128,7 +128,7 @@ struct CollectionView: View {
                     .pickerStyle(.segmented)
                     .fixedSize()
                     .accessibilityLabel("View mode control")
-                    .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid, \(columnCount) columns" : "Normal grid, \(columnCount) columns")
+                    .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -252,37 +252,18 @@ struct CollectionView: View {
     // MARK: - Empty Wallets View
     
     private var emptyWalletsView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "wallet.bifold")
-                .font(.system(size: 64))
-                .fontWeight(.regular)
-                .foregroundStyle(.primary)
-            
-            Text("No Wallets Added")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-            
+        ContentUnavailableView {
+            Label("No Wallets Added", systemImage: "wallet.bifold")
+        } description: {
             Text("Add a Bitcoin wallet to view your stamp collection")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            
-            Button {
+        } actions: {
+            Button("Add Wallet") {
                 showSettings = true
-            } label: {
-                Text("Add Wallet")
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 16)
-                    .glassEffect(in: .capsule)
             }
+            .buttonStyle(.borderedProminent)
             .accessibilityLabel("Add a Bitcoin wallet")
             .accessibilityHint("Opens the settings screen to add a wallet")
         }
-        .padding()
     }
     
     // MARK: - Loading View
@@ -298,61 +279,32 @@ struct CollectionView: View {
     // MARK: - Error View
     
     private var errorView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 64))
+        ContentUnavailableView {
+            Label("Unable to Load Stamps", systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.red)
-            
-            Text("Unable to Load Stamps")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-            
+        } description: {
             if let error = viewModel.errorMessage {
                 Text(error)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
             }
-            
-            Button {
+        } actions: {
+            Button("Try Again") {
                 Task {
                     await viewModel.refreshStamps(for: wallets)
                 }
-            } label: {
-                Text("Try Again")
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .glassEffect(in: .capsule)
             }
+            .buttonStyle(.borderedProminent)
             .accessibilityLabel("Retry loading stamps")
         }
-        .padding()
     }
     
     // MARK: - No Stamps View
     
     private var noStampsView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 64))
-                .foregroundStyle(.purple)
-            
-            Text("No Stamps Found")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-            
-            Text("Your wallets don't contain any Bitcoin Stamps yet")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-        }
-        .padding()
+        ContentUnavailableView(
+            "No Stamps Found",
+            systemImage: "photo.on.rectangle.angled",
+            description: Text("Your wallets don't contain any Stamps")
+        )
     }
     
     // MARK: - Stamps Grid
@@ -411,8 +363,7 @@ struct CollectionView: View {
         .foregroundStyle(.primary)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
-        .background(Color.orange.opacity(0.8))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .glassEffect(.regular.tint(.orange).interactive(), in: .rect(cornerRadius: 8))
         .padding()
     }
 }

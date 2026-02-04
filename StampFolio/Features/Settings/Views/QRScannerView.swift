@@ -114,7 +114,7 @@ struct QRScannerView: View {
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 16)
-                    .glassEffect(in: .capsule)
+                    .glassEffect(.regular.interactive(), in: .capsule)
             }
         }
     }

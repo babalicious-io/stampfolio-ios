@@ -37,7 +37,7 @@ struct StampRowView: View {
     
     var body: some View {
         rowContent
-            .glassEffect(in: .rect(cornerRadius: 16))
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
             .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)

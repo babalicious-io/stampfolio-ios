@@ -186,7 +186,7 @@ struct StampMetadataPopup: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .glassEffect(in: .capsule)
+            .glassEffect(.regular.interactive(), in: .capsule)
         }
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
@@ -207,12 +207,14 @@ struct MetadataRow: View {
     var body: some View {
         HStack(alignment: .top) {
             Text(label)
-                .font(.metadataLabel)
+                .font(.caption)
+                .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
                 .frame(width: 100, alignment: .leading)
             
             Text(value)
-                .font(isMonospace ? .monospace : .metadataValue)
+                .font(isMonospace ? .footnote : .caption)
+                .fontDesign(isMonospace ? .monospaced : .default)
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
             
