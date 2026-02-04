@@ -52,9 +52,9 @@ struct CollectionView: View {
         // Set minimums that achieve desired column counts while remaining adaptive
         let minSize: CGFloat
         if isIPad {
-            minSize = viewMode == .denseGrid ? 110 : 150  // iPad: 4-5 columns dense, 3-4 normal
+            minSize = viewMode == .denseGrid ? 130 : 180  // iPad: 4-5 columns dense, 3-4 normal
         } else {
-            minSize = viewMode == .denseGrid ? 100 : 165  // iPhone: 3 columns dense, 2 normal
+            minSize = viewMode == .denseGrid ? 110 : 170  // iPhone: 3 columns dense, 2 normal
         }
         
         return [GridItem(.adaptive(minimum: minSize, maximum: 300), spacing: 16)]
