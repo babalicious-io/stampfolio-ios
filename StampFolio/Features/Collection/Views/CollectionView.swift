@@ -37,16 +37,26 @@ struct CollectionView: View {
     
     // MARK: - Layout
     
-    /// Dynamic grid columns using native adaptive sizing
-    /// Automatically adjusts column count based on available space
+    /// Dynamic grid columns using native adaptive sizing with device awareness
+    /// iPhone: 2 columns (normal) / 3 columns (dense)
+    /// iPad: 3-4 columns (normal) / 4-5 columns (dense)
     private var columns: [GridItem] {
         // List mode uses single flexible column
         if viewMode == .list {
             return [GridItem(.flexible(), spacing: 16)]
         }
         
-        // Grid modes use adaptive sizing with different minimum widths
-        let minSize: CGFloat = viewMode == .denseGrid ? 120 : 160
+        // Simple device detection for optimal column counts
+        let isIPad = horizontalSizeClass == .regular
+        
+        // Set minimums that achieve desired column counts while remaining adaptive
+        let minSize: CGFloat
+        if isIPad {
+            minSize = viewMode == .denseGrid ? 110 : 150  // iPad: 4-5 columns dense, 3-4 normal
+        } else {
+            minSize = viewMode == .denseGrid ? 100 : 165  // iPhone: 3 columns dense, 2 normal
+        }
+        
         return [GridItem(.adaptive(minimum: minSize, maximum: 300), spacing: 16)]
     }
     
