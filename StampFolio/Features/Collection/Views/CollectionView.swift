@@ -37,40 +37,17 @@ struct CollectionView: View {
     
     // MARK: - Layout
     
-    /// Computed column count based on device size, orientation, and view mode
-    /// Uses GeometryReader-provided size for accurate orientation detection
-    private var columnCount: Int {
-        // List mode always uses 1 column
-        if viewMode == .list {
-            return 1
-        }
-        
-        let isIPad = horizontalSizeClass == .regular
-        let isLandscape = viewSize.width > viewSize.height
-        let isDense = viewMode == .denseGrid
-        
-        switch (isIPad, isLandscape, isDense) {
-        // iPad Landscape
-        case (true, true, false): return 4   // Normal
-        case (true, true, true): return 5    // Dense
-        
-        // iPad Portrait
-        case (true, false, false): return 3  // Normal
-        case (true, false, true): return 4   // Dense
-        
-        // iPhone Landscape
-        case (false, true, false): return 3  // Normal
-        case (false, true, true): return 4   // Dense
-        
-        // iPhone Portrait or iPad Split View
-        case (false, false, false): return 2 // Normal
-        case (false, false, true): return 3  // Dense
-        }
-    }
-    
-    /// Dynamic grid columns based on computed column count
+    /// Dynamic grid columns using native adaptive sizing
+    /// Automatically adjusts column count based on available space
     private var columns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: 16), count: columnCount)
+        // List mode uses single flexible column
+        if viewMode == .list {
+            return [GridItem(.flexible(), spacing: 16)]
+        }
+        
+        // Grid modes use adaptive sizing with different minimum widths
+        let minSize: CGFloat = viewMode == .denseGrid ? 120 : 160
+        return [GridItem(.adaptive(minimum: minSize, maximum: 300), spacing: 16)]
     }
     
     // MARK: - Computed Properties
@@ -134,17 +111,17 @@ struct CollectionView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Picker("View Mode", selection: $viewMode) {
                         Image(systemName: "square.grid.2x2.fill")
-                            .font(.title)
+                            .font(.title3)
                             .tag(ViewMode.normalGrid)
                             .accessibilityLabel("Normal grid")
                         
                         Image(systemName: "square.grid.3x3.fill")
-                            .font(.title)
+                            .font(.title3)
                             .tag(ViewMode.denseGrid)
                             .accessibilityLabel("Dense grid")
                         
                         Image(systemName: "rectangle.grid.1x3.fill")
-                            .font(.title)
+                            .font(.title3)
                             .tag(ViewMode.list)
                             .accessibilityLabel("List view")
                     }
