@@ -133,17 +133,17 @@ struct CollectionView: View {
         ToolbarItem(placement: .topBarLeading) {
             Picker("View Mode", selection: $viewMode) {
                 Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(size: 24))
+                    .font(.system(size: 20))
                     .tag(ViewMode.normalGrid)
                     .accessibilityLabel("Normal grid")
                 
                 Image(systemName: "square.grid.3x3.fill")
-                    .font(.system(size: 24))
+                    .font(.system(size: 20))
                     .tag(ViewMode.denseGrid)
                     .accessibilityLabel("Dense grid")
                 
                 Image(systemName: "rectangle.grid.1x3.fill")
-                    .font(.system(size: 24))
+                    .font(.system(size: 20))
                     .tag(ViewMode.list)
                     .accessibilityLabel("List view")
             }
@@ -157,41 +157,43 @@ struct CollectionView: View {
     private var filterAndSortGroupToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             ControlGroup {
-                // Filter Menu (using Toggle for multi-select with automatic checkmarks)
+                // Filter Menu (using Section with headers for semantic grouping)
                 Menu {
-                    Toggle("Classic", isOn: Binding(
-                        get: { viewModel.activeIdentFilters.contains("STAMP") },
-                        set: { _ in viewModel.toggleIdentFilter("STAMP") }
-                    ))
+                    Section("Stamp Type") {
+                        Toggle("Classic", isOn: Binding(
+                            get: { viewModel.activeIdentFilters.contains("STAMP") },
+                            set: { _ in viewModel.toggleIdentFilter("STAMP") }
+                        ))
+                        
+                        Toggle("Posh", isOn: Binding(
+                            get: { viewModel.activeIdentFilters.contains("POSH") },
+                            set: { _ in viewModel.toggleIdentFilter("POSH") }
+                        ))
+                    }
                     
-                    Toggle("Posh", isOn: Binding(
-                        get: { viewModel.activeIdentFilters.contains("POSH") },
-                        set: { _ in viewModel.toggleIdentFilter("POSH") }
-                    ))
+                    Section("File Type") {
+                        Toggle("Pixel", isOn: Binding(
+                            get: { viewModel.activeFileFormatFilters.contains("pixel") },
+                            set: { _ in viewModel.toggleFileFormatFilter("pixel") }
+                        ))
+                        
+                        Toggle("Vector", isOn: Binding(
+                            get: { viewModel.activeFileFormatFilters.contains("vector") },
+                            set: { _ in viewModel.toggleFileFormatFilter("vector") }
+                        ))
+                    }
                     
-                    Divider()
-                    
-                    Toggle("Pixel", isOn: Binding(
-                        get: { viewModel.activeFileFormatFilters.contains("pixel") },
-                        set: { _ in viewModel.toggleFileFormatFilter("pixel") }
-                    ))
-                    
-                    Toggle("Vector", isOn: Binding(
-                        get: { viewModel.activeFileFormatFilters.contains("vector") },
-                        set: { _ in viewModel.toggleFileFormatFilter("vector") }
-                    ))
-                    
-                    Divider()
-                    
-                    Toggle("Single Edition", isOn: Binding(
-                        get: { viewModel.activeEditionFilters.contains("single") },
-                        set: { _ in viewModel.toggleEditionFilter("single") }
-                    ))
-                    
-                    Toggle("Multiple Editions", isOn: Binding(
-                        get: { viewModel.activeEditionFilters.contains("multiple") },
-                        set: { _ in viewModel.toggleEditionFilter("multiple") }
-                    ))
+                    Section("Editions") {
+                        Toggle("Single Edition", isOn: Binding(
+                            get: { viewModel.activeEditionFilters.contains("single") },
+                            set: { _ in viewModel.toggleEditionFilter("single") }
+                        ))
+                        
+                        Toggle("Multiple Editions", isOn: Binding(
+                            get: { viewModel.activeEditionFilters.contains("multiple") },
+                            set: { _ in viewModel.toggleEditionFilter("multiple") }
+                        ))
+                    }
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 18))
@@ -200,54 +202,56 @@ struct CollectionView: View {
                 .accessibilityLabel("Filter stamps")
                 .accessibilityHint("Filter stamps by type, format, or edition count")
                 
-                // Sort Menu (using Toggle for single-select with automatic checkmarks)
+                // Sort Menu (using Section for semantic grouping)
                 Menu {
-                    Toggle("Stamp # - asc", isOn: Binding(
-                        get: { viewModel.currentSortOption == .stampAscending },
-                        set: { _ in viewModel.sortStamps(by: .stampAscending, wallets: wallets) }
-                    ))
+                    Section {
+                        Toggle("Stamp # - asc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .stampAscending },
+                            set: { _ in viewModel.sortStamps(by: .stampAscending, wallets: wallets) }
+                        ))
+                        
+                        Toggle("Stamp # - desc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .stampDescending },
+                            set: { _ in viewModel.sortStamps(by: .stampDescending, wallets: wallets) }
+                        ))
+                    }
                     
-                    Toggle("Stamp # - desc", isOn: Binding(
-                        get: { viewModel.currentSortOption == .stampDescending },
-                        set: { _ in viewModel.sortStamps(by: .stampDescending, wallets: wallets) }
-                    ))
+                    Section {
+                        Toggle("Artist - asc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .artistAscending },
+                            set: { _ in viewModel.sortStamps(by: .artistAscending, wallets: wallets) }
+                        ))
+                        
+                        Toggle("Artist - desc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .artistDescending },
+                            set: { _ in viewModel.sortStamps(by: .artistDescending, wallets: wallets) }
+                        ))
+                    }
                     
-                    Divider()
-                    
-                    Toggle("Artist - asc", isOn: Binding(
-                        get: { viewModel.currentSortOption == .artistAscending },
-                        set: { _ in viewModel.sortStamps(by: .artistAscending, wallets: wallets) }
-                    ))
-                    
-                    Toggle("Artist - desc", isOn: Binding(
-                        get: { viewModel.currentSortOption == .artistDescending },
-                        set: { _ in viewModel.sortStamps(by: .artistDescending, wallets: wallets) }
-                    ))
-                    
-                    Divider()
-                    
-                    Toggle("Balance - asc", isOn: Binding(
-                        get: { viewModel.currentSortOption == .balanceAscending },
-                        set: { _ in viewModel.sortStamps(by: .balanceAscending, wallets: wallets) }
-                    ))
-                    
-                    Toggle("Balance - desc", isOn: Binding(
-                        get: { viewModel.currentSortOption == .balanceDescending },
-                        set: { _ in viewModel.sortStamps(by: .balanceDescending, wallets: wallets) }
-                    ))
+                    Section {
+                        Toggle("Balance - asc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .balanceAscending },
+                            set: { _ in viewModel.sortStamps(by: .balanceAscending, wallets: wallets) }
+                        ))
+                        
+                        Toggle("Balance - desc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .balanceDescending },
+                            set: { _ in viewModel.sortStamps(by: .balanceDescending, wallets: wallets) }
+                        ))
+                    }
                     
                     if showWalletIcons {
-                        Divider()
-                        
-                        Toggle("Wallet - asc", isOn: Binding(
-                            get: { viewModel.currentSortOption == .walletAscending },
-                            set: { _ in viewModel.sortStamps(by: .walletAscending, wallets: wallets) }
-                        ))
-                        
-                        Toggle("Wallet - desc", isOn: Binding(
-                            get: { viewModel.currentSortOption == .walletDescending },
-                            set: { _ in viewModel.sortStamps(by: .walletDescending, wallets: wallets) }
-                        ))
+                        Section {
+                            Toggle("Wallet - asc", isOn: Binding(
+                                get: { viewModel.currentSortOption == .walletAscending },
+                                set: { _ in viewModel.sortStamps(by: .walletAscending, wallets: wallets) }
+                            ))
+                            
+                            Toggle("Wallet - desc", isOn: Binding(
+                                get: { viewModel.currentSortOption == .walletDescending },
+                                set: { _ in viewModel.sortStamps(by: .walletDescending, wallets: wallets) }
+                            ))
+                        }
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
@@ -266,7 +270,7 @@ struct CollectionView: View {
                 showSearchPopover = true
             } label: {
                 Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass")
-                    .font(.system(size: 18))
+                    .font(.system(size: 16))
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
             }
             .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
