@@ -105,7 +105,7 @@ struct CollectionView: View {
             mainContent
                 .toolbar {
                     viewModeToolbarItem
-                    filterAndSortToolbarGroup
+                    filterAndSortGroupToolbarItem
                     searchToolbarItem
                 }
                 .task {
@@ -185,104 +185,104 @@ struct CollectionView: View {
         }
     }
     
-    private var filterAndSortToolbarGroup: some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            // Filter Menu
-            Menu {
-                Button {
-                    viewModel.toggleIdentFilter("STAMP")
-                } label: {
-                    Label("Classic", systemImage: viewModel.activeIdentFilters.contains("STAMP") ? "checkmark" : "")
-                }
-                
-                Button {
-                    viewModel.toggleIdentFilter("POSH")
-                } label: {
-                    Label("Posh", systemImage: viewModel.activeIdentFilters.contains("POSH") ? "checkmark" : "")
-                }
-                
-                Divider()
-                
-                Button {
-                    viewModel.toggleFileFormatFilter("pixel")
-                } label: {
-                    Label("Pixel - jpg/gif/png/webP/Avif/bmp", systemImage: viewModel.activeFileFormatFilters.contains("pixel") ? "checkmark" : "")
-                }
-                
-                Button {
-                    viewModel.toggleFileFormatFilter("vector")
-                } label: {
-                    Label("Vector - txt/svg/html", systemImage: viewModel.activeFileFormatFilters.contains("vector") ? "checkmark" : "")
-                }
-                
-                Divider()
-                
-                Button {
-                    viewModel.toggleEditionFilter("single")
-                } label: {
-                    Label("Single Edition", systemImage: viewModel.activeEditionFilters.contains("single") ? "checkmark" : "")
-                }
-                
-                Button {
-                    viewModel.toggleEditionFilter("multiple")
-                } label: {
-                    Label("Multiple Editions", systemImage: viewModel.activeEditionFilters.contains("multiple") ? "checkmark" : "")
-                }
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.title3)
-                    .foregroundStyle(viewModel.hasActiveFilters ? Color.purple : Color.primary)
-            }
-            .buttonStyle(.glass)
-            .accessibilityLabel("Filter stamps")
-            .accessibilityHint("Filter stamps by type, format, or edition count")
-            
-            // Sort Menu
-            Menu {
-                Button {
-                    viewModel.toggleSort(for: .stamp, wallets: wallets)
-                } label: {
-                    Label("Stamp #", systemImage: stampSortIcon)
-                }
-                
-                Button {
-                    viewModel.toggleSort(for: .artist, wallets: wallets)
-                } label: {
-                    Label {
-                        Text("Artist")
-                    } icon: {
-                        Text(artistSortIcon)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.blue)
-                    }
-                }
-                
-                Button {
-                    viewModel.toggleSort(for: .balance, wallets: wallets)
-                } label: {
-                    Label("Balance", systemImage: balanceSortIcon)
-                }
-                
-                if showWalletIcons {
+    private var filterAndSortGroupToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            ControlGroup {
+                // Filter Menu
+                Menu {
                     Button {
-                        viewModel.toggleSort(for: .wallet, wallets: wallets)
+                        viewModel.toggleIdentFilter("STAMP")
+                    } label: {
+                        Label("Classic", systemImage: viewModel.activeIdentFilters.contains("STAMP") ? "checkmark" : "")
+                    }
+                    
+                    Button {
+                        viewModel.toggleIdentFilter("POSH")
+                    } label: {
+                        Label("Posh", systemImage: viewModel.activeIdentFilters.contains("POSH") ? "checkmark" : "")
+                    }
+                    
+                    Divider()
+                    
+                    Button {
+                        viewModel.toggleFileFormatFilter("pixel")
+                    } label: {
+                        Label("Pixel", systemImage: viewModel.activeFileFormatFilters.contains("pixel") ? "checkmark" : "")
+                    }
+                    
+                    Button {
+                        viewModel.toggleFileFormatFilter("vector")
+                    } label: {
+                        Label("Vector", systemImage: viewModel.activeFileFormatFilters.contains("vector") ? "checkmark" : "")
+                    }
+                    
+                    Divider()
+                    
+                    Button {
+                        viewModel.toggleEditionFilter("single")
+                    } label: {
+                        Label("Single Edition", systemImage: viewModel.activeEditionFilters.contains("single") ? "checkmark" : "")
+                    }
+                    
+                    Button {
+                        viewModel.toggleEditionFilter("multiple")
+                    } label: {
+                        Label("Multiple Editions", systemImage: viewModel.activeEditionFilters.contains("multiple") ? "checkmark" : "")
+                    }
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.title3)
+                        .foregroundStyle(viewModel.hasActiveFilters ? Color.purple : Color.primary)
+                }
+                .accessibilityLabel("Filter stamps")
+                .accessibilityHint("Filter stamps by type, format, or edition count")
+                
+                // Sort Menu
+                Menu {
+                    Button {
+                        viewModel.toggleSort(for: .stamp, wallets: wallets)
+                    } label: {
+                        Label("Stamp #", systemImage: stampSortIcon)
+                    }
+                    
+                    Button {
+                        viewModel.toggleSort(for: .artist, wallets: wallets)
                     } label: {
                         Label {
-                            Text("Wallet")
+                            Text("Artist")
                         } icon: {
-                            Text(walletSortIcon)
+                            Text(artistSortIcon)
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.blue)
                         }
                     }
+                    
+                    Button {
+                        viewModel.toggleSort(for: .balance, wallets: wallets)
+                    } label: {
+                        Label("Balance", systemImage: balanceSortIcon)
+                    }
+                    
+                    if showWalletIcons {
+                        Button {
+                            viewModel.toggleSort(for: .wallet, wallets: wallets)
+                        } label: {
+                            Label {
+                                Text("Wallet")
+                            } icon: {
+                                Text(walletSortIcon)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.blue)
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .font(.title3)
                 }
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease")
-                    .font(.title3)
+                .accessibilityLabel("Sort stamps")
+                .accessibilityHint("Choose how to sort your stamp collection")
             }
-            .buttonStyle(.glass)
-            .accessibilityLabel("Sort stamps")
-            .accessibilityHint("Choose how to sort your stamp collection")
         }
     }
     
