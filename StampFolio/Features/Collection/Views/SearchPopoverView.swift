@@ -13,7 +13,6 @@ struct SearchPopoverView: View {
     // MARK: - Environment
     
     @Environment(CollectionViewModel.self) private var viewModel
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     // MARK: - State
     
@@ -47,8 +46,8 @@ struct SearchPopoverView: View {
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(16)
-        .frame(maxWidth: horizontalSizeClass == .compact ? .infinity : 300)
+        .padding(16) 
+        .frame(width: 300)
         .onAppear {
             isSearchFieldFocused = true
         }
