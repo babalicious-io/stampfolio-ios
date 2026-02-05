@@ -109,7 +109,7 @@ struct CollectionView: View {
                         Color.clear
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0)) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.4, blendDuration: 0)) {
                                     showSearchPopover = false
                                 }
                             }
