@@ -273,8 +273,9 @@ struct CollectionView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
             }
-            .popover(isPresented: $showSearchPopover, arrowEdge: .bottom) {
+            .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
                 SearchPopoverView()
+                    .offset(y: -30)
                     .presentationCompactAdaptation(.popover)
             }
             .accessibilityLabel("Search")
