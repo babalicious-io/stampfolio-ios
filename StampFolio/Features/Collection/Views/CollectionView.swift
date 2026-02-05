@@ -297,9 +297,8 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass")
                     .font(.title3)
-                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.primary : Color.purple)
+                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
             }
-            .buttonStyle(.glass)
             .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
                 SearchPopoverView()
                     .presentationCompactAdaptation(.popover)
