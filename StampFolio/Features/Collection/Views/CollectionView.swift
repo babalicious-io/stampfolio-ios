@@ -118,7 +118,7 @@ struct CollectionView: View {
                 .overlay(alignment: .topTrailing) {
                     if showSearchPopover {
                         SearchPopoverView()
-                            .background(.ultraThinMaterial)
+                            .glassEffect(.thick.interactive(), in: .rect(cornerRadius: 12))
                             .cornerRadius(12)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
