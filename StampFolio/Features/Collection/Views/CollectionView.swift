@@ -30,7 +30,6 @@ struct CollectionView: View {
     // MARK: - State
     
     @State private var showOfflineBanner = false
-    @State private var showSearchPopover = false
     @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
@@ -75,8 +74,15 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
-                    searchToolbarItem
                 }
+                .searchable(
+                    text: Binding(
+                        get: { viewModel.searchText },
+                        set: { viewModel.searchText = $0 }
+                    ),
+                    placement: .navigationBarDrawer(displayMode: .automatic),
+                    prompt: "Stamp #, CPID, txHash, Creator"
+                )
                 .task {
                     await viewModel.fetchStamps(for: wallets)
                 }
@@ -103,36 +109,6 @@ struct CollectionView: View {
                     StampMetadataPopup(stamp: displayStamp.stamp)
                         .presentationDetents([.medium])
                         .presentationBackground(.ultraThinMaterial)
-                }
-                .overlay {
-                    if showSearchPopover {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.4, blendDuration: 0)) {
-                                    showSearchPopover = false
-                                }
-                            }
-                    }
-                }
-                .overlay(alignment: .topTrailing) {
-                    if showSearchPopover {
-                        SearchPopoverView()
-                            .background(.regularMaterial)
-                            .cornerRadius(24)
-                            .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-                            .padding(.top, 0)
-                            .padding(.trailing, 16)
-                            .transition(
-                                .asymmetric(
-                                    insertion: .scale(scale: 0.8, anchor: .topTrailing)
-                                        .combined(with: .opacity),
-                                    removal: .scale(scale: 0.95, anchor: .topTrailing)
-                                        .combined(with: .opacity)
-                                )
-                            )
-                            .zIndex(1000)
-                    }
                 }
         }
     }
@@ -291,22 +267,6 @@ struct CollectionView: View {
                 .accessibilityLabel("Sort stamps")
                 .accessibilityHint("Choose how to sort your stamp collection")
             }
-        }
-    }
-    
-    private var searchToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0)) {
-                    showSearchPopover.toggle()
-                }
-            } label: {
-                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass")
-                    .font(.system(size: 16))
-                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
-            }
-            .accessibilityLabel("Search")
-            .accessibilityHint("Search for stamps by number, CPID, transaction hash, creator address or name")
         }
     }
     
