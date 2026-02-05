@@ -67,6 +67,25 @@ struct CollectionView: View {
         viewModel.currentSortOption != .stampDescending
     }
     
+    /// Helper to get sort label with suffix
+    private func sortLabel(base: String, ascending: SortOption, descending: SortOption) -> String {
+        let suffix: String
+        switch viewModel.currentSortOption {
+        case ascending:
+            suffix = " - asc"
+        case descending:
+            suffix = " - desc"
+        default:
+            suffix = ""
+        }
+        return base + suffix
+    }
+    
+    /// Helper to check if a sort category is active
+    private func isSortActive(_ options: SortOption...) -> Bool {
+        options.contains(viewModel.currentSortOption)
+    }
+    
     // MARK: - Body
     
     var body: some View {
@@ -211,35 +230,35 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleSort(for: .stamp, wallets: wallets)
                     } label: {
-                        let suffix = viewModel.currentSortOption == .stampAscending ? " - asc" : viewModel.currentSortOption == .stampDescending ? " - desc" : ""
-                        Label("Stamp #\(suffix)", systemImage: (viewModel.currentSortOption == .stampAscending || viewModel.currentSortOption == .stampDescending) ? "checkmark" : "")
+                        Label(sortLabel(base: "Stamp #", ascending: .stampAscending, descending: .stampDescending),
+                              systemImage: isSortActive(.stampAscending, .stampDescending) ? "checkmark" : "")
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .artist, wallets: wallets)
                     } label: {
-                        let suffix = viewModel.currentSortOption == .artistAZ ? " - A-Z" : viewModel.currentSortOption == .artistZA ? " - Z-A" : ""
-                        Label("Artist\(suffix)", systemImage: (viewModel.currentSortOption == .artistAZ || viewModel.currentSortOption == .artistZA) ? "checkmark" : "")
+                        Label(sortLabel(base: "Artist", ascending: .artistAscending, descending: .artistDescending),
+                              systemImage: isSortActive(.artistAscending, .artistDescending) ? "checkmark" : "")
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .balance, wallets: wallets)
                     } label: {
-                        let suffix = viewModel.currentSortOption == .balanceAscending ? " - asc" : viewModel.currentSortOption == .balanceDescending ? " - desc" : ""
-                        Label("Balance\(suffix)", systemImage: (viewModel.currentSortOption == .balanceAscending || viewModel.currentSortOption == .balanceDescending) ? "checkmark" : "")
+                        Label(sortLabel(base: "Balance", ascending: .balanceAscending, descending: .balanceDescending),
+                              systemImage: isSortActive(.balanceAscending, .balanceDescending) ? "checkmark" : "")
                     }
                     
                     if showWalletIcons {
                         Button {
                             viewModel.toggleSort(for: .wallet, wallets: wallets)
                         } label: {
-                            let suffix = viewModel.currentSortOption == .walletAZ ? " - A-Z" : viewModel.currentSortOption == .walletZA ? " - Z-A" : ""
-                            Label("Wallet\(suffix)", systemImage: (viewModel.currentSortOption == .walletAZ || viewModel.currentSortOption == .walletZA) ? "checkmark" : "")
+                            Label(sortLabel(base: "Wallet", ascending: .walletAscending, descending: .walletDescending),
+                                  systemImage: isSortActive(.walletAscending, .walletDescending) ? "checkmark" : "")
                         }
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .font(.title3)
+                        .font(.title2)
                         .foregroundStyle(hasActiveSort ? Color.purple : Color.primary)
                 }
                 .accessibilityLabel("Sort stamps")

@@ -21,31 +21,23 @@ enum SortCategory {
 enum SortOption: String, CaseIterable, Codable {
     case stampAscending = "stamp_asc"
     case stampDescending = "stamp_desc"
-    case artistAZ = "artist_az"
-    case artistZA = "artist_za"
+    case artistAscending = "artist_asc"
+    case artistDescending = "artist_desc"
     case balanceAscending = "balance_asc"
     case balanceDescending = "balance_desc"
-    case walletAZ = "wallet_az"
-    case walletZA = "wallet_za"
+    case walletAscending = "wallet_asc"
+    case walletDescending = "wallet_desc"
     
     var displayName: String {
         switch self {
         case .stampAscending: return "Stamp # (ascending)"
         case .stampDescending: return "Stamp # (descending)"
-        case .artistAZ: return "Artist (A-Z)"
-        case .artistZA: return "Artist (Z-A)"
+        case .artistAscending: return "Artist (ascending)"
+        case .artistDescending: return "Artist (descending)"
         case .balanceAscending: return "Balance (ascending)"
         case .balanceDescending: return "Balance (descending)"
-        case .walletAZ: return "Wallet (A-Z)"
-        case .walletZA: return "Wallet (Z-A)"
-        }
-    }
-    
-    var iconName: String {
-        switch self {
-        case .stampAscending, .balanceAscending: return "arrow.up"
-        case .stampDescending, .balanceDescending: return "arrow.down"
-        case .artistAZ, .artistZA, .walletAZ, .walletZA: return ""
+        case .walletAscending: return "Wallet (ascending)"
+        case .walletDescending: return "Wallet (descending)"
         }
     }
 }
@@ -295,11 +287,11 @@ final class CollectionViewModel {
         case .stamp:
             newOption = currentSortOption == .stampAscending ? .stampDescending : .stampAscending
         case .artist:
-            newOption = currentSortOption == .artistAZ ? .artistZA : .artistAZ
+            newOption = currentSortOption == .artistAscending ? .artistDescending : .artistAscending
         case .balance:
             newOption = currentSortOption == .balanceAscending ? .balanceDescending : .balanceAscending
         case .wallet:
-            newOption = currentSortOption == .walletAZ ? .walletZA : .walletAZ
+            newOption = currentSortOption == .walletAscending ? .walletDescending : .walletAscending
         }
         
         sortStamps(by: newOption, wallets: wallets)
@@ -351,14 +343,14 @@ final class CollectionViewModel {
         case .stampDescending:
             return stamps.sorted { $0.id > $1.id }
             
-        case .artistAZ:
+        case .artistAscending:
             return stamps.sorted { stamp1, stamp2 in
                 let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creatorAddy
                 let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creatorAddy
                 return artist1.localizedCaseInsensitiveCompare(artist2) == .orderedAscending
             }
             
-        case .artistZA:
+        case .artistDescending:
             return stamps.sorted { stamp1, stamp2 in
                 let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creatorAddy
                 let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creatorAddy
@@ -371,14 +363,14 @@ final class CollectionViewModel {
         case .balanceDescending:
             return stamps.sorted { ($0.balance ?? 0) > ($1.balance ?? 0) }
             
-        case .walletAZ:
+        case .walletAscending:
             return stamps.sorted { stamp1, stamp2 in
                 let wallet1Name = walletDisplayName(for: stamp1.walletAddress, in: wallets)
                 let wallet2Name = walletDisplayName(for: stamp2.walletAddress, in: wallets)
                 return wallet1Name.localizedCaseInsensitiveCompare(wallet2Name) == .orderedAscending
             }
             
-        case .walletZA:
+        case .walletDescending:
             return stamps.sorted { stamp1, stamp2 in
                 let wallet1Name = walletDisplayName(for: stamp1.walletAddress, in: wallets)
                 let wallet2Name = walletDisplayName(for: stamp2.walletAddress, in: wallets)
