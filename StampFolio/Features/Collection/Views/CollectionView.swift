@@ -350,11 +350,6 @@ struct CollectionView: View {
                 offlineBanner
             }
             
-            // Search active banner
-            if !viewModel.searchText.isEmpty {
-                searchActiveBanner
-            }
-            
             if viewMode == .list {
                 // List view mode
                 LazyVStack(spacing: 12) {
@@ -406,33 +401,6 @@ struct CollectionView: View {
         .padding()
     }
     
-    // MARK: - Search Active Banner
-    
-    private var searchActiveBanner: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-            Text("Searching: \(viewModel.filteredStamps.count) result\(viewModel.filteredStamps.count == 1 ? "" : "s")")
-            
-            Spacer()
-            
-            Button {
-                viewModel.searchText = ""
-            } label: {
-                HStack(spacing: 4) {
-                    Text("Clear")
-                    Image(systemName: "xmark.circle.fill")
-                }
-                .font(.caption)
-            }
-            .buttonStyle(.plain)
-        }
-        .font(.caption)
-        .foregroundStyle(.primary)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .glassEffect(.regular.tint(.purple).interactive(), in: .rect(cornerRadius: 8))
-        .padding()
-    }
 }
 
 // MARK: - Bindable Extension for Optional Binding
