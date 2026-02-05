@@ -105,9 +105,7 @@ struct CollectionView: View {
             mainContent
                 .toolbar {
                     viewModeToolbarItem
-                    filterMenuToolbarItem
-                    sortMenuToolbarItem
-                    ToolbarSpacer(.fixed)
+                    filterAndSortToolbarGroup
                     searchToolbarItem
                 }
                 .task {
@@ -187,8 +185,9 @@ struct CollectionView: View {
         }
     }
     
-    private var filterMenuToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
+    private var filterAndSortToolbarGroup: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            // Filter Menu
             Menu {
                 Button {
                     viewModel.toggleIdentFilter("STAMP")
@@ -237,11 +236,8 @@ struct CollectionView: View {
             .buttonStyle(.glass)
             .accessibilityLabel("Filter stamps")
             .accessibilityHint("Filter stamps by type, format, or edition count")
-        }
-    }
-    
-    private var sortMenuToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
+            
+            // Sort Menu
             Menu {
                 Button {
                     viewModel.toggleSort(for: .stamp, wallets: wallets)
