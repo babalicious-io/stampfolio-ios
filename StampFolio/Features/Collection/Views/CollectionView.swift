@@ -159,7 +159,7 @@ struct CollectionView: View {
             ControlGroup {
                 // Filter Menu (using Section with headers for semantic grouping)
                 Menu {
-                    Section("Stamp Type") {
+                    Section("STAMP TYPE") {
                         Toggle("Classic", isOn: Binding(
                             get: { viewModel.activeIdentFilters.contains("STAMP") },
                             set: { _ in viewModel.toggleIdentFilter("STAMP") }
@@ -171,7 +171,7 @@ struct CollectionView: View {
                         ))
                     }
                     
-                    Section("File Type") {
+                    Section("FILE TYPE") {
                         Toggle("Pixel", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("pixel") },
                             set: { _ in viewModel.toggleFileFormatFilter("pixel") }
@@ -183,13 +183,13 @@ struct CollectionView: View {
                         ))
                     }
                     
-                    Section("Editions") {
-                        Toggle("Single Edition", isOn: Binding(
+                    Section("EDITIONS") {
+                        Toggle("Single", isOn: Binding(
                             get: { viewModel.activeEditionFilters.contains("single") },
                             set: { _ in viewModel.toggleEditionFilter("single") }
                         ))
                         
-                        Toggle("Multiple Editions", isOn: Binding(
+                        Toggle("Multiple", isOn: Binding(
                             get: { viewModel.activeEditionFilters.contains("multiple") },
                             set: { _ in viewModel.toggleEditionFilter("multiple") }
                         ))
@@ -273,7 +273,7 @@ struct CollectionView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
             }
-            .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
+            .popover(isPresented: $showSearchPopover, arrowEdge: .bottom) {
                 SearchPopoverView()
                     .presentationCompactAdaptation(.popover)
             }
