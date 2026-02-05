@@ -138,8 +138,9 @@ struct CollectionView: View {
                         .stroke(Color(uiColor: .separator).opacity(0.3), lineWidth: 0.5)
                 )
                 .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-                .padding(.top, horizontalSizeClass == .compact ? 8 : 16)
-                .padding(.trailing, 8)
+                .padding(.top, horizontalSizeClass == .compact ? 0 : 24)
+                .padding(.trailing, 16)
+                .offset(x: horizontalSizeClass == .compact ? 0 : 48)
                 .transition(.scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity))
                 .zIndex(1000)
         }
