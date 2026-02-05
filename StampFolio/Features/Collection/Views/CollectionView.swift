@@ -105,6 +105,7 @@ struct CollectionView: View {
             mainContent
                 .toolbar {
                     viewModeToolbarItem
+                    filterMenuToolbarItem
                     sortMenuToolbarItem
                     ToolbarSpacer(.fixed)
                     searchToolbarItem
@@ -186,6 +187,59 @@ struct CollectionView: View {
         }
     }
     
+    private var filterMenuToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                Button {
+                    viewModel.toggleIdentFilter("STAMP")
+                } label: {
+                    Label("Classic", systemImage: viewModel.activeIdentFilters.contains("STAMP") ? "checkmark" : "")
+                }
+                
+                Button {
+                    viewModel.toggleIdentFilter("POSH")
+                } label: {
+                    Label("Posh", systemImage: viewModel.activeIdentFilters.contains("POSH") ? "checkmark" : "")
+                }
+                
+                Divider()
+                
+                Button {
+                    viewModel.toggleFileFormatFilter("pixel")
+                } label: {
+                    Label("Pixel - jpg/gif/png/webP/Avif/bmp", systemImage: viewModel.activeFileFormatFilters.contains("pixel") ? "checkmark" : "")
+                }
+                
+                Button {
+                    viewModel.toggleFileFormatFilter("vector")
+                } label: {
+                    Label("Vector - txt/svg/html", systemImage: viewModel.activeFileFormatFilters.contains("vector") ? "checkmark" : "")
+                }
+                
+                Divider()
+                
+                Button {
+                    viewModel.toggleEditionFilter("single")
+                } label: {
+                    Label("Single Edition", systemImage: viewModel.activeEditionFilters.contains("single") ? "checkmark" : "")
+                }
+                
+                Button {
+                    viewModel.toggleEditionFilter("multiple")
+                } label: {
+                    Label("Multiple Editions", systemImage: viewModel.activeEditionFilters.contains("multiple") ? "checkmark" : "")
+                }
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.title3)
+                    .foregroundStyle(viewModel.hasActiveFilters ? Color.purple : Color.primary)
+            }
+            .buttonStyle(.glass)
+            .accessibilityLabel("Filter stamps")
+            .accessibilityHint("Filter stamps by type, format, or edition count")
+        }
+    }
+    
     private var sortMenuToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
@@ -251,7 +305,7 @@ struct CollectionView: View {
                     .presentationCompactAdaptation(.popover)
             }
             .accessibilityLabel("Search")
-            .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
+            .accessibilityHint("Search for stamps by number, CPID, transaction hash, creator address or name")
         }
     }
     
@@ -267,7 +321,7 @@ struct CollectionView: View {
             errorView
         } else if viewModel.stamps.isEmpty {
             noStampsView
-        } else if !viewModel.searchText.isEmpty && viewModel.filteredStamps.isEmpty {
+        } else if (!viewModel.searchText.isEmpty || viewModel.hasActiveFilters) && viewModel.filteredStamps.isEmpty {
             noSearchResultsView
         } else {
             stampsGrid
@@ -330,9 +384,15 @@ struct CollectionView: View {
     
     private var noSearchResultsView: some View {
         ContentUnavailableView {
-            Label("No Results", systemImage: "magnifyingglass")
+            Label("No Results", systemImage: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle" : "magnifyingglass")
         } description: {
-            Text("No stamps match '\(viewModel.searchText)'")
+            if !viewModel.searchText.isEmpty && viewModel.hasActiveFilters {
+                Text("No stamps match '\(viewModel.searchText)' with the active filters")
+            } else if !viewModel.searchText.isEmpty {
+                Text("No stamps match '\(viewModel.searchText)'")
+            } else if viewModel.hasActiveFilters {
+                Text("No stamps match the active filters")
+            }
         }
     }
     

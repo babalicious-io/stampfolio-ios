@@ -83,47 +83,101 @@ final class CollectionViewModel {
     /// Whether search is active
     var isSearching: Bool = false
     
+    /// Filter state: Active ident filters (e.g., "STAMP", "POSH")
+    var activeIdentFilters: Set<String> = []
+    
+    /// Filter state: Active file format filters ("pixel" or "vector")
+    var activeFileFormatFilters: Set<String> = []
+    
+    /// Filter state: Active edition filters ("single" or "multiple")
+    var activeEditionFilters: Set<String> = []
+    
     // MARK: - Computed Properties
     
-    /// Filtered stamps based on search text
+    /// Check if any filters are active
+    var hasActiveFilters: Bool {
+        !activeIdentFilters.isEmpty || !activeFileFormatFilters.isEmpty || !activeEditionFilters.isEmpty
+    }
+    
+    /// Filtered stamps based on search text and filters
     var filteredStamps: [DisplayStamp] {
-        guard !searchText.isEmpty else {
-            return stamps
+        var result = stamps
+        
+        // Apply search filter
+        if !searchText.isEmpty {
+            let searchLower = searchText.lowercased()
+            result = result.filter { displayStamp in
+                let stamp = displayStamp.stamp
+                
+                // Search by stamp ID
+                if "\(stamp.id)".contains(searchLower) {
+                    return true
+                }
+                
+                // Search by CPID
+                if stamp.cpid.localizedCaseInsensitiveContains(searchText) {
+                    return true
+                }
+                
+                // Search by transaction hash
+                if stamp.txHash.localizedCaseInsensitiveContains(searchText) {
+                    return true
+                }
+                
+                // Search by creator address
+                if stamp.creatorAddy.localizedCaseInsensitiveContains(searchText) {
+                    return true
+                }
+                
+                // Search by creator name
+                if let creatorName = stamp.creatorName,
+                   creatorName.localizedCaseInsensitiveContains(searchText) {
+                    return true
+                }
+                
+                return false
+            }
         }
         
-        let searchLower = searchText.lowercased()
-        
-        return stamps.filter { displayStamp in
-            let stamp = displayStamp.stamp
-            
-            // Search by stamp ID
-            if "\(stamp.id)".contains(searchLower) {
-                return true
+        // Apply ident filters
+        if !activeIdentFilters.isEmpty {
+            result = result.filter { displayStamp in
+                guard let ident = displayStamp.stamp.ident else { return false }
+                return activeIdentFilters.contains(ident)
             }
-            
-            // Search by CPID
-            if stamp.cpid.localizedCaseInsensitiveContains(searchText) {
-                return true
-            }
-            
-            // Search by transaction hash
-            if stamp.txHash.localizedCaseInsensitiveContains(searchText) {
-                return true
-            }
-            
-            // Search by creator address
-            if stamp.creatorAddy.localizedCaseInsensitiveContains(searchText) {
-                return true
-            }
-            
-            // Search by creator name
-            if let creatorName = stamp.creatorName,
-               creatorName.localizedCaseInsensitiveContains(searchText) {
-                return true
-            }
-            
-            return false
         }
+        
+        // Apply file format filters
+        if !activeFileFormatFilters.isEmpty {
+            result = result.filter { displayStamp in
+                guard let mimetype = displayStamp.stamp.stampMimetype?.lowercased() else { return false }
+                
+                for format in activeFileFormatFilters {
+                    if format == "pixel" {
+                        let pixelFormats = ["image/jpeg", "image/jpg", "image/gif", "image/png", "image/webp", "image/avif", "image/bmp"]
+                        if pixelFormats.contains(mimetype) { return true }
+                    } else if format == "vector" {
+                        let vectorFormats = ["text/plain", "image/svg+xml", "text/html"]
+                        if vectorFormats.contains(mimetype) { return true }
+                    }
+                }
+                return false
+            }
+        }
+        
+        // Apply edition filters
+        if !activeEditionFilters.isEmpty {
+            result = result.filter { displayStamp in
+                let supply = displayStamp.stamp.supply
+                for edition in activeEditionFilters {
+                    if edition == "single" && supply == 1 { return true }
+                    if edition == "multiple" && supply > 1 { return true }
+                }
+                return false
+            }
+        }
+        
+        return result
     }
     
     // MARK: - Private Properties
@@ -249,6 +303,38 @@ final class CollectionViewModel {
         }
         
         sortStamps(by: newOption, wallets: wallets)
+    }
+    
+    // MARK: - Filter Methods
+    
+    /// Toggle an ident filter (e.g., "STAMP", "POSH")
+    /// - Parameter ident: The ident type to toggle
+    func toggleIdentFilter(_ ident: String) {
+        if activeIdentFilters.contains(ident) {
+            activeIdentFilters.remove(ident)
+        } else {
+            activeIdentFilters.insert(ident)
+        }
+    }
+    
+    /// Toggle a file format filter ("pixel" or "vector")
+    /// - Parameter format: The format type to toggle
+    func toggleFileFormatFilter(_ format: String) {
+        if activeFileFormatFilters.contains(format) {
+            activeFileFormatFilters.remove(format)
+        } else {
+            activeFileFormatFilters.insert(format)
+        }
+    }
+    
+    /// Toggle an edition filter ("single" or "multiple")
+    /// - Parameter edition: The edition type to toggle
+    func toggleEditionFilter(_ edition: String) {
+        if activeEditionFilters.contains(edition) {
+            activeEditionFilters.remove(edition)
+        } else {
+            activeEditionFilters.insert(edition)
+        }
     }
     
     /// Returns sorted stamps based on the given option
