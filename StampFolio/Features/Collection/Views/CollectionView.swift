@@ -119,12 +119,12 @@ struct CollectionView: View {
                     if showSearchPopover {
                         SearchPopoverView()
                             .background(.regularMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 24)
+                            .cornerRadius(24)
                             .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
                             .padding(.top, -16)
                             .padding(.horizontal, 16)
                             .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
-                            .zIndex(1000))
+                            .zIndex(1000)
                     }
                 }
         }
