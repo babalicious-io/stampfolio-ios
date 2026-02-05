@@ -30,6 +30,7 @@ struct CollectionView: View {
     // MARK: - State
     
     @State private var showOfflineBanner = false
+    @State private var showSearchPopover = false
     @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
@@ -192,6 +193,25 @@ struct CollectionView: View {
                     .accessibilityLabel("Sort stamps")
                     .accessibilityHint("Choose how to sort your stamp collection")
                 }
+                
+                ToolbarSpacer(.fixed)
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSearchPopover = true
+                    } label: {
+                        Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(viewModel.searchText.isEmpty ? .primary : .purple)
+                    }
+                    .buttonStyle(.glass)
+                    .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
+                        SearchPopoverView()
+                            .presentationCompactAdaptation(.popover)
+                    }
+                    .accessibilityLabel("Search")
+                    .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
+                }
             }
             .task {
                 await viewModel.fetchStamps(for: wallets)
@@ -220,16 +240,6 @@ struct CollectionView: View {
                     .presentationDetents([.medium])
                     .presentationBackground(.ultraThinMaterial)
             }
-            .searchable(
-                text: Binding(
-                    get: { viewModel.searchText },
-                    set: { viewModel.searchText = $0 }
-                ),
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Stamp #, CPID, txHash, or Creator"
-            )
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
         }
     }
     
@@ -328,9 +338,9 @@ struct CollectionView: View {
                 offlineBanner
             }
             
-            // Search active indicator
+            // Search active banner
             if !viewModel.searchText.isEmpty {
-                searchActiveIndicator
+                searchActiveBanner
             }
             
             if viewMode == .list {
@@ -384,30 +394,32 @@ struct CollectionView: View {
         .padding()
     }
     
-    // MARK: - Search Active Indicator
+    // MARK: - Search Active Banner
     
-    private var searchActiveIndicator: some View {
+    private var searchActiveBanner: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-            Text("\(viewModel.filteredStamps.count) result\(viewModel.filteredStamps.count == 1 ? "" : "s")")
-                .fontWeight(.medium)
+            Text("Searching: \(viewModel.filteredStamps.count) result\(viewModel.filteredStamps.count == 1 ? "" : "s")")
             
             Spacer()
             
             Button {
                 viewModel.searchText = ""
             } label: {
-                Text("Clear")
-                    .font(.subheadline)
-                    .foregroundStyle(.purple)
+                HStack(spacing: 4) {
+                    Text("Clear")
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .font(.caption)
             }
+            .buttonStyle(.plain)
         }
         .font(.caption)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.primary)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
         .glassEffect(.regular.tint(.purple).interactive(), in: .rect(cornerRadius: 8))
-        .padding(.horizontal)
+        .padding()
     }
 }
 
