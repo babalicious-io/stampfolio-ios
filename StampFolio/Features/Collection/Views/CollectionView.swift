@@ -241,7 +241,7 @@ struct CollectionView: View {
             Button {
                 showSearchPopover = true
             } label: {
-                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass")
                     .font(.title3)
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.primary : Color.purple)
             }
