@@ -121,8 +121,8 @@ struct CollectionView: View {
                             .background(.regularMaterial)
                             .cornerRadius(24)
                             .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-                            .padding(.top, -16)
-                            .padding(.horizontal, 16)
+                            .padding(.top, 24)
+                            .padding(.trailing, 0)
                             .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
                             .zIndex(1000)
                     }
