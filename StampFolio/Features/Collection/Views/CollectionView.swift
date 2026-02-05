@@ -67,35 +67,6 @@ struct CollectionView: View {
         viewModel.currentSortOption != .stampDescending
     }
     
-    /// Helper to get sort label with suffix
-    private func sortLabel(base: String, ascending: SortOption, descending: SortOption) -> String {
-        let suffix: String
-        switch viewModel.currentSortOption {
-        case ascending:
-            suffix = " - asc"
-        case descending:
-            suffix = " - desc"
-        default:
-            suffix = ""
-        }
-        return base + suffix
-    }
-    
-    /// Helper to check if a sort category is active
-    private func isSortActive(_ options: SortOption...) -> Bool {
-        options.contains(viewModel.currentSortOption)
-    }
-    
-    /// Helper to create menu item label with optional checkmark (recommended pattern per Apple docs)
-    @ViewBuilder
-    private func sortMenuItem(text: String, isActive: Bool) -> some View {
-        if isActive {
-            Label(text, systemImage: "checkmark")
-        } else {
-            Text(text)
-        }
-    }
-    
     // MARK: - Body
     
     var body: some View {
@@ -162,17 +133,17 @@ struct CollectionView: View {
         ToolbarItem(placement: .topBarLeading) {
             Picker("View Mode", selection: $viewMode) {
                 Image(systemName: "square.grid.2x2.fill")
-                    .font(.title3)
+                    .font(.system(size: 20))
                     .tag(ViewMode.normalGrid)
                     .accessibilityLabel("Normal grid")
                 
                 Image(systemName: "square.grid.3x3.fill")
-                    .font(.title3)
+                    .font(.system(size: 20))
                     .tag(ViewMode.denseGrid)
                     .accessibilityLabel("Dense grid")
                 
                 Image(systemName: "rectangle.grid.1x3.fill")
-                    .font(.title3)
+                    .font(.system(size: 20))
                     .tag(ViewMode.list)
                     .accessibilityLabel("List view")
             }
@@ -223,54 +194,64 @@ struct CollectionView: View {
                     ))
                 } label: {
                     Image(systemName: "slider.horizontal.3")
-                        .font(.title3)
+                        .font(.system(size: 18))
                         .foregroundStyle(viewModel.hasActiveFilters ? Color.purple : Color.primary)
                 }
                 .accessibilityLabel("Filter stamps")
                 .accessibilityHint("Filter stamps by type, format, or edition count")
                 
-                // Sort Menu (using Button with manual checkmarks for toggle behavior)
+                // Sort Menu (using Toggle for single-select with automatic checkmarks)
                 Menu {
-                    Button {
-                        viewModel.toggleSort(for: .stamp, wallets: wallets)
-                    } label: {
-                        sortMenuItem(
-                            text: sortLabel(base: "Stamp #", ascending: .stampAscending, descending: .stampDescending),
-                            isActive: isSortActive(.stampAscending, .stampDescending)
-                        )
-                    }
+                    Toggle("Stamp # - asc", isOn: Binding(
+                        get: { viewModel.currentSortOption == .stampAscending },
+                        set: { _ in viewModel.sortStamps(by: .stampAscending, wallets: wallets) }
+                    ))
                     
-                    Button {
-                        viewModel.toggleSort(for: .artist, wallets: wallets)
-                    } label: {
-                        sortMenuItem(
-                            text: sortLabel(base: "Artist", ascending: .artistAscending, descending: .artistDescending),
-                            isActive: isSortActive(.artistAscending, .artistDescending)
-                        )
-                    }
+                    Toggle("Stamp # - desc", isOn: Binding(
+                        get: { viewModel.currentSortOption == .stampDescending },
+                        set: { _ in viewModel.sortStamps(by: .stampDescending, wallets: wallets) }
+                    ))
                     
-                    Button {
-                        viewModel.toggleSort(for: .balance, wallets: wallets)
-                    } label: {
-                        sortMenuItem(
-                            text: sortLabel(base: "Balance", ascending: .balanceAscending, descending: .balanceDescending),
-                            isActive: isSortActive(.balanceAscending, .balanceDescending)
-                        )
-                    }
+                    Divider()
+                    
+                    Toggle("Artist - asc", isOn: Binding(
+                        get: { viewModel.currentSortOption == .artistAscending },
+                        set: { _ in viewModel.sortStamps(by: .artistAscending, wallets: wallets) }
+                    ))
+                    
+                    Toggle("Artist - desc", isOn: Binding(
+                        get: { viewModel.currentSortOption == .artistDescending },
+                        set: { _ in viewModel.sortStamps(by: .artistDescending, wallets: wallets) }
+                    ))
+                    
+                    Divider()
+                    
+                    Toggle("Balance - asc", isOn: Binding(
+                        get: { viewModel.currentSortOption == .balanceAscending },
+                        set: { _ in viewModel.sortStamps(by: .balanceAscending, wallets: wallets) }
+                    ))
+                    
+                    Toggle("Balance - desc", isOn: Binding(
+                        get: { viewModel.currentSortOption == .balanceDescending },
+                        set: { _ in viewModel.sortStamps(by: .balanceDescending, wallets: wallets) }
+                    ))
                     
                     if showWalletIcons {
-                        Button {
-                            viewModel.toggleSort(for: .wallet, wallets: wallets)
-                        } label: {
-                            sortMenuItem(
-                                text: sortLabel(base: "Wallet", ascending: .walletAscending, descending: .walletDescending),
-                                isActive: isSortActive(.walletAscending, .walletDescending)
-                            )
-                        }
+                        Divider()
+                        
+                        Toggle("Wallet - asc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .walletAscending },
+                            set: { _ in viewModel.sortStamps(by: .walletAscending, wallets: wallets) }
+                        ))
+                        
+                        Toggle("Wallet - desc", isOn: Binding(
+                            get: { viewModel.currentSortOption == .walletDescending },
+                            set: { _ in viewModel.sortStamps(by: .walletDescending, wallets: wallets) }
+                        ))
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .font(.title3)
+                        .font(.system(size: 20))
                         .foregroundStyle(hasActiveSort ? Color.purple : Color.primary)
                 }
                 .accessibilityLabel("Sort stamps")
@@ -285,7 +266,7 @@ struct CollectionView: View {
                 showSearchPopover = true
             } label: {
                 Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass")
-                    .font(.headline)
+                    .font(.system(size: 18))
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
             }
             .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
