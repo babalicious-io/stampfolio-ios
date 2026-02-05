@@ -23,11 +23,6 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
-            
-            SearchView()
-                .tabItem {
-                    Label("Search", systemImage: "magnifyingglass")
-                }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
     }
