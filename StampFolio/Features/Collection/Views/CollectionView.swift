@@ -211,26 +211,30 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleSort(for: .stamp, wallets: wallets)
                     } label: {
-                        Label("Stamp #", systemImage: (viewModel.currentSortOption == .stampAscending || viewModel.currentSortOption == .stampDescending) ? "checkmark" : "")
+                        let suffix = viewModel.currentSortOption == .stampAscending ? " - asc" : viewModel.currentSortOption == .stampDescending ? " - desc" : ""
+                        Label("Stamp #\(suffix)", systemImage: (viewModel.currentSortOption == .stampAscending || viewModel.currentSortOption == .stampDescending) ? "checkmark" : "")
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .artist, wallets: wallets)
                     } label: {
-                        Label("Artist", systemImage: (viewModel.currentSortOption == .artistAZ || viewModel.currentSortOption == .artistZA) ? "checkmark" : "")
+                        let suffix = viewModel.currentSortOption == .artistAZ ? " - A-Z" : viewModel.currentSortOption == .artistZA ? " - Z-A" : ""
+                        Label("Artist\(suffix)", systemImage: (viewModel.currentSortOption == .artistAZ || viewModel.currentSortOption == .artistZA) ? "checkmark" : "")
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .balance, wallets: wallets)
                     } label: {
-                        Label("Balance", systemImage: (viewModel.currentSortOption == .balanceAscending || viewModel.currentSortOption == .balanceDescending) ? "checkmark" : "")
+                        let suffix = viewModel.currentSortOption == .balanceAscending ? " - asc" : viewModel.currentSortOption == .balanceDescending ? " - desc" : ""
+                        Label("Balance\(suffix)", systemImage: (viewModel.currentSortOption == .balanceAscending || viewModel.currentSortOption == .balanceDescending) ? "checkmark" : "")
                     }
                     
                     if showWalletIcons {
                         Button {
                             viewModel.toggleSort(for: .wallet, wallets: wallets)
                         } label: {
-                            Label("Wallet", systemImage: (viewModel.currentSortOption == .walletAZ || viewModel.currentSortOption == .walletZA) ? "checkmark" : "")
+                            let suffix = viewModel.currentSortOption == .walletAZ ? " - A-Z" : viewModel.currentSortOption == .walletZA ? " - Z-A" : ""
+                            Label("Wallet\(suffix)", systemImage: (viewModel.currentSortOption == .walletAZ || viewModel.currentSortOption == .walletZA) ? "checkmark" : "")
                         }
                     }
                 } label: {
