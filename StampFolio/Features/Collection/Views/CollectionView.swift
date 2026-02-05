@@ -77,60 +77,71 @@ struct CollectionView: View {
                     filterAndSortGroupToolbarItem
                     searchToolbarItem
                 }
-                .task {
-                    await viewModel.fetchStamps(for: wallets)
-                }
-                .refreshable {
-                    await viewModel.refreshStamps(for: wallets)
-                }
-                .onChange(of: wallets.count) { _, _ in
-                    Task {
-                        await viewModel.fetchStamps(for: wallets)
+        }
+        .task {
+            await viewModel.fetchStamps(for: wallets)
+        }
+        .refreshable {
+            await viewModel.refreshStamps(for: wallets)
+        }
+        .onChange(of: wallets.count) { _, _ in
+            Task {
+                await viewModel.fetchStamps(for: wallets)
+            }
+        }
+        .onChange(of: networkMonitor.isConnected) { _, isConnected in
+            showOfflineBanner = !isConnected
+        }
+        .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
+            if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
+                StampDetailView(
+                    stamps: viewModel.stamps.map(\.stamp),
+                    initialIndex: index
+                )
+            }
+        }
+        .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
+            StampMetadataPopup(stamp: displayStamp.stamp)
+                .presentationDetents([.medium])
+                .presentationBackground(.ultraThinMaterial)
+        }
+        .overlay {
+            searchDismissOverlay
+        }
+        .overlay(alignment: .topTrailing) {
+            searchPopoverOverlay
+        }
+    }
+    
+    // MARK: - Search Overlays
+    
+    @ViewBuilder
+    private var searchDismissOverlay: some View {
+        if showSearchPopover {
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.825)) {
+                        showSearchPopover = false
                     }
                 }
-                .onChange(of: networkMonitor.isConnected) { _, isConnected in
-                    showOfflineBanner = !isConnected
-                }
-                .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
-                    if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
-                        StampDetailView(
-                            stamps: viewModel.stamps.map(\.stamp),
-                            initialIndex: index
-                        )
-                    }
-                }
-                .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
-                    StampMetadataPopup(stamp: displayStamp.stamp)
-                        .presentationDetents([.medium])
-                        .presentationBackground(.ultraThinMaterial)
-                }
-                .overlay {
-                    if showSearchPopover {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.825)) {
-                                    showSearchPopover = false
-                                }
-                            }
-                    }
-                }
-                .overlay(alignment: .topTrailing) {
-                    if showSearchPopover {
-                        SearchPopoverView()
-                            .glassEffect(.thick.interactive(), in: .rect(cornerRadius: 12))
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(uiColor: .separator).opacity(0.3), lineWidth: 0.5)
-                            )
-                            .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-                            .padding(.top, 0)
-                            .padding(.trailing, 16)
-                            .transition(.scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity))
-                            .zIndex(1000)
-                    }
-                }
+        }
+    }
+    
+    @ViewBuilder
+    private var searchPopoverOverlay: some View {
+        if showSearchPopover {
+            SearchPopoverView()
+                .glassEffect(.thick.interactive(), in: .rect(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(uiColor: .separator).opacity(0.3), lineWidth: 0.5)
+                )
+                .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+                .padding(.top, 0)
+                .padding(.trailing, 16)
+                .transition(.scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity))
+                .zIndex(1000)
         }
     }
     
