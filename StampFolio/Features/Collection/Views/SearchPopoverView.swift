@@ -21,7 +21,7 @@ struct SearchPopoverView: View {
     // MARK: - Body
     
     var body: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 16) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
                 .font(.body)
@@ -46,7 +46,8 @@ struct SearchPopoverView: View {
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(16)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
         .frame(width: 300)
         .onAppear {
             isSearchFieldFocused = true

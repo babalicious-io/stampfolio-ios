@@ -333,11 +333,6 @@ struct CollectionView: View {
             Label("No Results", systemImage: "magnifyingglass")
         } description: {
             Text("No stamps match '\(viewModel.searchText)'")
-        } actions: {
-            Button("Clear Search") {
-                viewModel.searchText = ""
-            }
-            .buttonStyle(.borderedProminent)
         }
     }
     
