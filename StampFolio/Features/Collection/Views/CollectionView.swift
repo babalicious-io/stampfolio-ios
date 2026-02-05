@@ -86,6 +86,16 @@ struct CollectionView: View {
         options.contains(viewModel.currentSortOption)
     }
     
+    /// Helper to create a label with optional checkmark (for both filter and sort menus)
+    @ViewBuilder
+    private func menuLabel(text: String, isActive: Bool) -> some View {
+        if isActive {
+            Label(text, systemImage: "checkmark")
+        } else {
+            Text(text)
+        }
+    }
+    
     // MARK: - Body
     
     var body: some View {
@@ -181,13 +191,13 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleIdentFilter("STAMP")
                     } label: {
-                        Label("Classic", systemImage: viewModel.activeIdentFilters.contains("STAMP") ? "checkmark" : "")
+                        menuLabel(text: "Classic", isActive: viewModel.activeIdentFilters.contains("STAMP"))
                     }
                     
                     Button {
                         viewModel.toggleIdentFilter("POSH")
                     } label: {
-                        Label("Posh", systemImage: viewModel.activeIdentFilters.contains("POSH") ? "checkmark" : "")
+                        menuLabel(text: "Posh", isActive: viewModel.activeIdentFilters.contains("POSH"))
                     }
                     
                     Divider()
@@ -195,13 +205,13 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleFileFormatFilter("pixel")
                     } label: {
-                        Label("Pixel", systemImage: viewModel.activeFileFormatFilters.contains("pixel") ? "checkmark" : "")
+                        menuLabel(text: "Pixel", isActive: viewModel.activeFileFormatFilters.contains("pixel"))
                     }
                     
                     Button {
                         viewModel.toggleFileFormatFilter("vector")
                     } label: {
-                        Label("Vector", systemImage: viewModel.activeFileFormatFilters.contains("vector") ? "checkmark" : "")
+                        menuLabel(text: "Vector", isActive: viewModel.activeFileFormatFilters.contains("vector"))
                     }
                     
                     Divider()
@@ -209,13 +219,13 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleEditionFilter("single")
                     } label: {
-                        Label("Single Edition", systemImage: viewModel.activeEditionFilters.contains("single") ? "checkmark" : "")
+                        menuLabel(text: "Single Edition", isActive: viewModel.activeEditionFilters.contains("single"))
                     }
                     
                     Button {
                         viewModel.toggleEditionFilter("multiple")
                     } label: {
-                        Label("Multiple Editions", systemImage: viewModel.activeEditionFilters.contains("multiple") ? "checkmark" : "")
+                        menuLabel(text: "Multiple Editions", isActive: viewModel.activeEditionFilters.contains("multiple"))
                     }
                 } label: {
                     Image(systemName: "slider.horizontal.3")
@@ -230,35 +240,43 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleSort(for: .stamp, wallets: wallets)
                     } label: {
-                        Label(sortLabel(base: "Stamp #", ascending: .stampAscending, descending: .stampDescending),
-                              systemImage: isSortActive(.stampAscending, .stampDescending) ? "checkmark" : "")
+                        menuLabel(
+                            text: sortLabel(base: "Stamp #", ascending: .stampAscending, descending: .stampDescending),
+                            isActive: isSortActive(.stampAscending, .stampDescending)
+                        )
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .artist, wallets: wallets)
                     } label: {
-                        Label(sortLabel(base: "Artist", ascending: .artistAscending, descending: .artistDescending),
-                              systemImage: isSortActive(.artistAscending, .artistDescending) ? "checkmark" : "")
+                        menuLabel(
+                            text: sortLabel(base: "Artist", ascending: .artistAscending, descending: .artistDescending),
+                            isActive: isSortActive(.artistAscending, .artistDescending)
+                        )
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .balance, wallets: wallets)
                     } label: {
-                        Label(sortLabel(base: "Balance", ascending: .balanceAscending, descending: .balanceDescending),
-                              systemImage: isSortActive(.balanceAscending, .balanceDescending) ? "checkmark" : "")
+                        menuLabel(
+                            text: sortLabel(base: "Balance", ascending: .balanceAscending, descending: .balanceDescending),
+                            isActive: isSortActive(.balanceAscending, .balanceDescending)
+                        )
                     }
                     
                     if showWalletIcons {
                         Button {
                             viewModel.toggleSort(for: .wallet, wallets: wallets)
                         } label: {
-                            Label(sortLabel(base: "Wallet", ascending: .walletAscending, descending: .walletDescending),
-                                  systemImage: isSortActive(.walletAscending, .walletDescending) ? "checkmark" : "")
+                            menuLabel(
+                                text: sortLabel(base: "Wallet", ascending: .walletAscending, descending: .walletDescending),
+                                isActive: isSortActive(.walletAscending, .walletDescending)
+                            )
                         }
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .font(.title2)
+                        .font(.title3)
                         .foregroundStyle(hasActiveSort ? Color.purple : Color.primary)
                 }
                 .accessibilityLabel("Sort stamps")
