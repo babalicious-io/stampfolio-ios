@@ -115,15 +115,15 @@ struct CollectionView: View {
                             }
                     }
                 }
-                .overlay(alignment: .top) {
+                .overlay(alignment: .topTrailing) {
                     if showSearchPopover {
                         SearchPopoverView()
                             .background(.regularMaterial)
                             .cornerRadius(24)
                             .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-                            .padding(.top, 24)
-                            .padding(.trailing, 0)
-                            .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
+                            .padding(.top, 0)
+                            .padding(.trailing, 16)
+                            .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
                             .zIndex(1000)
                     }
                 }
