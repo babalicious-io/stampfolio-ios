@@ -86,9 +86,9 @@ struct CollectionView: View {
         options.contains(viewModel.currentSortOption)
     }
     
-    /// Helper to create a label with optional checkmark (for both filter and sort menus)
+    /// Helper to create menu item label with optional checkmark (recommended pattern per Apple docs)
     @ViewBuilder
-    private func menuLabel(text: String, isActive: Bool) -> some View {
+    private func sortMenuItem(text: String, isActive: Bool) -> some View {
         if isActive {
             Label(text, systemImage: "checkmark")
         } else {
@@ -186,47 +186,41 @@ struct CollectionView: View {
     private var filterAndSortGroupToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             ControlGroup {
-                // Filter Menu
+                // Filter Menu (using Toggle for multi-select with automatic checkmarks)
                 Menu {
-                    Button {
-                        viewModel.toggleIdentFilter("STAMP")
-                    } label: {
-                        menuLabel(text: "Classic", isActive: viewModel.activeIdentFilters.contains("STAMP"))
-                    }
+                    Toggle("Classic", isOn: Binding(
+                        get: { viewModel.activeIdentFilters.contains("STAMP") },
+                        set: { _ in viewModel.toggleIdentFilter("STAMP") }
+                    ))
                     
-                    Button {
-                        viewModel.toggleIdentFilter("POSH")
-                    } label: {
-                        menuLabel(text: "Posh", isActive: viewModel.activeIdentFilters.contains("POSH"))
-                    }
+                    Toggle("Posh", isOn: Binding(
+                        get: { viewModel.activeIdentFilters.contains("POSH") },
+                        set: { _ in viewModel.toggleIdentFilter("POSH") }
+                    ))
                     
                     Divider()
                     
-                    Button {
-                        viewModel.toggleFileFormatFilter("pixel")
-                    } label: {
-                        menuLabel(text: "Pixel", isActive: viewModel.activeFileFormatFilters.contains("pixel"))
-                    }
+                    Toggle("Pixel", isOn: Binding(
+                        get: { viewModel.activeFileFormatFilters.contains("pixel") },
+                        set: { _ in viewModel.toggleFileFormatFilter("pixel") }
+                    ))
                     
-                    Button {
-                        viewModel.toggleFileFormatFilter("vector")
-                    } label: {
-                        menuLabel(text: "Vector", isActive: viewModel.activeFileFormatFilters.contains("vector"))
-                    }
+                    Toggle("Vector", isOn: Binding(
+                        get: { viewModel.activeFileFormatFilters.contains("vector") },
+                        set: { _ in viewModel.toggleFileFormatFilter("vector") }
+                    ))
                     
                     Divider()
                     
-                    Button {
-                        viewModel.toggleEditionFilter("single")
-                    } label: {
-                        menuLabel(text: "Single Edition", isActive: viewModel.activeEditionFilters.contains("single"))
-                    }
+                    Toggle("Single Edition", isOn: Binding(
+                        get: { viewModel.activeEditionFilters.contains("single") },
+                        set: { _ in viewModel.toggleEditionFilter("single") }
+                    ))
                     
-                    Button {
-                        viewModel.toggleEditionFilter("multiple")
-                    } label: {
-                        menuLabel(text: "Multiple Editions", isActive: viewModel.activeEditionFilters.contains("multiple"))
-                    }
+                    Toggle("Multiple Editions", isOn: Binding(
+                        get: { viewModel.activeEditionFilters.contains("multiple") },
+                        set: { _ in viewModel.toggleEditionFilter("multiple") }
+                    ))
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.title3)
@@ -235,12 +229,12 @@ struct CollectionView: View {
                 .accessibilityLabel("Filter stamps")
                 .accessibilityHint("Filter stamps by type, format, or edition count")
                 
-                // Sort Menu
+                // Sort Menu (using Button with manual checkmarks for toggle behavior)
                 Menu {
                     Button {
                         viewModel.toggleSort(for: .stamp, wallets: wallets)
                     } label: {
-                        menuLabel(
+                        sortMenuItem(
                             text: sortLabel(base: "Stamp #", ascending: .stampAscending, descending: .stampDescending),
                             isActive: isSortActive(.stampAscending, .stampDescending)
                         )
@@ -249,7 +243,7 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleSort(for: .artist, wallets: wallets)
                     } label: {
-                        menuLabel(
+                        sortMenuItem(
                             text: sortLabel(base: "Artist", ascending: .artistAscending, descending: .artistDescending),
                             isActive: isSortActive(.artistAscending, .artistDescending)
                         )
@@ -258,7 +252,7 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleSort(for: .balance, wallets: wallets)
                     } label: {
-                        menuLabel(
+                        sortMenuItem(
                             text: sortLabel(base: "Balance", ascending: .balanceAscending, descending: .balanceDescending),
                             isActive: isSortActive(.balanceAscending, .balanceDescending)
                         )
@@ -268,7 +262,7 @@ struct CollectionView: View {
                         Button {
                             viewModel.toggleSort(for: .wallet, wallets: wallets)
                         } label: {
-                            menuLabel(
+                            sortMenuItem(
                                 text: sortLabel(base: "Wallet", ascending: .walletAscending, descending: .walletDescending),
                                 isActive: isSortActive(.walletAscending, .walletDescending)
                             )
@@ -291,7 +285,7 @@ struct CollectionView: View {
                 showSearchPopover = true
             } label: {
                 Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass")
-                    .font(.title3)
+                    .font(.headline)
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
             }
             .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
