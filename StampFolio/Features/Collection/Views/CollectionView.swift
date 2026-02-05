@@ -140,7 +140,7 @@ struct CollectionView: View {
                 .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
                 .padding(.top, horizontalSizeClass == .compact ? 0 : 64)
                 .padding(.trailing, 16)
-                .offset(x: horizontalSizeClass == .compact ? 0 : 64)
+                .offset(x: horizontalSizeClass == .compact ? 0 : -64)
                 .transition(.scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity))
                 .zIndex(1000)
         }
