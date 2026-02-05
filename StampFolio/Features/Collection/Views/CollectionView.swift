@@ -30,7 +30,7 @@ struct CollectionView: View {
     // MARK: - State
     
     @State private var showOfflineBanner = false
-    @State private var showSettings = false
+    @State private var showSearch = false
     @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
@@ -198,14 +198,14 @@ struct CollectionView: View {
                 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        showSettings = true
+                        showSearch = true
                     } label: {
-                        Image(systemName: "ellipsis")
+                        Image(systemName: "magnifyingglass")
                             .font(.title3)
                     }
                     .buttonStyle(.glass)
-                    .accessibilityLabel("Settings")
-                    .accessibilityHint("Opens the settings screen")
+                    .accessibilityLabel("Search")
+                    .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
                 }
             }
             .task {
@@ -235,8 +235,8 @@ struct CollectionView: View {
                     .presentationDetents([.medium])
                     .presentationBackground(.ultraThinMaterial)
             }
-            .fullScreenCover(isPresented: $showSettings) {
-                SettingsView()
+            .sheet(isPresented: $showSearch) {
+                SearchView()
             }
         }
     }
@@ -266,13 +266,6 @@ struct CollectionView: View {
             Label("No Wallets Added", systemImage: "wallet.bifold")
         } description: {
             Text("Add a Bitcoin wallet to view your stamp collection")
-        } actions: {
-            Button("Add Wallet") {
-                showSettings = true
-            }
-            .buttonStyle(.borderedProminent)
-            .accessibilityLabel("Add a Bitcoin wallet")
-            .accessibilityHint("Opens the settings screen to add a wallet")
         }
     }
     

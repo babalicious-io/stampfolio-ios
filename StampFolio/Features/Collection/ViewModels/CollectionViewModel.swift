@@ -77,6 +77,55 @@ final class CollectionViewModel {
     /// Current sort option
     var currentSortOption: SortOption = .stampDescending
     
+    /// Search text for filtering stamps
+    var searchText: String = ""
+    
+    /// Whether search is active
+    var isSearching: Bool = false
+    
+    // MARK: - Computed Properties
+    
+    /// Filtered stamps based on search text
+    var filteredStamps: [DisplayStamp] {
+        guard !searchText.isEmpty else {
+            return stamps
+        }
+        
+        let searchLower = searchText.lowercased()
+        
+        return stamps.filter { displayStamp in
+            let stamp = displayStamp.stamp
+            
+            // Search by stamp ID
+            if "\(stamp.id)".contains(searchLower) {
+                return true
+            }
+            
+            // Search by CPID
+            if stamp.cpid.localizedCaseInsensitiveContains(searchText) {
+                return true
+            }
+            
+            // Search by transaction hash
+            if stamp.txHash.localizedCaseInsensitiveContains(searchText) {
+                return true
+            }
+            
+            // Search by creator address
+            if stamp.creatorAddy.localizedCaseInsensitiveContains(searchText) {
+                return true
+            }
+            
+            // Search by creator name
+            if let creatorName = stamp.creatorName,
+               creatorName.localizedCaseInsensitiveContains(searchText) {
+                return true
+            }
+            
+            return false
+        }
+    }
+    
     // MARK: - Private Properties
     
     private let apiClient = StampchainAPIClient()
@@ -218,15 +267,15 @@ final class CollectionViewModel {
             
         case .artistAZ:
             return stamps.sorted { stamp1, stamp2 in
-                let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creator
-                let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creator
+                let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creatorAddy
+                let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creatorAddy
                 return artist1.localizedCaseInsensitiveCompare(artist2) == .orderedAscending
             }
             
         case .artistZA:
             return stamps.sorted { stamp1, stamp2 in
-                let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creator
-                let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creator
+                let artist1 = stamp1.stamp.creatorName ?? stamp1.stamp.creatorAddy
+                let artist2 = stamp2.stamp.creatorName ?? stamp2.stamp.creatorAddy
                 return artist1.localizedCaseInsensitiveCompare(artist2) == .orderedDescending
             }
             

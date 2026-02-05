@@ -40,7 +40,7 @@ struct DisplayStamp: Identifiable {
         self.stamp = Stamp(
             id: stampBalance.stamp,
             cpid: stampBalance.cpid,
-            creator: stampBalance.creator,
+            creatorAddy: stampBalance.creatorAddy,
             creatorName: stampBalance.creatorName,
             stampUrl: stampBalance.stampUrl,
             stampMimetype: stampBalance.stampMimetype,

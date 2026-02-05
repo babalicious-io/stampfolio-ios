@@ -19,7 +19,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     let cpid: String
     
     /// Creator's Bitcoin address
-    let creator: String
+    let creatorAddy: String
     
     /// Creator's display name (if available)
     let creatorName: String?
@@ -62,7 +62,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id = "stamp"
         case cpid
-        case creator
+        case creatorAddy = "creator"
         case creatorName = "creator_name"
         case stampUrl = "stamp_url"
         case stampMimetype = "stamp_mimetype"
@@ -172,7 +172,7 @@ extension Stamp {
     static let sample = Stamp(
         id: 1384303,
         cpid: "A888354448084788958",
-        creator: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
+        creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
         creatorName: "babalicious",
         stampUrl: "https://stampchain.io/stamps/e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca.png",
         stampMimetype: "image/png",
@@ -193,7 +193,7 @@ extension Stamp {
         Stamp(
             id: 1384302,
             cpid: "A888354448084788957",
-            creator: "bc1qabc123def456",
+            creatorAddy: "bc1qabc123def456",
             creatorName: nil,
             stampUrl: "https://stampchain.io/stamps/1384302.gif",
             stampMimetype: "image/gif",
@@ -210,7 +210,7 @@ extension Stamp {
         Stamp(
             id: 74705,
             cpid: "A888354448084788999",
-            creator: "bc1qtest",
+            creatorAddy: "bc1qtest",
             creatorName: "divisible_test",
             stampUrl: "https://stampchain.io/stamps/test.png",
             stampMimetype: "image/png",

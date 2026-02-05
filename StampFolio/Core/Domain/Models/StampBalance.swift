@@ -37,7 +37,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     let locked: Int?
     
     /// Creator's Bitcoin address
-    let creator: String
+    let creatorAddy: String
     
     /// Creator's display name (if available)
     let creatorName: String?
@@ -104,7 +104,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
         case divisible
         case supply
         case locked
-        case creator
+        case creatorAddy = "creator"
         case creatorName = "creator_name"
         case _balance = "balance"
         case address
@@ -126,7 +126,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
         divisible = try container.decode(Int.self, forKey: .divisible)
         supply = try container.decodeIfPresent(Int.self, forKey: .supply)
         locked = try container.decodeIfPresent(Int.self, forKey: .locked)
-        creator = try container.decode(String.self, forKey: .creator)
+        creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
         creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
         address = try container.decode(String.self, forKey: .address)
         cpid = try container.decode(String.self, forKey: .cpid)

@@ -101,8 +101,8 @@ struct StampMetadataPopup: View {
             // Creator
             MetadataRow(
                 label: "Creator",
-                value: stamp.creator.truncatedAddress(prefixLength: 6, suffixLength: 6),
-                fullValue: stamp.creator,
+                value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
+                fullValue: stamp.creatorAddy,
                 isMonospace: true
             )
             

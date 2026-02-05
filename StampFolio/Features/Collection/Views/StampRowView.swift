@@ -236,7 +236,7 @@ struct StampRowView: View {
         if let creatorName = stamp.creatorName {
             return creatorName
         } else {
-            return stamp.creator.truncatedAddress(length: 6)
+            return stamp.creatorAddy.truncatedAddress(length: 6)
         }
     }
     

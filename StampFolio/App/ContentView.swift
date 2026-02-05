@@ -7,13 +7,13 @@
 
 import SwiftUI
 
-/// Main content view displaying the collection.
+/// Main content view displaying the tab view.
 struct ContentView: View {
     
     // MARK: - Body
     
     var body: some View {
-        CollectionView()
+        MainTabView()
     }
 }
 
@@ -24,4 +24,5 @@ struct ContentView: View {
         .environment(SettingsViewModel())
         .environment(CollectionViewModel())
         .environment(NetworkMonitor())
+        .modelContainer(for: Wallet.self, inMemory: true)
 }
