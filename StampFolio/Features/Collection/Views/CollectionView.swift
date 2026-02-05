@@ -30,7 +30,6 @@ struct CollectionView: View {
     // MARK: - State
     
     @State private var showOfflineBanner = false
-    @State private var showSearch = false
     @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
@@ -193,20 +192,6 @@ struct CollectionView: View {
                     .accessibilityLabel("Sort stamps")
                     .accessibilityHint("Choose how to sort your stamp collection")
                 }
-                
-                ToolbarSpacer(.fixed)
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSearch = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .font(.title3)
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityLabel("Search")
-                    .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
-                }
             }
             .task {
                 await viewModel.fetchStamps(for: wallets)
@@ -234,9 +219,6 @@ struct CollectionView: View {
                 StampMetadataPopup(stamp: displayStamp.stamp)
                     .presentationDetents([.medium])
                     .presentationBackground(.ultraThinMaterial)
-            }
-            .sheet(isPresented: $showSearch) {
-                SearchView()
             }
         }
     }

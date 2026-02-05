@@ -14,7 +14,6 @@ struct SearchView: View {
     // MARK: - Environment
     
     @Environment(CollectionViewModel.self) private var viewModel
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     // MARK: - State
@@ -100,19 +99,8 @@ struct SearchView: View {
                 // Results
                 searchResults
             }
-            .navigationTitle("Search Stamps")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    .accessibilityLabel("Close search")
-                }
-            }
+            .navigationTitle("Search")
+            .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 isSearchFieldFocused = true
             }
@@ -231,11 +219,9 @@ struct SearchView: View {
                                 displayStamp: displayStamp,
                                 onTap: {
                                     viewModel.selectedStamp = displayStamp
-                                    dismiss()
                                 },
                                 onInfoTap: {
                                     viewModel.metadataStamp = displayStamp
-                                    dismiss()
                                 }
                             )
                         }
@@ -248,11 +234,9 @@ struct SearchView: View {
                                 displayStamp: displayStamp,
                                 onTap: {
                                     viewModel.selectedStamp = displayStamp
-                                    dismiss()
                                 },
                                 onInfoTap: {
                                     viewModel.metadataStamp = displayStamp
-                                    dismiss()
                                 }
                             )
                         }
