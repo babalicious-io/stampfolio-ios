@@ -46,7 +46,7 @@ struct SearchPopoverView: View {
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(16)
+        .padding(16) 
         .frame(width: 300)
         .onAppear {
             isSearchFieldFocused = true
