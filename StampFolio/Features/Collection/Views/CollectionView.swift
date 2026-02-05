@@ -62,40 +62,9 @@ struct CollectionView: View {
     
     // MARK: - Computed Properties
     
-    /// Dynamic icon for Stamp # sort based on current sort option
-    private var stampSortIcon: String {
-        switch viewModel.currentSortOption {
-        case .stampAscending: return "arrow.up"
-        case .stampDescending: return "arrow.down"
-        default: return "arrow.down"
-        }
-    }
-    
-    /// Dynamic icon for Artist sort based on current sort option
-    private var artistSortIcon: String {
-        switch viewModel.currentSortOption {
-        case .artistAZ: return "AZ"
-        case .artistZA: return "ZA"
-        default: return "AZ"
-        }
-    }
-    
-    /// Dynamic icon for Balance sort based on current sort option
-    private var balanceSortIcon: String {
-        switch viewModel.currentSortOption {
-        case .balanceAscending: return "arrow.up"
-        case .balanceDescending: return "arrow.down"
-        default: return "arrow.down"
-        }
-    }
-    
-    /// Dynamic icon for Wallet sort based on current sort option
-    private var walletSortIcon: String {
-        switch viewModel.currentSortOption {
-        case .walletAZ: return "AZ"
-        case .walletZA: return "ZA"
-        default: return "AZ"
-        }
+    /// Check if any sort is active (not the default descending stamp sort)
+    private var hasActiveSort: Bool {
+        viewModel.currentSortOption != .stampDescending
     }
     
     // MARK: - Body
@@ -242,43 +211,32 @@ struct CollectionView: View {
                     Button {
                         viewModel.toggleSort(for: .stamp, wallets: wallets)
                     } label: {
-                        Label("Stamp #", systemImage: stampSortIcon)
+                        Label("Stamp #", systemImage: (viewModel.currentSortOption == .stampAscending || viewModel.currentSortOption == .stampDescending) ? "checkmark" : "")
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .artist, wallets: wallets)
                     } label: {
-                        Label {
-                            Text("Artist")
-                        } icon: {
-                            Text(artistSortIcon)
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.blue)
-                        }
+                        Label("Artist", systemImage: (viewModel.currentSortOption == .artistAZ || viewModel.currentSortOption == .artistZA) ? "checkmark" : "")
                     }
                     
                     Button {
                         viewModel.toggleSort(for: .balance, wallets: wallets)
                     } label: {
-                        Label("Balance", systemImage: balanceSortIcon)
+                        Label("Balance", systemImage: (viewModel.currentSortOption == .balanceAscending || viewModel.currentSortOption == .balanceDescending) ? "checkmark" : "")
                     }
                     
                     if showWalletIcons {
                         Button {
                             viewModel.toggleSort(for: .wallet, wallets: wallets)
                         } label: {
-                            Label {
-                                Text("Wallet")
-                            } icon: {
-                                Text(walletSortIcon)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.blue)
-                            }
+                            Label("Wallet", systemImage: (viewModel.currentSortOption == .walletAZ || viewModel.currentSortOption == .walletZA) ? "checkmark" : "")
                         }
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
                         .font(.title3)
+                        .foregroundStyle(hasActiveSort ? Color.purple : Color.primary)
                 }
                 .accessibilityLabel("Sort stamps")
                 .accessibilityHint("Choose how to sort your stamp collection")
