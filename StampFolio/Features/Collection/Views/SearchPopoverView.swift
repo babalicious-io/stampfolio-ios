@@ -21,16 +21,17 @@ struct SearchPopoverView: View {
     // MARK: - Body
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-                .font(.body)
+                .font(.callout)
             
             TextField("Search stamps...", text: Binding(
                 get: { viewModel.searchText },
                 set: { viewModel.searchText = $0 }
             ))
             .textFieldStyle(.plain)
+            .font(.callout)
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .focused($isSearchFieldFocused)
@@ -41,15 +42,14 @@ struct SearchPopoverView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
+                        .font(.callout)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
-        .frame(width: 300, height: 44)
-        .fixedSize(horizontal: false, vertical: true)
+        .padding(8)
+        .frame(minWidth: 280)
         .onAppear {
             isSearchFieldFocused = true
         }

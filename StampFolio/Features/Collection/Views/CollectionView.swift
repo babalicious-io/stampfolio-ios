@@ -249,6 +249,7 @@ struct CollectionView: View {
             .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
                 SearchPopoverView()
                     .presentationCompactAdaptation(.popover)
+                    .presentationBackground(.regularMaterial)
             }
             .accessibilityLabel("Search")
             .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
