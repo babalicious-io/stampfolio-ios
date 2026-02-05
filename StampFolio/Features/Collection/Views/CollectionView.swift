@@ -132,7 +132,7 @@ struct CollectionView: View {
     private var searchPopoverOverlay: some View {
         if showSearchPopover {
             SearchPopoverView()
-                .glassEffect(.thick.interactive(), in: .rect(cornerRadius: 12))
+                .glassEffect(.regular, in: .rect(cornerRadius: 12))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(Color(uiColor: .separator).opacity(0.3), lineWidth: 0.5)
