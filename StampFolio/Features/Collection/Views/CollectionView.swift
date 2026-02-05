@@ -109,7 +109,7 @@ struct CollectionView: View {
                         Color.clear
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0)) {
                                     showSearchPopover = false
                                 }
                             }
@@ -123,7 +123,14 @@ struct CollectionView: View {
                             .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
                             .padding(.top, 0)
                             .padding(.trailing, 16)
-                            .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .topTrailing)))
+                            .transition(
+                                .asymmetric(
+                                    insertion: .scale(scale: 0.8, anchor: .topTrailing)
+                                        .combined(with: .opacity),
+                                    removal: .scale(scale: 0.95, anchor: .topTrailing)
+                                        .combined(with: .opacity)
+                                )
+                            )
                             .zIndex(1000)
                     }
                 }
@@ -290,7 +297,7 @@ struct CollectionView: View {
     private var searchToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7, blendDuration: 0)) {
                     showSearchPopover.toggle()
                 }
             } label: {
