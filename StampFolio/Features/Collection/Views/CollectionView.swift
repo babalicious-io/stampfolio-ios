@@ -102,144 +102,156 @@ struct CollectionView: View {
     
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
-                ZStack {
-                    // Background
-                    Color(uiColor: .systemBackground)
-                        .ignoresSafeArea()
-                    
-                    content
+            mainContent
+                .toolbar {
+                    viewModeToolbarItem
+                    sortMenuToolbarItem
+                    ToolbarSpacer(.fixed)
+                    searchToolbarItem
                 }
-                .onAppear {
-                    viewSize = geometry.size
-                }
-                .onChange(of: geometry.size) { _, newSize in
-                    viewSize = newSize
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Picker("View Mode", selection: $viewMode) {
-                        Image(systemName: "square.grid.2x2.fill")
-                            .font(.title3)
-                            .tag(ViewMode.normalGrid)
-                            .accessibilityLabel("Normal grid")
-                        
-                        Image(systemName: "square.grid.3x3.fill")
-                            .font(.title3)
-                            .tag(ViewMode.denseGrid)
-                            .accessibilityLabel("Dense grid")
-                        
-                        Image(systemName: "rectangle.grid.1x3.fill")
-                            .font(.title3)
-                            .tag(ViewMode.list)
-                            .accessibilityLabel("List view")
-                    }
-                    .pickerStyle(.segmented)
-                    .fixedSize()
-                    .accessibilityLabel("View mode control")
-                    .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
-                }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    // Sort menu
-                    Menu {
-                        // Stamp # toggle
-                        Button {
-                            viewModel.toggleSort(for: .stamp, wallets: wallets)
-                        } label: {
-                            Label("Stamp #", systemImage: stampSortIcon)
-                        }
-                        
-                        // Artist toggle
-                        Button {
-                            viewModel.toggleSort(for: .artist, wallets: wallets)
-                        } label: {
-                            Label {
-                                Text("Artist")
-                            } icon: {
-                                Text(artistSortIcon)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.blue)
-                            }
-                        }
-                        
-                        // Balance toggle
-                        Button {
-                            viewModel.toggleSort(for: .balance, wallets: wallets)
-                        } label: {
-                            Label("Balance", systemImage: balanceSortIcon)
-                        }
-                        
-                        // Wallet toggle (conditional)
-                        if showWalletIcons {
-                            Button {
-                                viewModel.toggleSort(for: .wallet, wallets: wallets)
-                            } label: {
-                                Label {
-                                    Text("Wallet")
-                                } icon: {
-                                    Text(walletSortIcon)
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(.blue)
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .font(.title3)
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityLabel("Sort stamps")
-                    .accessibilityHint("Choose how to sort your stamp collection")
-                }
-                
-                ToolbarSpacer(.fixed)
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSearchPopover = true
-                    } label: {
-                        Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(viewModel.searchText.isEmpty ? .primary : .purple)
-                    }
-                    .buttonStyle(.glass)
-                    .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
-                        SearchPopoverView()
-                            .presentationCompactAdaptation(.popover)
-                    }
-                    .accessibilityLabel("Search")
-                    .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
-                }
-            }
-            .task {
-                await viewModel.fetchStamps(for: wallets)
-            }
-            .refreshable {
-                await viewModel.refreshStamps(for: wallets)
-            }
-            .onChange(of: wallets.count) { _, _ in
-                Task {
+                .task {
                     await viewModel.fetchStamps(for: wallets)
                 }
-            }
-            .onChange(of: networkMonitor.isConnected) { _, isConnected in
-                showOfflineBanner = !isConnected
-            }
-            .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
-                if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
-                    StampDetailView(
-                        stamps: viewModel.stamps.map(\.stamp),
-                        initialIndex: index
-                    )
+                .refreshable {
+                    await viewModel.refreshStamps(for: wallets)
                 }
+                .onChange(of: wallets.count) { _, _ in
+                    Task {
+                        await viewModel.fetchStamps(for: wallets)
+                    }
+                }
+                .onChange(of: networkMonitor.isConnected) { _, isConnected in
+                    showOfflineBanner = !isConnected
+                }
+                .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
+                    if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
+                        StampDetailView(
+                            stamps: viewModel.stamps.map(\.stamp),
+                            initialIndex: index
+                        )
+                    }
+                }
+                .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
+                    StampMetadataPopup(stamp: displayStamp.stamp)
+                        .presentationDetents([.medium])
+                        .presentationBackground(.ultraThinMaterial)
+                }
+        }
+    }
+    
+    // MARK: - Main Content
+    
+    private var mainContent: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Background
+                Color(uiColor: .systemBackground)
+                    .ignoresSafeArea()
+                
+                content
             }
-            .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
-                StampMetadataPopup(stamp: displayStamp.stamp)
-                    .presentationDetents([.medium])
-                    .presentationBackground(.ultraThinMaterial)
+            .onAppear {
+                viewSize = geometry.size
             }
+            .onChange(of: geometry.size) { _, newSize in
+                viewSize = newSize
+            }
+        }
+    }
+    
+    // MARK: - Toolbar Items
+    
+    private var viewModeToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Picker("View Mode", selection: $viewMode) {
+                Image(systemName: "square.grid.2x2.fill")
+                    .font(.title3)
+                    .tag(ViewMode.normalGrid)
+                    .accessibilityLabel("Normal grid")
+                
+                Image(systemName: "square.grid.3x3.fill")
+                    .font(.title3)
+                    .tag(ViewMode.denseGrid)
+                    .accessibilityLabel("Dense grid")
+                
+                Image(systemName: "rectangle.grid.1x3.fill")
+                    .font(.title3)
+                    .tag(ViewMode.list)
+                    .accessibilityLabel("List view")
+            }
+            .pickerStyle(.segmented)
+            .fixedSize()
+            .accessibilityLabel("View mode control")
+            .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
+        }
+    }
+    
+    private var sortMenuToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                Button {
+                    viewModel.toggleSort(for: .stamp, wallets: wallets)
+                } label: {
+                    Label("Stamp #", systemImage: stampSortIcon)
+                }
+                
+                Button {
+                    viewModel.toggleSort(for: .artist, wallets: wallets)
+                } label: {
+                    Label {
+                        Text("Artist")
+                    } icon: {
+                        Text(artistSortIcon)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.blue)
+                    }
+                }
+                
+                Button {
+                    viewModel.toggleSort(for: .balance, wallets: wallets)
+                } label: {
+                    Label("Balance", systemImage: balanceSortIcon)
+                }
+                
+                if showWalletIcons {
+                    Button {
+                        viewModel.toggleSort(for: .wallet, wallets: wallets)
+                    } label: {
+                        Label {
+                            Text("Wallet")
+                        } icon: {
+                            Text(walletSortIcon)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .font(.title3)
+            }
+            .buttonStyle(.glass)
+            .accessibilityLabel("Sort stamps")
+            .accessibilityHint("Choose how to sort your stamp collection")
+        }
+    }
+    
+    private var searchToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                showSearchPopover = true
+            } label: {
+                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(viewModel.searchText.isEmpty ? .primary : .purple)
+            }
+            .buttonStyle(.glass)
+            .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
+                SearchPopoverView()
+                    .presentationCompactAdaptation(.popover)
+            }
+            .accessibilityLabel("Search")
+            .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
         }
     }
     
