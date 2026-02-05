@@ -104,6 +104,29 @@ struct CollectionView: View {
                         .presentationDetents([.medium])
                         .presentationBackground(.ultraThinMaterial)
                 }
+                .overlay {
+                    if showSearchPopover {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showSearchPopover = false
+                                }
+                            }
+                    }
+                }
+                .overlay(alignment: .top) {
+                    if showSearchPopover {
+                        SearchPopoverView()
+                            .background(.regularMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+                            .padding(.top, 8)
+                            .padding(.horizontal, 16)
+                            .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
+                            .zIndex(1000)
+                    }
+                }
         }
     }
     
@@ -267,16 +290,13 @@ struct CollectionView: View {
     private var searchToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                showSearchPopover = true
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showSearchPopover.toggle()
+                }
             } label: {
                 Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass")
                     .font(.system(size: 16))
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
-            }
-            .popover(isPresented: $showSearchPopover, arrowEdge: .top) {
-                SearchPopoverView()
-                    .offset(y: -30)
-                    .presentationCompactAdaptation(.popover)
             }
             .accessibilityLabel("Search")
             .accessibilityHint("Search for stamps by number, CPID, transaction hash, creator address or name")
