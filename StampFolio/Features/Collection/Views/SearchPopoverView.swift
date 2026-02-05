@@ -47,7 +47,7 @@ struct SearchPopoverView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.vertical, 0)
         .frame(width: 300)
         .onAppear {
             isSearchFieldFocused = true
