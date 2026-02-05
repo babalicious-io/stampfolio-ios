@@ -30,7 +30,6 @@ struct CollectionView: View {
     // MARK: - State
     
     @State private var showOfflineBanner = false
-    @State private var showSearch = false
     @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
@@ -193,20 +192,6 @@ struct CollectionView: View {
                     .accessibilityLabel("Sort stamps")
                     .accessibilityHint("Choose how to sort your stamp collection")
                 }
-                
-                ToolbarSpacer(.fixed)
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSearch = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .font(.title3)
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityLabel("Search")
-                    .accessibilityHint("Search for stamps by number, CPID, transaction hash, or creator")
-                }
             }
             .task {
                 await viewModel.fetchStamps(for: wallets)
@@ -235,9 +220,16 @@ struct CollectionView: View {
                     .presentationDetents([.medium])
                     .presentationBackground(.ultraThinMaterial)
             }
-            .sheet(isPresented: $showSearch) {
-                SearchView()
-            }
+            .searchable(
+                text: Binding(
+                    get: { viewModel.searchText },
+                    set: { viewModel.searchText = $0 }
+                ),
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Stamp #, CPID, txHash, or Creator"
+            )
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
         }
     }
     
@@ -253,6 +245,8 @@ struct CollectionView: View {
             errorView
         } else if viewModel.stamps.isEmpty {
             noStampsView
+        } else if !viewModel.searchText.isEmpty && viewModel.filteredStamps.isEmpty {
+            noSearchResultsView
         } else {
             stampsGrid
         }
@@ -310,6 +304,21 @@ struct CollectionView: View {
         )
     }
     
+    // MARK: - No Search Results View
+    
+    private var noSearchResultsView: some View {
+        ContentUnavailableView {
+            Label("No Results", systemImage: "magnifyingglass")
+        } description: {
+            Text("No stamps match '\(viewModel.searchText)'")
+        } actions: {
+            Button("Clear Search") {
+                viewModel.searchText = ""
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+    
     // MARK: - Stamps Grid
     
     private var stampsGrid: some View {
@@ -319,10 +328,15 @@ struct CollectionView: View {
                 offlineBanner
             }
             
+            // Search active indicator
+            if !viewModel.searchText.isEmpty {
+                searchActiveIndicator
+            }
+            
             if viewMode == .list {
                 // List view mode
                 LazyVStack(spacing: 12) {
-                    ForEach(viewModel.stamps) { displayStamp in
+                    ForEach(viewModel.filteredStamps) { displayStamp in
                         StampRowView(
                             displayStamp: displayStamp,
                             onTap: {
@@ -338,7 +352,7 @@ struct CollectionView: View {
             } else {
                 // Grid view modes
                 LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(viewModel.stamps) { displayStamp in
+                    ForEach(viewModel.filteredStamps) { displayStamp in
                         StampCardView(
                             displayStamp: displayStamp,
                             onTap: {
@@ -368,6 +382,32 @@ struct CollectionView: View {
         .padding(.horizontal, 16)
         .glassEffect(.regular.tint(.orange).interactive(), in: .rect(cornerRadius: 8))
         .padding()
+    }
+    
+    // MARK: - Search Active Indicator
+    
+    private var searchActiveIndicator: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+            Text("\(viewModel.filteredStamps.count) result\(viewModel.filteredStamps.count == 1 ? "" : "s")")
+                .fontWeight(.medium)
+            
+            Spacer()
+            
+            Button {
+                viewModel.searchText = ""
+            } label: {
+                Text("Clear")
+                    .font(.subheadline)
+                    .foregroundStyle(.purple)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .glassEffect(.regular.tint(.purple).interactive(), in: .rect(cornerRadius: 8))
+        .padding(.horizontal)
     }
 }
 

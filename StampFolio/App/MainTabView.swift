@@ -16,7 +16,7 @@ struct MainTabView: View {
         TabView {
             CollectionView()
                 .tabItem {
-                    Label("Collection", systemImage: "photo.stack")
+                    Label("Collection", systemImage: "bitcoinsign.square.fill")
                 }
             
             SettingsView()
