@@ -26,7 +26,6 @@ struct CollectionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
-    @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -76,7 +75,6 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
-                    searchToolbarItem
                     settingsToolbarItem
                 }
         }
@@ -266,24 +264,6 @@ struct CollectionView: View {
         }
     }
     
-    private var searchToolbarItem: some ToolbarContent {
-        Group {
-            // Only show search button on iPad (regular size class)
-            if horizontalSizeClass == .regular {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSearch.wrappedValue = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 16))
-                    }
-                    .accessibilityLabel("Search")
-                    .accessibilityHint("Search for stamps")
-                }
-            }
-        }
-    }
-    
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
@@ -291,7 +271,6 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")

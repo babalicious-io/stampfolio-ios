@@ -7,13 +7,9 @@
 
 import SwiftUI
 
-// MARK: - Environment Keys
+// MARK: - Environment Key
 
 private struct ShowSettingsKey: EnvironmentKey {
-    static let defaultValue = Binding<Bool>.constant(false)
-}
-
-private struct ShowSearchKey: EnvironmentKey {
     static let defaultValue = Binding<Bool>.constant(false)
 }
 
@@ -22,52 +18,20 @@ extension EnvironmentValues {
         get { self[ShowSettingsKey.self] }
         set { self[ShowSettingsKey.self] = newValue }
     }
-    
-    var showSearchBinding: Binding<Bool> {
-        get { self[ShowSearchKey.self] }
-        set { self[ShowSearchKey.self] = newValue }
-    }
 }
 
 // MARK: - Main Tab View
 
-/// Main tab view with adaptive search (tab on iPhone, toolbar on iPad)
+/// Main tab view with collection tabs and pinned search
 struct MainTabView: View {
-    
-    // MARK: - Environment
-    
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     // MARK: - State
     
     @State private var showSettings = false
-    @State private var showSearch = false
     
     // MARK: - Body
     
     var body: some View {
-        Group {
-            if horizontalSizeClass == .compact {
-                // iPhone: Search as tab
-                compactTabView
-            } else {
-                // iPad: Search as toolbar button
-                regularTabView
-            }
-        }
-        .environment(\.showSettingsBinding, $showSettings)
-        .environment(\.showSearchBinding, $showSearch)
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-        }
-        .sheet(isPresented: $showSearch) {
-            SearchView()
-        }
-    }
-    
-    // MARK: - Compact Layout (iPhone)
-    
-    private var compactTabView: some View {
         TabView {
             Tab("Stamps", systemImage: "bitcoinsign.square.fill") {
                 CollectionView()
@@ -81,30 +45,15 @@ struct MainTabView: View {
                 CounterpartyView()
             }
             
-            Tab("Search", systemImage: "magnifyingglass") {
+            Tab(role: .search) {
                 SearchView()
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-    }
-    
-    // MARK: - Regular Layout (iPad)
-    
-    private var regularTabView: some View {
-        TabView {
-            Tab("Stamps", systemImage: "bitcoinsign.square.fill") {
-                CollectionView()
-            }
-            
-            Tab("Ordinals", systemImage: "circle.hexagongrid.fill") {
-                OrdinalsView()
-            }
-            
-            Tab("Counterparty", systemImage: "square.3.layers.3d") {
-                CounterpartyView()
-            }
+        .environment(\.showSettingsBinding, $showSettings)
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
-        .tabBarMinimizeBehavior(.onScrollDown)
     }
 }
 
