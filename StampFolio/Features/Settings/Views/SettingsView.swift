@@ -46,14 +46,7 @@ struct SettingsView: View {
                 // Protocols Section
                 Section {
                     ForEach(protocolOrder) { protocolType in
-                        if protocolEditMode.isEditing {
-                            protocolReorderRow(for: protocolType)
-                        } else {
-                            protocolToggle(for: protocolType)
-                                .onChange(of: toggleState(for: protocolType)) { _, _ in
-                                    enforceProtocolSelection()
-                                }
-                        }
+                        protocolRow(for: protocolType)
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
@@ -165,30 +158,27 @@ struct SettingsView: View {
         }
     }
     
-    // MARK: - Protocol Reorder Row
+    // MARK: - Protocol Row
     
-    private func protocolReorderRow(for protocolType: ProtocolType) -> some View {
+    /// Single stable view structure for both normal and reorder modes.
+    /// View identity must stay the same for .onMove drag handles to work.
+    private func protocolRow(for protocolType: ProtocolType) -> some View {
         HStack(spacing: 14) {
             Image(systemName: protocolType.icon)
                 .foregroundStyle(.orange)
-            Text(protocolType.rawValue)
+            Text(protocolEditMode.isEditing
+                 ? protocolType.rawValue
+                 : (toggleState(for: protocolType) ? "Display \(protocolType.rawValue)" : "Hide \(protocolType.rawValue)"))
+            Spacer()
+            Toggle("", isOn: toggleBinding(for: protocolType))
+                .labelsHidden()
+                .tint(.orange)
+                .opacity(protocolEditMode.isEditing ? 0 : 1)
+                .allowsHitTesting(!protocolEditMode.isEditing)
         }
-    }
-    
-    // MARK: - Protocol Toggles
-    
-    private func protocolToggle(for protocolType: ProtocolType) -> some View {
-        Toggle(isOn: toggleBinding(for: protocolType)) {
-            HStack(spacing: 14) {
-                Image(systemName: protocolType.icon)
-                    .foregroundStyle(.orange)
-                Text(toggleState(for: protocolType) ? "Display \(protocolType.rawValue)" : "Hide \(protocolType.rawValue)")
-            }
+        .onChange(of: toggleState(for: protocolType)) { _, _ in
+            enforceProtocolSelection()
         }
-        .tint(.orange)
-        .accessibilityLabel(toggleState(for: protocolType) ? "Display \(protocolType.rawValue) toggle" : "Hide \(protocolType.rawValue) toggle")
-        .accessibilityValue(toggleState(for: protocolType) ? "On" : "Off")
-        .accessibilityHint("Double tap to toggle \(protocolType.rawValue) tab visibility")
     }
     
     private func toggleBinding(for protocolType: ProtocolType) -> Binding<Bool> {
