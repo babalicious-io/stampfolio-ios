@@ -88,7 +88,7 @@ struct AddWalletView: View {
                             viewModel.showQRScanner = true
                         } label: {
                             Image(systemName: "qrcode")
-                                .foregroundStyle(.purple)
+                                .foregroundStyle(.orange)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Scan QR code")
@@ -124,7 +124,7 @@ struct AddWalletView: View {
                     Button("Cancel") {
                         viewModel.walletAddressInput = ""
                         walletName = ""
-                        selectedColor = .purple
+                        selectedColor = .gray
                         viewModel.resetValidation()
                         dismiss()
                     }
@@ -175,7 +175,7 @@ struct AddWalletView: View {
         
         return HStack {
             Image(systemName: addressTypeIcon(for: addressType))
-                .foregroundStyle(.purple)
+                .foregroundStyle(.orange)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(addressType.rawValue)
@@ -213,7 +213,7 @@ struct AddWalletView: View {
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(.purple)
+                    .tint(.orange)
                 
                 Text("Validating wallet...")
                     .font(.body)

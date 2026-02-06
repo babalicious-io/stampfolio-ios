@@ -51,7 +51,7 @@ struct SettingsView: View {
                                     } label: {
                                         Label("Edit", systemImage: "pencil")
                                     }
-                                    .tint(.purple)
+                                    .tint(.orange)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
@@ -112,11 +112,11 @@ struct SettingsView: View {
         Toggle(isOn: $isDarkMode) {
             HStack(spacing: isDarkMode ? 14 : 8) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(.orange)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
             }
         }
-        .tint(.purple)
+        .tint(.orange)
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
@@ -141,7 +141,7 @@ struct SettingsView: View {
         } label: {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(.orange)
                 Text("Add Wallet")
             }
         }
@@ -155,11 +155,11 @@ struct SettingsView: View {
         Toggle(isOn: $showWalletIcons) {
             HStack(spacing: 14) {
                 Image(systemName: "wallet.bifold.fill")
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(.orange)
                 Text(showWalletIcons ? "Display Wallet Icon" : "Hide Wallet Icon")    
             }
         }
-        .tint(.purple)
+        .tint(.orange)
         .accessibilityLabel(showWalletIcons ? "Display wallet icon toggle" : "Hide wallet icon toggle")
         .accessibilityValue(showWalletIcons ? "On" : "Off")
         .accessibilityHint(showWalletIcons ? "Double tap to toggle wallet icon display on stamp cards" : "Double tap to toggle wallet icon hide on stamp cards")
@@ -189,7 +189,7 @@ struct SettingsView: View {
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption)
                 }
-                .foregroundStyle(.purple)
+                .foregroundStyle(.orange)
             }
             .accessibilityLabel("Visit Stampchain.io")
         }
@@ -232,7 +232,7 @@ struct WalletRow: View {
                 
                 Text(wallet.addressType.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(.purple.secondary)
+                    .foregroundStyle(.orange.secondary)
             }
             
             HStack {

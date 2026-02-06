@@ -69,7 +69,7 @@ struct StampMetadataPopup: View {
                 if let creatorName = stamp.creatorName {
                     Text("by \(creatorName)")
                         .font(.subheadline)
-                        .foregroundStyle(.purple)
+                        .foregroundStyle(.orange)
                 }
             }
             
@@ -82,7 +82,7 @@ struct StampMetadataPopup: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.purple.opacity(0.8))
+                .background(Color.orange.opacity(0.8))
                 .clipShape(Capsule())
         }
     }

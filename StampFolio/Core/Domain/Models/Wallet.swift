@@ -24,7 +24,7 @@ final class Wallet {
     /// Optional user-provided label for the wallet
     var label: String?
     
-    /// User-selected color for the wallet icon (defaults to purple for existing wallets)
+    /// User-selected color for the wallet icon (defaults to gray for existing wallets)
     var colorName: String?
     
     /// Cached stamp count (updated on refresh)
@@ -61,7 +61,7 @@ final class Wallet {
         BitcoinAddressType.detect(from: address)
     }
     
-    /// Wallet color with fallback to purple for existing wallets
+    /// Wallet color with fallback to gray for existing wallets
     var walletColor: WalletColor {
         WalletColor.from(name: colorName ?? WalletColor.gray.rawValue)
     }
@@ -124,7 +124,7 @@ enum WalletColor: String, CaseIterable, Identifiable, Equatable {
     }
     
     static func from(name: String) -> WalletColor {
-        WalletColor.allCases.first { $0.rawValue == name } ?? .purple
+        WalletColor.allCases.first { $0.rawValue == name } ?? .gray
     }
 }
 

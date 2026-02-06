@@ -176,7 +176,7 @@ struct StampRowView: View {
                     .foregroundStyle(.secondary)
                 
                 ProgressView()
-                    .tint(.purple)
+                    .tint(.orange)
                     .scaleEffect(0.7)
             }
         }

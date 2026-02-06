@@ -95,7 +95,7 @@ struct EditWalletView: View {
                         
                         Text(wallet.addressType.rawValue)
                             .font(.caption)
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(.orange)
                     }
                 } header: {
                     Text("Wallet Details")

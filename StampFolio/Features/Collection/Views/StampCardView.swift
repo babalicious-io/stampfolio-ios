@@ -155,7 +155,7 @@ struct StampCardView: View {
                     .foregroundStyle(.secondary)
                 
                 ProgressView()
-                    .tint(.purple)
+                    .tint(.orange)
             }
         }
     }
@@ -180,7 +180,7 @@ struct StampCardView: View {
                 } label: {
                     Text("Retry")
                         .font(.caption2)
-                        .foregroundStyle(.purple)
+                        .foregroundStyle(.orange)
                 }
             }
         }

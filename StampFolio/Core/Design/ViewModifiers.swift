@@ -62,10 +62,10 @@ struct ScaledSpacing {
 // MARK: - Reusable Gradients
 
 extension LinearGradient {
-    /// Standard stamp card background gradient - purple to orange with black center
+    /// Standard stamp card background gradient - orange to orange with black center
     static let stampCardBackgroundGradient = LinearGradient(
         stops: [
-            Gradient.Stop(color: .purple, location: 0),
+            Gradient.Stop(color: .orange, location: 0),
             Gradient.Stop(color: .black, location: 0.3),
             Gradient.Stop(color: .black, location: 0.8),
             Gradient.Stop(color: .orange, location: 1)
@@ -74,10 +74,10 @@ extension LinearGradient {
         endPoint: .topTrailing
     )
     
-    /// Fullscreen background gradient - purple to orange with black center
+    /// Fullscreen background gradient - orange to orange with black center
     static let stampFullscreenBackgroundGradient = LinearGradient(
         stops: [
-            Gradient.Stop(color: .purple, location: 0),
+            Gradient.Stop(color: .orange, location: 0),
             Gradient.Stop(color: .black, location: 0.2),
             Gradient.Stop(color: .black, location: 0.9),
             Gradient.Stop(color: .orange, location: 1)
