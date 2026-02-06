@@ -44,8 +44,17 @@ struct SettingsView: View {
                 // Protocols Section
                 Section {
                     stampsToggle
+                        .onChange(of: showStamps) { _, newValue in
+                            enforceProtocolSelection()
+                        }
                     ordinalsToggle
+                        .onChange(of: showOrdinals) { _, newValue in
+                            enforceProtocolSelection()
+                        }
                     counterpartyToggle
+                        .onChange(of: showCounterparty) { _, newValue in
+                            enforceProtocolSelection()
+                        }
                 } header: {
                     Text("Protocols")
                 }
@@ -245,6 +254,13 @@ struct SettingsView: View {
     
     private func deleteWallet(_ wallet: Wallet) {
         viewModel.deleteWallet(wallet, context: modelContext)
+    }
+    
+    private func enforceProtocolSelection() {
+        // Ensure at least one protocol is selected
+        if !showStamps && !showOrdinals && !showCounterparty {
+            showStamps = true
+        }
     }
 }
 
