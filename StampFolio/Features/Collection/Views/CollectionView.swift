@@ -293,8 +293,8 @@ struct CollectionView: View {
             errorView
         } else if viewModel.stamps.isEmpty {
             noStampsView
-        } else if (!viewModel.searchText.isEmpty || viewModel.hasActiveFilters) && viewModel.filteredStamps.isEmpty {
-            noSearchResultsView
+        } else if viewModel.hasActiveFilters && viewModel.filteredStamps.isEmpty {
+            noFilterResultsView
         } else {
             stampsGrid
         }
@@ -342,19 +342,13 @@ struct CollectionView: View {
         )
     }
     
-    // MARK: - No Search Results View
+    // MARK: - No Filter Results View
     
-    private var noSearchResultsView: some View {
+    private var noFilterResultsView: some View {
         ContentUnavailableView {
-            Label("No Results", systemImage: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle" : "magnifyingglass")
+            Label("No Results", systemImage: "line.3.horizontal.decrease.circle")
         } description: {
-            if !viewModel.searchText.isEmpty && viewModel.hasActiveFilters {
-                Text("No stamps match '\(viewModel.searchText)' with the active filters")
-            } else if !viewModel.searchText.isEmpty {
-                Text("No stamps match '\(viewModel.searchText)'")
-            } else if viewModel.hasActiveFilters {
-                Text("No stamps match the active filters")
-            }
+            Text("No stamps match the active filters")
         }
     }
     
