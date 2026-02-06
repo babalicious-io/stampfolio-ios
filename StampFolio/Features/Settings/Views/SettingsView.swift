@@ -27,7 +27,7 @@ struct SettingsView: View {
     @AppStorage("showStamps") private var showStamps = true
     @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: Wallet?
-    @Environment(\.editMode) private var editMode
+    @State private var protocolEditMode: EditMode = .inactive
     
     // MARK: - Body
     
@@ -46,7 +46,7 @@ struct SettingsView: View {
                 // Protocols Section
                 Section {
                     ForEach(protocolOrder) { protocolType in
-                        if editMode?.wrappedValue == .active {
+                        if protocolEditMode.isEditing {
                             protocolReorderRow(for: protocolType)
                         } else {
                             protocolToggle(for: protocolType)
@@ -57,24 +57,9 @@ struct SettingsView: View {
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
-                    HStack {
-                        Text("Protocols")
-                        Spacer()
-                        Button {
-                            withAnimation {
-                                if editMode?.wrappedValue == .active {
-                                    editMode?.wrappedValue = .inactive
-                                } else {
-                                    editMode?.wrappedValue = .active
-                                }
-                            }
-                        } label: {
-                            Text(editMode?.wrappedValue == .active ? "Done" : "Reorder")
-                                .font(.caption)
-                                .textCase(.uppercase)
-                        }
-                    }
+                    protocolSectionHeader
                 }
+                .environment(\.editMode, $protocolEditMode)
                 
                 // Wallets Section
                 Section {
@@ -160,6 +145,24 @@ struct SettingsView: View {
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
+    }
+    
+    // MARK: - Protocol Section Header
+    
+    private var protocolSectionHeader: some View {
+        HStack {
+            Text("Protocols")
+            Spacer()
+            Button {
+                withAnimation {
+                    protocolEditMode = protocolEditMode.isEditing ? .inactive : .active
+                }
+            } label: {
+                Text(protocolEditMode.isEditing ? "Done" : "Reorder")
+                    .font(.caption)
+                    .textCase(.uppercase)
+            }
+        }
     }
     
     // MARK: - Protocol Reorder Row
