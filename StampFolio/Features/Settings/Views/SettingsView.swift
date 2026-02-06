@@ -67,7 +67,7 @@ struct SettingsView: View {
                         } label: {
                             Text(editMode?.wrappedValue == .active ? "Done" : "Reorder")
                                 .font(.caption)
-                                .textCase(.none)
+                                .textCase(.uppercase)
                         }
                     }
                 }
