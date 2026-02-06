@@ -25,7 +25,9 @@ struct SettingsView: View {
     @AppStorage("showOrdinals") private var showOrdinals = true
     @AppStorage("showCounterparty") private var showCounterparty = true
     @AppStorage("showStamps") private var showStamps = true
+    @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: Wallet?
+    @Environment(\.editMode) private var editMode
     
     // MARK: - Body
     
@@ -43,18 +45,13 @@ struct SettingsView: View {
                 
                 // Protocols Section
                 Section {
-                    stampsToggle
-                        .onChange(of: showStamps) { _, newValue in
-                            enforceProtocolSelection()
-                        }
-                    ordinalsToggle
-                        .onChange(of: showOrdinals) { _, newValue in
-                            enforceProtocolSelection()
-                        }
-                    counterpartyToggle
-                        .onChange(of: showCounterparty) { _, newValue in
-                            enforceProtocolSelection()
-                        }
+                    ForEach(protocolOrder) { protocolType in
+                        protocolToggle(for: protocolType)
+                            .onChange(of: toggleState(for: protocolType)) { _, _ in
+                                enforceProtocolSelection()
+                            }
+                    }
+                    .onMove(perform: moveProtocol)
                 } header: {
                     Text("Protocols")
                 }
@@ -108,6 +105,24 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation {
+                            if editMode?.wrappedValue == .active {
+                                editMode?.wrappedValue = .inactive
+                            } else {
+                                editMode?.wrappedValue = .active
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "line.3.horizontal")
+                            .foregroundStyle(.orange)
+                    }
+                    .accessibilityLabel(editMode?.wrappedValue == .active ? "Done reordering" : "Reorder protocols")
+                }
+            }
+            .onAppear {
+                loadProtocolOrder()
             }
             .sheet(isPresented: $viewModel.showAddWallet) {
                 AddWalletView()
@@ -144,46 +159,34 @@ struct SettingsView: View {
     
     // MARK: - Protocol Toggles
     
-    private var stampsToggle: some View {
-        Toggle(isOn: $showStamps) {
+    private func protocolToggle(for protocolType: ProtocolType) -> some View {
+        Toggle(isOn: toggleBinding(for: protocolType)) {
             HStack(spacing: 14) {
-                Image(systemName: "bitcoinsign.square.fill")
+                Image(systemName: protocolType.icon)
                     .foregroundStyle(.orange)
-                Text(showStamps ? "Display Stamps" : "Hide Stamps")
+                Text(toggleState(for: protocolType) ? "Display \(protocolType.rawValue)" : "Hide \(protocolType.rawValue)")
             }
         }
         .tint(.orange)
-        .accessibilityLabel(showStamps ? "Display Stamps toggle" : "Hide Stamps toggle")
-        .accessibilityValue(showStamps ? "On" : "Off")
-        .accessibilityHint("Double tap to toggle Stamps tab visibility")
+        .accessibilityLabel(toggleState(for: protocolType) ? "Display \(protocolType.rawValue) toggle" : "Hide \(protocolType.rawValue) toggle")
+        .accessibilityValue(toggleState(for: protocolType) ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle \(protocolType.rawValue) tab visibility")
     }
     
-    private var ordinalsToggle: some View {
-        Toggle(isOn: $showOrdinals) {
-            HStack(spacing: 14) {
-                Image(systemName: "circle.hexagongrid.fill")
-                    .foregroundStyle(.orange)
-                Text(showOrdinals ? "Display Ordinals" : "Hide Ordinals")
-            }
+    private func toggleBinding(for protocolType: ProtocolType) -> Binding<Bool> {
+        switch protocolType {
+        case .stamps: return $showStamps
+        case .ordinals: return $showOrdinals
+        case .counterparty: return $showCounterparty
         }
-        .tint(.orange)
-        .accessibilityLabel(showOrdinals ? "Display Ordinals toggle" : "Hide Ordinals toggle")
-        .accessibilityValue(showOrdinals ? "On" : "Off")
-        .accessibilityHint("Double tap to toggle Ordinals tab visibility")
     }
     
-    private var counterpartyToggle: some View {
-        Toggle(isOn: $showCounterparty) {
-            HStack(spacing: 14) {
-                Image(systemName: "square.3.layers.3d")
-                    .foregroundStyle(.orange)
-                Text(showCounterparty ? "Display Counterparty" : "Hide Counterparty")
-            }
+    private func toggleState(for protocolType: ProtocolType) -> Bool {
+        switch protocolType {
+        case .stamps: return showStamps
+        case .ordinals: return showOrdinals
+        case .counterparty: return showCounterparty
         }
-        .tint(.orange)
-        .accessibilityLabel(showCounterparty ? "Display Counterparty toggle" : "Hide Counterparty toggle")
-        .accessibilityValue(showCounterparty ? "On" : "Off")
-        .accessibilityHint("Double tap to toggle Counterparty tab visibility")
     }
     
     // MARK: - Add Wallet Button
@@ -261,6 +264,27 @@ struct SettingsView: View {
         if !showStamps && !showOrdinals && !showCounterparty {
             showStamps = true
         }
+    }
+    
+    private func loadProtocolOrder() {
+        if let data = UserDefaults.standard.data(forKey: "protocolOrder"),
+           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
+            protocolOrder = decoded
+        } else {
+            // Default order
+            protocolOrder = [.stamps, .ordinals, .counterparty]
+        }
+    }
+    
+    private func saveProtocolOrder() {
+        if let encoded = try? JSONEncoder().encode(protocolOrder) {
+            UserDefaults.standard.set(encoded, forKey: "protocolOrder")
+        }
+    }
+    
+    private func moveProtocol(from source: IndexSet, to destination: Int) {
+        protocolOrder.move(fromOffsets: source, toOffset: destination)
+        saveProtocolOrder()
     }
 }
 
