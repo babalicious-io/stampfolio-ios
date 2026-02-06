@@ -73,7 +73,21 @@ struct MainTabView: View {
             SettingsView()
         }
         .fullScreenCover(isPresented: $showSearch) {
-            SearchView()
+            NavigationStack {
+                SearchView()
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button {
+                                showSearch = false
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .accessibilityLabel("Close")
+                        }
+                    }
+            }
         }
     }
 }
