@@ -25,20 +25,21 @@ struct SearchView: View {
     // MARK: - Body
     
     var body: some View {
-        Group {
-            if viewModel.searchText.isEmpty && !viewModel.hasActiveFilters {
-                searchEmptyState
-            } else if viewModel.filteredStamps.isEmpty {
-                noResultsView
-            } else {
-                searchResults
+        NavigationStack {
+            Group {
+                if viewModel.searchText.isEmpty && !viewModel.hasActiveFilters {
+                    searchEmptyState
+                } else if viewModel.filteredStamps.isEmpty {
+                    noResultsView
+                } else {
+                    searchResults
+                }
             }
         }
         .searchable(text: Binding(
             get: { viewModel.searchText },
             set: { viewModel.searchText = $0 }
         ), prompt: "Search")
-        .navigationTitle("Search")
         .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampDetailView(

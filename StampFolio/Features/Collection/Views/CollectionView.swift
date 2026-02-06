@@ -26,14 +26,12 @@ struct CollectionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
-    @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
-    @State private var showAddWallet = false
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -77,12 +75,6 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
-                    
-                    // Show search button only on iPad (regular)
-                    if horizontalSizeClass == .regular {
-                        searchToolbarItemIPad
-                    }
-                    
                     settingsToolbarItem
                 }
         }
@@ -113,9 +105,6 @@ struct CollectionView: View {
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
         }
-        .sheet(isPresented: $showAddWallet) {
-            AddWalletView()
-        }
     }
     
     // MARK: - Main Content
@@ -128,7 +117,6 @@ struct CollectionView: View {
                     .ignoresSafeArea()
                 
                 content
-                    .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             }
             .onAppear {
                 viewSize = geometry.size
@@ -276,20 +264,6 @@ struct CollectionView: View {
         }
     }
     
-    private var searchToolbarItemIPad: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSearch.wrappedValue = true
-            } label: {
-                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.primary : Color.orange)
-            }
-            .accessibilityLabel("Search")
-            .accessibilityHint("Search for stamps")
-        }
-    }
-    
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
@@ -297,7 +271,6 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")
@@ -308,7 +281,9 @@ struct CollectionView: View {
     
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading && viewModel.stamps.isEmpty {
+        if wallets.isEmpty {
+            emptyWalletsView
+        } else if viewModel.isLoading && viewModel.stamps.isEmpty {
             loadingView
         } else if viewModel.showError {
             errorView
@@ -318,6 +293,23 @@ struct CollectionView: View {
             noSearchResultsView
         } else {
             stampsGrid
+        }
+    }
+    
+    
+    // MARK: - Empty Wallets View
+    
+    private var emptyWalletsView: some View {
+        ContentUnavailableView {
+            Label {
+                Text("No Wallets Added")
+                    .foregroundStyle(.orange)
+            } icon: {
+                Image(systemName: "wallet.bifold")
+                    .foregroundStyle(.orange.secondary)
+            }
+        } description: {
+            Text("Add a Bitcoin wallet to view your stamp collection.\nTap the Settings tab below to get started.")
         }
     }
     

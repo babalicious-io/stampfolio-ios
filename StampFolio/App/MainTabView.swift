@@ -7,13 +7,9 @@
 
 import SwiftUI
 
-// MARK: - Environment Keys
+// MARK: - Environment Key
 
 private struct ShowSettingsKey: EnvironmentKey {
-    static let defaultValue = Binding<Bool>.constant(false)
-}
-
-private struct ShowSearchKey: EnvironmentKey {
     static let defaultValue = Binding<Bool>.constant(false)
 }
 
@@ -22,26 +18,16 @@ extension EnvironmentValues {
         get { self[ShowSettingsKey.self] }
         set { self[ShowSettingsKey.self] = newValue }
     }
-    
-    var showSearchBinding: Binding<Bool> {
-        get { self[ShowSearchKey.self] }
-        set { self[ShowSearchKey.self] = newValue }
-    }
 }
 
 // MARK: - Main Tab View
 
-/// Main tab view with collection tabs and adaptive search
+/// Main tab view with collection tabs and pinned search
 struct MainTabView: View {
-    
-    // MARK: - Environment
-    
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     // MARK: - State
     
     @State private var showSettings = false
-    @State private var showSearch = false
     
     // MARK: - Body
     
@@ -59,35 +45,14 @@ struct MainTabView: View {
                 CounterpartyView()
             }
             
-            // Show search tab only on iPhone (compact size class)
-            if horizontalSizeClass == .compact {
-                Tab(role: .search) {
-                    SearchView()
-                }
+            Tab(role: .search) {
+                SearchView()
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(\.showSettingsBinding, $showSettings)
-        .environment(\.showSearchBinding, $showSearch)
         .sheet(isPresented: $showSettings) {
             SettingsView()
-        }
-        .fullScreenCover(isPresented: $showSearch) {
-            NavigationStack {
-                SearchView()
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button {
-                                showSearch = false
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(.secondary)
-                            }
-                            .accessibilityLabel("Close")
-                        }
-                    }
-            }
         }
     }
 }
