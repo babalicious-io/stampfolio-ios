@@ -13,9 +13,7 @@ struct CounterpartyView: View {
     
     // MARK: - Environment
     
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
-    @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -34,34 +32,16 @@ struct CounterpartyView: View {
             .navigationTitle("Counterparty")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                // Show search button only on iPad (regular)
-                if horizontalSizeClass == .regular {
-                    searchToolbarItem
-                }
-                
                 settingsToolbarItem
             }
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()
+                .environment(SettingsViewModel())
         }
     }
     
     // MARK: - Toolbar Items
-    
-    private var searchToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSearch.wrappedValue = true
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.primary)
-            }
-            .accessibilityLabel("Search")
-            .accessibilityHint("Search for counterparty assets")
-        }
-    }
     
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {

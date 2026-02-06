@@ -115,6 +115,7 @@ struct CollectionView: View {
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()
+                .environment(SettingsViewModel())
         }
     }
     
