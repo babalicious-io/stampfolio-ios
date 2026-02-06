@@ -15,6 +15,7 @@ struct SearchView: View {
     
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.dismiss) private var dismiss
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -35,15 +36,23 @@ struct SearchView: View {
                     searchResults
                 }
             }
-            .navigationTitle("Search")
             .toolbar {
-                filterToolbarItem
+                ToolbarItem(placement: .topBarLeading) {
+                    Text("Search")
+                        .font(.title3)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Close", role: .close) {
+                        dismiss()
+                    }
+                }
             }
         }
         .searchable(text: Binding(
             get: { viewModel.searchText },
             set: { viewModel.searchText = $0 }
-        ), prompt: "Search stamps...")
+        ), prompt: "Search")
         .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampDetailView(
@@ -106,61 +115,6 @@ struct SearchView: View {
         }
     }
     
-    // MARK: - Toolbar Items
-    
-    private var filterToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                Section("STAMP TYPE") {
-                    Toggle("Classic", isOn: Binding(
-                        get: { viewModel.activeIdentFilters.contains("STAMP") },
-                        set: { _ in viewModel.toggleIdentFilter("STAMP") }
-                    ))
-                    
-                    Toggle("Posh", isOn: Binding(
-                        get: { viewModel.activeIdentFilters.contains("POSH") },
-                        set: { _ in viewModel.toggleIdentFilter("POSH") }
-                    ))
-                }
-                
-                Section("FILE TYPE") {
-                    Toggle("Pixel", isOn: Binding(
-                        get: { viewModel.activeFileFormatFilters.contains("pixel") },
-                        set: { _ in viewModel.toggleFileFormatFilter("pixel") }
-                    ))
-                    
-                    Toggle("Vector", isOn: Binding(
-                        get: { viewModel.activeFileFormatFilters.contains("vector") },
-                        set: { _ in viewModel.toggleFileFormatFilter("vector") }
-                    ))
-                }
-                
-                Section("EDITIONS") {
-                    Toggle("Single", isOn: Binding(
-                        get: { viewModel.activeEditionFilters.contains("single") },
-                        set: { _ in viewModel.toggleEditionFilter("single") }
-                    ))
-                    
-                    Toggle("Multiple", isOn: Binding(
-                        get: { viewModel.activeEditionFilters.contains("multiple") },
-                        set: { _ in viewModel.toggleEditionFilter("multiple") }
-                    ))
-                }
-                
-                if showWalletIcons {
-                    Section("WALLET") {
-                        // Future: Add wallet-specific filters
-                    }
-                }
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 18))
-                    .foregroundStyle(viewModel.hasActiveFilters ? Color.purple : Color.primary)
-            }
-            .accessibilityLabel("Filter stamps")
-            .accessibilityHint("Filter stamps by type, format, or edition count")
-        }
-    }
 }
 
 // MARK: - Preview
