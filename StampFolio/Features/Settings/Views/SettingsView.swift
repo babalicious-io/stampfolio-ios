@@ -52,7 +52,6 @@ struct SettingsView: View {
                 } header: {
                     protocolSectionHeader
                 }
-                .environment(\.editMode, $protocolEditMode)
                 
                 // Wallets Section
                 Section {
@@ -94,6 +93,7 @@ struct SettingsView: View {
                     Text("About")
                 }
             }
+            .environment(\.editMode, $protocolEditMode)
             .listSectionSpacing(16)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
