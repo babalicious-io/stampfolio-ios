@@ -37,13 +37,8 @@ struct SearchView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Text("Search")
-                        .font(.title3)
-                }
-                
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Close", role: .close) {
+                    Button(role: .close) {
                         dismiss()
                     }
                 }
