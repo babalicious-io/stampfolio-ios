@@ -84,7 +84,7 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Close", role: .close) {
+                    Button(role: .close) {
                         dismiss()
                     }
                 }
