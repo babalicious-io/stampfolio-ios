@@ -33,6 +33,7 @@ struct CollectionView: View {
     
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
+    @State private var showAddWallet = false
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -112,6 +113,9 @@ struct CollectionView: View {
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(isPresented: $showAddWallet) {
+            AddWalletView()
+        }
     }
     
     // MARK: - Main Content
@@ -124,7 +128,7 @@ struct CollectionView: View {
                     .ignoresSafeArea()
                 
                 content
-                    .emptyWalletOverlay(walletCount: wallets.count)
+                    .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             }
             .onAppear {
                 viewSize = geometry.size

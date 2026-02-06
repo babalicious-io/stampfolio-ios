@@ -18,6 +18,10 @@ struct OrdinalsView: View {
     @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
+    // MARK: - State
+    
+    @State private var showAddWallet = false
+    
     // MARK: - Body
     
     var body: some View {
@@ -26,7 +30,7 @@ struct OrdinalsView: View {
                 Text("Ordinals")
                     .font(.title2)
             }
-            .emptyWalletOverlay(walletCount: wallets.count)
+            .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             .navigationTitle("Ordinals")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -37,6 +41,9 @@ struct OrdinalsView: View {
                 
                 settingsToolbarItem
             }
+        }
+        .sheet(isPresented: $showAddWallet) {
+            AddWalletView()
         }
     }
     
