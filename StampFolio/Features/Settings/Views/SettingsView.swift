@@ -127,9 +127,9 @@ struct SettingsView: View {
     private var emptyWalletsRow: some View {
         HStack {
             Image(systemName: "wallet.pass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.orange.secondary)
             Text("No wallets added")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.orange)
         }
     }
     
@@ -171,7 +171,7 @@ struct SettingsView: View {
     private var aboutRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("StampFolio")
+                Text("BitArt")
                     .font(.headline)
                 Spacer()
                 Text("v1.0")
@@ -179,7 +179,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             
-            Text("A portfolio viewer for Bitcoin Stamps")
+            Text("A portfolio viewer for Bitcoin Art")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             
