@@ -26,6 +26,7 @@ struct CollectionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
+    @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -75,6 +76,7 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
+                    searchToolbarItem
                     settingsToolbarItem
                 }
         }
@@ -261,6 +263,19 @@ struct CollectionView: View {
                 .accessibilityLabel("Sort stamps")
                 .accessibilityHint("Choose how to sort your stamp collection")
             }
+        }
+    }
+    
+    private var searchToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                showSearch.wrappedValue = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16))
+            }
+            .accessibilityLabel("Search")
+            .accessibilityHint("Search for stamps")
         }
     }
     

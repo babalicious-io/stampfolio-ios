@@ -13,6 +13,7 @@ struct OrdinalsView: View {
     // MARK: - Environment
     
     @Environment(\.showSettingsBinding) private var showSettings
+    @Environment(\.showSearchBinding) private var showSearch
     
     // MARK: - Body
     
@@ -24,12 +25,26 @@ struct OrdinalsView: View {
             }
             .navigationTitle("Ordinals")
             .toolbar {
+                searchToolbarItem
                 settingsToolbarItem
             }
         }
     }
     
     // MARK: - Toolbar Items
+    
+    private var searchToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                showSearch.wrappedValue = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16))
+            }
+            .accessibilityLabel("Search")
+            .accessibilityHint("Search for stamps")
+        }
+    }
     
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {

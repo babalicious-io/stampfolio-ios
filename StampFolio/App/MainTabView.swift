@@ -7,9 +7,13 @@
 
 import SwiftUI
 
-// MARK: - Environment Key
+// MARK: - Environment Keys
 
 private struct ShowSettingsKey: EnvironmentKey {
+    static let defaultValue = Binding<Bool>.constant(false)
+}
+
+private struct ShowSearchKey: EnvironmentKey {
     static let defaultValue = Binding<Bool>.constant(false)
 }
 
@@ -18,16 +22,22 @@ extension EnvironmentValues {
         get { self[ShowSettingsKey.self] }
         set { self[ShowSettingsKey.self] = newValue }
     }
+    
+    var showSearchBinding: Binding<Bool> {
+        get { self[ShowSearchKey.self] }
+        set { self[ShowSearchKey.self] = newValue }
+    }
 }
 
 // MARK: - Main Tab View
 
-/// Main tab view with collection tabs and pinned search
+/// Main tab view with collection tabs
 struct MainTabView: View {
     
     // MARK: - State
     
     @State private var showSettings = false
+    @State private var showSearch = false
     
     // MARK: - Body
     
@@ -44,15 +54,15 @@ struct MainTabView: View {
             Tab("Counterparty", systemImage: "square.3.layers.3d") {
                 CounterpartyView()
             }
-            
-            Tab(role: .search) {
-                SearchView()
-            }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(\.showSettingsBinding, $showSettings)
+        .environment(\.showSearchBinding, $showSearch)
         .sheet(isPresented: $showSettings) {
             SettingsView()
+        }
+        .sheet(isPresented: $showSearch) {
+            SearchView()
         }
     }
 }
