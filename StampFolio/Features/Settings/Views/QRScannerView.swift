@@ -90,23 +90,17 @@ struct QRScannerView: View {
     // MARK: - Unsupported View
     
     private var unsupportedView: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "camera")
-                .font(.system(size: 64))
-                .fontWeight(.regular)
-                .foregroundStyle(.orange.secondary)
-            
-            Text("Camera Not Available")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.orange)
-            
+        ContentUnavailableView {
+            Label {
+                Text("Camera Not Available")
+                    .foregroundStyle(.orange)
+            } icon: {
+                Image(systemName: "camera")
+                    .foregroundStyle(.orange.secondary)
+            }
+        } description: {
             Text("QR code scanning requires camera access. Please enable camera permissions in Settings.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            
+        } actions: {
             Button {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
