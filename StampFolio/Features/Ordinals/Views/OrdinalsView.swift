@@ -16,7 +16,7 @@ struct OrdinalsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.showSearchBinding) private var showSearch
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: [SortDescriptor(\Wallet.addedDate, order: .reverse)]) private var wallets: [Wallet]
     
     // MARK: - State
     
