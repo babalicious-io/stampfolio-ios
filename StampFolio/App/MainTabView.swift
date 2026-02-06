@@ -37,9 +37,11 @@ struct MainTabView: View {
     
     var body: some View {
         TabView {
-            ForEach(protocolOrder) { protocolType in
-                if shouldShowProtocol(protocolType) {
-                    protocolTab(for: protocolType)
+            Group {
+                ForEach(protocolOrder) { protocolType in
+                    if shouldShowProtocol(protocolType) {
+                        protocolTab(for: protocolType)
+                    }
                 }
             }
             
