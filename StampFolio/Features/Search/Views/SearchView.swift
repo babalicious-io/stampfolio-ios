@@ -67,7 +67,7 @@ struct SearchView: View {
                     .foregroundStyle(.orange.secondary)
             }
         } description: {
-            Text("Search by stamp or ordinals number, CPID, txHash, creator or genesis addy, or artist name")
+            Text("Search by stamp or ordinals number, CPID, txHash, creator or genesis addy, or artist name.")
         }
     }
     
