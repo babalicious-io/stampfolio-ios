@@ -147,9 +147,7 @@ struct SettingsView: View {
             Text("Protocols")
             Spacer()
             Button {
-                withAnimation {
-                    protocolEditMode = protocolEditMode.isEditing ? .inactive : .active
-                }
+                protocolEditMode = protocolEditMode.isEditing ? .inactive : .active
             } label: {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
@@ -170,11 +168,11 @@ struct SettingsView: View {
                  ? protocolType.rawValue
                  : (toggleState(for: protocolType) ? "Display \(protocolType.rawValue)" : "Hide \(protocolType.rawValue)"))
             Spacer()
-            Toggle("", isOn: toggleBinding(for: protocolType))
-                .labelsHidden()
-                .tint(.orange)
-                .opacity(protocolEditMode.isEditing ? 0 : 1)
-                .allowsHitTesting(!protocolEditMode.isEditing)
+            if !protocolEditMode.isEditing {
+                Toggle("", isOn: toggleBinding(for: protocolType))
+                    .labelsHidden()
+                    .tint(.orange)
+            }
         }
         .onChange(of: toggleState(for: protocolType)) { _, _ in
             enforceProtocolSelection()
@@ -285,6 +283,7 @@ struct SettingsView: View {
     private func saveProtocolOrder() {
         if let encoded = try? JSONEncoder().encode(protocolOrder) {
             UserDefaults.standard.set(encoded, forKey: "protocolOrder")
+            NotificationCenter.default.post(name: .protocolOrderDidChange, object: nil)
         }
     }
     

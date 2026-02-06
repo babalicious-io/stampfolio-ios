@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // MARK: - Environment Key
 
@@ -54,6 +55,9 @@ struct MainTabView: View {
         .onChange(of: showStamps) { _, _ in loadProtocolOrder() }
         .onChange(of: showOrdinals) { _, _ in loadProtocolOrder() }
         .onChange(of: showCounterparty) { _, _ in loadProtocolOrder() }
+        .onReceive(NotificationCenter.default.publisher(for: .protocolOrderDidChange)) { _ in
+            loadProtocolOrder()
+        }
     }
     
     // MARK: - Helper Methods

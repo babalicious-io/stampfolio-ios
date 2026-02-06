@@ -7,6 +7,10 @@
 
 import Foundation
 
+extension Notification.Name {
+    static let protocolOrderDidChange = Notification.Name("protocolOrderDidChange")
+}
+
 /// Protocol type for managing visible tabs and their order
 enum ProtocolType: String, Identifiable, Codable, CaseIterable, Hashable {
     case stamps = "Stamps"
