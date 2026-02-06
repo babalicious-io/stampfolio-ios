@@ -26,7 +26,6 @@ struct CollectionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
-    @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -77,12 +76,6 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
-                    
-                    // Show search button only on iPad (regular)
-                    if horizontalSizeClass == .regular {
-                        searchToolbarItemIPad
-                    }
-                    
                     settingsToolbarItem
                 }
         }
@@ -274,20 +267,6 @@ struct CollectionView: View {
                 .accessibilityLabel("Sort stamps")
                 .accessibilityHint("Choose how to sort your stamp collection")
             }
-        }
-    }
-    
-    private var searchToolbarItemIPad: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSearch.wrappedValue = true
-            } label: {
-                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
-            }
-            .accessibilityLabel("Search")
-            .accessibilityHint("Search for stamps")
         }
     }
     
