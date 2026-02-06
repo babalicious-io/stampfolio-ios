@@ -28,36 +28,45 @@ struct MainTabView: View {
     // MARK: - State
     
     @State private var showSettings = false
-    @AppStorage("TabViewCustomization") private var customization: TabViewCustomization
+    @AppStorage("showOrdinals") private var showOrdinals = true
+    @AppStorage("showCounterparty") private var showCounterparty = true
+    @AppStorage("showStamps") private var showStamps = true
+    @State private var protocolOrder: [ProtocolType] = []
     
     // MARK: - Body
     
     var body: some View {
         TabView {
-            TabSection("Protocols") {
-                ForEach(ProtocolType.allCases) { protocolType in
-                    Tab(protocolType.rawValue, systemImage: protocolType.icon) {
-                        viewForProtocol(protocolType)
-                    }
-                    .customizationID("Tab.\(protocolType.rawValue)")
-                }
-            }
-            .customizationID("Tab.protocols")
+            orderedProtocolTabs
             
             Tab(role: .search) {
                 SearchView()
             }
         }
-        .tabViewStyle(.sidebarAdaptable)
-        .tabViewCustomization($customization)
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(\.showSettingsBinding, $showSettings)
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
+        .onAppear {
+            loadProtocolOrder()
+        }
+        .onChange(of: showStamps) { _, _ in loadProtocolOrder() }
+        .onChange(of: showOrdinals) { _, _ in loadProtocolOrder() }
+        .onChange(of: showCounterparty) { _, _ in loadProtocolOrder() }
     }
     
     // MARK: - Helper Methods
+    
+    /// Build tabs in user-defined order, showing only enabled protocols
+    @TabContentBuilder<Never>
+    private var orderedProtocolTabs: some TabContent<Never> {
+        ForEach(protocolOrder.filter { shouldShowProtocol($0) }) { protocolType in
+            Tab(protocolType.rawValue, systemImage: protocolType.icon) {
+                viewForProtocol(protocolType)
+            }
+        }
+    }
     
     @ViewBuilder
     private func viewForProtocol(_ protocolType: ProtocolType) -> some View {
@@ -68,6 +77,23 @@ struct MainTabView: View {
             OrdinalsView()
         case .counterparty:
             CounterpartyView()
+        }
+    }
+    
+    private func shouldShowProtocol(_ protocolType: ProtocolType) -> Bool {
+        switch protocolType {
+        case .stamps: return showStamps
+        case .ordinals: return showOrdinals
+        case .counterparty: return showCounterparty
+        }
+    }
+    
+    private func loadProtocolOrder() {
+        if let data = UserDefaults.standard.data(forKey: "protocolOrder"),
+           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
+            protocolOrder = decoded
+        } else {
+            protocolOrder = [.stamps, .ordinals, .counterparty]
         }
     }
     

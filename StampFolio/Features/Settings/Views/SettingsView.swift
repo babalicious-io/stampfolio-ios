@@ -22,7 +22,12 @@ struct SettingsView: View {
     
     @AppStorage("isDarkMode") private var isDarkMode = true
     @AppStorage("showWalletIcons") private var showWalletIcons = false
+    @AppStorage("showOrdinals") private var showOrdinals = true
+    @AppStorage("showCounterparty") private var showCounterparty = true
+    @AppStorage("showStamps") private var showStamps = true
+    @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: Wallet?
+    @Environment(\.editMode) private var editMode
     
     // MARK: - Body
     
@@ -36,6 +41,19 @@ struct SettingsView: View {
                     themeToggle
                 } header: {
                     Text("Appearance")
+                }
+                
+                // Protocols Section
+                Section {
+                    ForEach(protocolOrder) { protocolType in
+                        protocolToggle(for: protocolType)
+                            .onChange(of: toggleState(for: protocolType)) { _, _ in
+                                enforceProtocolSelection()
+                            }
+                    }
+                    .onMove(perform: moveProtocol)
+                } header: {
+                    Text("Protocols")
                 }
                 
                 // Wallets Section
@@ -87,6 +105,24 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation {
+                            if editMode?.wrappedValue == .active {
+                                editMode?.wrappedValue = .inactive
+                            } else {
+                                editMode?.wrappedValue = .active
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "line.3.horizontal")
+                            .foregroundStyle(.orange)
+                    }
+                    .accessibilityLabel(editMode?.wrappedValue == .active ? "Done reordering" : "Reorder protocols")
+                }
+            }
+            .onAppear {
+                loadProtocolOrder()
             }
             .sheet(isPresented: $viewModel.showAddWallet) {
                 AddWalletView()
@@ -119,6 +155,38 @@ struct SettingsView: View {
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
+    }
+    
+    // MARK: - Protocol Toggles
+    
+    private func protocolToggle(for protocolType: ProtocolType) -> some View {
+        Toggle(isOn: toggleBinding(for: protocolType)) {
+            HStack(spacing: 14) {
+                Image(systemName: protocolType.icon)
+                    .foregroundStyle(.orange)
+                Text(toggleState(for: protocolType) ? "Display \(protocolType.rawValue)" : "Hide \(protocolType.rawValue)")
+            }
+        }
+        .tint(.orange)
+        .accessibilityLabel(toggleState(for: protocolType) ? "Display \(protocolType.rawValue) toggle" : "Hide \(protocolType.rawValue) toggle")
+        .accessibilityValue(toggleState(for: protocolType) ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle \(protocolType.rawValue) tab visibility")
+    }
+    
+    private func toggleBinding(for protocolType: ProtocolType) -> Binding<Bool> {
+        switch protocolType {
+        case .stamps: return $showStamps
+        case .ordinals: return $showOrdinals
+        case .counterparty: return $showCounterparty
+        }
+    }
+    
+    private func toggleState(for protocolType: ProtocolType) -> Bool {
+        switch protocolType {
+        case .stamps: return showStamps
+        case .ordinals: return showOrdinals
+        case .counterparty: return showCounterparty
+        }
     }
     
     // MARK: - Add Wallet Button
@@ -189,6 +257,32 @@ struct SettingsView: View {
     
     private func deleteWallet(_ wallet: Wallet) {
         viewModel.deleteWallet(wallet, context: modelContext)
+    }
+    
+    private func enforceProtocolSelection() {
+        if !showStamps && !showOrdinals && !showCounterparty {
+            showStamps = true
+        }
+    }
+    
+    private func loadProtocolOrder() {
+        if let data = UserDefaults.standard.data(forKey: "protocolOrder"),
+           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
+            protocolOrder = decoded
+        } else {
+            protocolOrder = [.stamps, .ordinals, .counterparty]
+        }
+    }
+    
+    private func saveProtocolOrder() {
+        if let encoded = try? JSONEncoder().encode(protocolOrder) {
+            UserDefaults.standard.set(encoded, forKey: "protocolOrder")
+        }
+    }
+    
+    private func moveProtocol(from source: IndexSet, to destination: Int) {
+        protocolOrder.move(fromOffsets: source, toOffset: destination)
+        saveProtocolOrder()
     }
 }
 
