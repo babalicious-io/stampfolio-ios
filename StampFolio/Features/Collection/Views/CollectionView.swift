@@ -25,12 +25,12 @@ struct CollectionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.showSettings) private var showSettings
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
-    @State private var showSearchPopover = false
     @State private var viewSize: CGSize = .zero
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
@@ -75,7 +75,7 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
-                    searchToolbarItem
+                    settingsToolbarItem
                 }
         }
         .task {
@@ -104,45 +104,6 @@ struct CollectionView: View {
             StampMetadataPopup(stamp: displayStamp.stamp)
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
-        }
-        .overlay {
-            searchDismissOverlay
-        }
-        .overlay(alignment: .topTrailing) {
-            searchPopoverOverlay
-        }
-    }
-    
-    // MARK: - Search Overlays
-    
-    @ViewBuilder
-    private var searchDismissOverlay: some View {
-        if showSearchPopover {
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.825)) {
-                        showSearchPopover = false
-                    }
-                }
-        }
-    }
-    
-    @ViewBuilder
-    private var searchPopoverOverlay: some View {
-        if showSearchPopover {
-            SearchPopoverView()
-                .glassEffect(.regular, in: .rect(cornerRadius: 25))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(Color(uiColor: .separator).opacity(0.3), lineWidth: 0.5)
-                )
-                .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-                .padding(.top, horizontalSizeClass == .compact ? 0 : 64)
-                .padding(.trailing, 16)
-                .offset(x: horizontalSizeClass == .compact ? 0 : -64)
-                .transition(.scale(scale: 0.01, anchor: .topTrailing).combined(with: .opacity))
-                .zIndex(1000)
         }
     }
     
@@ -303,19 +264,16 @@ struct CollectionView: View {
         }
     }
     
-    private var searchToolbarItem: some ToolbarContent {
+    private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.825)) {
-                    showSearchPopover.toggle()
-                }
+                showSettings.wrappedValue = true
             } label: {
-                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
             }
-            .accessibilityLabel("Search")
-            .accessibilityHint("Search for stamps")
+            .accessibilityLabel("Settings")
+            .accessibilityHint("Open app settings")
         }
     }
     
