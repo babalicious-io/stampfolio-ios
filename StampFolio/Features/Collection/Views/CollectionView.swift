@@ -26,13 +26,13 @@ struct CollectionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
+    @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
-    @State private var showAddWallet = false
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -76,6 +76,12 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
+                    
+                    // Show search button only on iPad (regular)
+                    if horizontalSizeClass == .regular {
+                        searchToolbarItemIPad
+                    }
+                    
                     settingsToolbarItem
                 }
         }
@@ -106,9 +112,6 @@ struct CollectionView: View {
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
         }
-        .sheet(isPresented: $showAddWallet) {
-            AddWalletView()
-        }
     }
     
     // MARK: - Main Content
@@ -121,8 +124,8 @@ struct CollectionView: View {
                     .ignoresSafeArea()
                 
                 content
-                    .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             }
+            .emptyWalletOverlay(walletCount: wallets.count)
             .onAppear {
                 viewSize = geometry.size
             }
@@ -269,6 +272,20 @@ struct CollectionView: View {
         }
     }
     
+    private var searchToolbarItemIPad: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                showSearch.wrappedValue = true
+            } label: {
+                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
+            }
+            .accessibilityLabel("Search")
+            .accessibilityHint("Search for stamps")
+        }
+    }
+    
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
@@ -276,7 +293,6 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")
@@ -293,12 +309,13 @@ struct CollectionView: View {
             errorView
         } else if viewModel.stamps.isEmpty {
             noStampsView
-        } else if viewModel.hasActiveFilters && viewModel.filteredStamps.isEmpty {
-            noFilterResultsView
+        } else if (!viewModel.searchText.isEmpty || viewModel.hasActiveFilters) && viewModel.filteredStamps.isEmpty {
+            noSearchResultsView
         } else {
             stampsGrid
         }
     }
+    
     
     // MARK: - Loading View
     
@@ -341,13 +358,19 @@ struct CollectionView: View {
         )
     }
     
-    // MARK: - No Filter Results View
+    // MARK: - No Search Results View
     
-    private var noFilterResultsView: some View {
+    private var noSearchResultsView: some View {
         ContentUnavailableView {
-            Label("No Results", systemImage: "line.3.horizontal.decrease.circle")
+            Label("No Results", systemImage: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle" : "magnifyingglass")
         } description: {
-            Text("No stamps match the active filters")
+            if !viewModel.searchText.isEmpty && viewModel.hasActiveFilters {
+                Text("No stamps match '\(viewModel.searchText)' with the active filters")
+            } else if !viewModel.searchText.isEmpty {
+                Text("No stamps match '\(viewModel.searchText)'")
+            } else if viewModel.hasActiveFilters {
+                Text("No stamps match the active filters")
+            }
         }
     }
     

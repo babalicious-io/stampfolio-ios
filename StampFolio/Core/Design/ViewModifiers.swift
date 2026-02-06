@@ -43,13 +43,12 @@ struct ShimmerModifier: ViewModifier {
 
 struct EmptyWalletViewModifier: ViewModifier {
     let walletCount: Int
-    @Binding var showAddWallet: Bool
     
     func body(content: Content) -> some View {
         if walletCount == 0 {
             ContentUnavailableView {
                 Label {
-                    Text("No Wallets Defined")
+                    Text("No Wallets Added")
                         .foregroundStyle(.orange)
                 } icon: {
                     Image(systemName: "wallet.bifold")
@@ -85,8 +84,8 @@ extension View {
     }
     
     /// Show empty wallet state when no wallets are added
-    func emptyWalletOverlay(walletCount: Int, showAddWallet: Binding<Bool>) -> some View {
-        modifier(EmptyWalletViewModifier(walletCount: walletCount, showAddWallet: showAddWallet))
+    func emptyWalletOverlay(walletCount: Int) -> some View {
+        modifier(EmptyWalletViewModifier(walletCount: walletCount))
     }
 }
 
