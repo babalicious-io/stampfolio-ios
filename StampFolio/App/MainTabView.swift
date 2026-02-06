@@ -48,6 +48,7 @@ struct MainTabView: View {
                 SearchView()
             }
         }
+        .tabViewStyle(.sidebarAdaptable)
         .tabViewCustomization($customization)
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(\.showSettingsBinding, $showSettings)
