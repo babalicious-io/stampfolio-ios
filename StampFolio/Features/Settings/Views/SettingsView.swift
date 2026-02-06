@@ -151,8 +151,8 @@ struct SettingsView: View {
             } label: {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
-                    .textCase(.uppercase)
-                    .foregroundStyle(protocolEditMode.isEditing ? .orange : .orange.secondary)
+                    .textCase(.none)
+                    .foregroundStyle(protocolEditMode.isEditing ? Color.orange : Color.orange.secondary)
             }
         }
     }
