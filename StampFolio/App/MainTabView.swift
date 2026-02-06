@@ -36,7 +36,7 @@ struct MainTabView: View {
         TabView {
             TabSection("Protocols") {
                 ForEach(ProtocolType.allCases) { protocolType in
-                    Tab(protocolType.rawValue, systemImage: protocolType.icon, value: protocolType) {
+                    Tab(protocolType.rawValue, systemImage: protocolType.icon) {
                         viewForProtocol(protocolType)
                     }
                     .customizationID("Tab.\(protocolType.rawValue)")
