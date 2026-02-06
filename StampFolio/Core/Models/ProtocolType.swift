@@ -8,7 +8,7 @@
 import Foundation
 
 /// Protocol type for managing visible tabs and their order
-enum ProtocolType: String, Identifiable, Codable, CaseIterable {
+enum ProtocolType: String, Identifiable, Codable, CaseIterable, Hashable {
     case stamps = "Stamps"
     case ordinals = "Ordinals"
     case counterparty = "Counterparty"
