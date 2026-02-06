@@ -12,11 +12,12 @@ This rule provides quick access to all essential documentation for building Stam
 
 Quick reference to local project documentation files:
 
-- **[CURSOR-RULES.md](../CURSOR-RULES.md)** - Available Cursor rules and workflows for iOS development
-- **[.cursor/QUICKSTART.md](.cursor/QUICKSTART.md)** - Quick reference guide for all 24 development rules
-- **[SETUP-COMPLETE.md](../SETUP-COMPLETE.md)** - Initial project setup summary and configuration
-- **[SWEETPAD-SETUP.md](../SWEETPAD-SETUP.md)** - Detailed SweetPad configuration for building without Xcode
-- **[SWEETPAD-QUICKSTART.md](../SWEETPAD-QUICKSTART.md)** - Quick guide to build and run using SweetPad
+- **[CURSOR-RULES.md](../docs/CURSOR-RULES.md)** - Available Cursor rules and workflows for iOS development
+- **[QUICKSTART.md](../docs/QUICKSTART.md)** - Quick reference guide for all 21 development rules
+- **[SETUP-COMPLETE.md](../docs/SETUP-COMPLETE.md)** - Initial project setup summary and configuration
+- **[SWEETPAD-SETUP.md](../docs/SWEETPAD-SETUP.md)** - Detailed SweetPad configuration for building without Xcode
+- **[SWEETPAD-QUICKSTART.md](../docs/SWEETPAD-QUICKSTART.md)** - Quick guide to build and run using SweetPad
+- **[LOCALTEST.md](../docs/LOCALTEST.md)** - Local testing notes and examples
 
 ## Apple Official Documentation
 

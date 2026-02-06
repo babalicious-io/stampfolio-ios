@@ -6,13 +6,14 @@ Welcome to your comprehensive iOS development setup with Cursor AI! 🎉
 
 ## 📦 What's Installed
 
-You now have **24 specialized rule files** covering the complete iOS development lifecycle:
+You now have **21 specialized rule files** covering the complete iOS development lifecycle:
 
 ### 🍎 Core iOS Development
 - `@with-swift` - Swift coding standards and best practices
 - `@with-ios` - iOS-specific patterns and architecture
 - `@clean-architecture-swift` - Clean Architecture principles
 - `@with-ddd-swift` - Domain-Driven Design for Swift
+- `@docs` - Comprehensive documentation reference (Apple, Bitcoin protocols, APIs)
 
 ### 🧪 Testing & Quality
 - `@create-tests-swift` - Create comprehensive Swift tests
@@ -31,6 +32,7 @@ You now have **24 specialized rule files** covering the complete iOS development
 - `@main-refactoring-rules` - Code refactoring guidance
 
 ### 📋 Planning & Documentation
+- `@docs` - Documentation reference hub (Apple, Bitcoin, APIs, project docs)
 - `@prepare` - Pre-development research
 - `@propose` - Feature proposals and planning
 - `@create-prompt` - AI prompt generation
@@ -62,6 +64,15 @@ Simply mention a rule with `@` in your message:
 Then implement:
 ```
 "Implement the authentication flow we discussed @with-swift @with-ios"
+```
+
+#### 🆕 **Working with APIs**
+```
+"How do I fetch stamps from Stampchain API? @docs"
+```
+Check API pricing:
+```
+"What's the best Ordinals API for development? @docs"
 ```
 
 #### 2️⃣ **Writing Tests**
@@ -99,12 +110,14 @@ Some rules apply automatically based on file types:
 Your workspace now includes:
 ```
 .cursor/
-├── rules/           # All 24 rule files
-├── specs/           # Feature specifications
-├── tasks/           # Task tracking
-├── learnings/       # Knowledge base
-├── docs/            # Documentation
-└── output/          # Generated artifacts
+├── rules/           # All 21 rule files (including @docs)
+└── docs/            # All project documentation
+    ├── QUICKSTART.md    # This quick reference guide
+    ├── CURSOR-RULES.md  # Complete rules documentation
+    ├── SETUP-COMPLETE.md
+    ├── SWEETPAD-SETUP.md
+    ├── SWEETPAD-QUICKSTART.md
+    └── LOCALTEST.md
 ```
 
 ## 🎯 Next Steps
@@ -116,7 +129,7 @@ Your workspace now includes:
 
 ## 📚 Additional Resources
 
-- [Main Documentation](../CURSOR-RULES.md)
+- [Main Documentation](CURSOR-RULES.md)
 - [Contributing Guidelines](https://github.com/brunogama/ios-cursor-rules)
 - [Apple Developer Documentation](https://developer.apple.com)
 

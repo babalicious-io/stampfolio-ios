@@ -61,9 +61,9 @@ Successfully installed **brunogama's comprehensive iOS Cursor rules** on: 2026-0
 
 ### 📚 Documentation Files
 
-- `.cursor/QUICKSTART.md` - Quick reference guide
-- `CURSOR-RULES.md` - Complete rule documentation
-- This file (`SETUP-COMPLETE.md`) - Setup summary
+- `.cursor/docs/QUICKSTART.md` - Quick reference guide
+- `.cursor/docs/CURSOR-RULES.md` - Complete rule documentation
+- This file (`.cursor/docs/SETUP-COMPLETE.md`) - Setup summary
 
 ### 🔄 After Reopening Cursor
 
