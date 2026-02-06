@@ -7,6 +7,21 @@
 
 import SwiftUI
 
+// MARK: - Environment Key
+
+private struct ShowSettingsKey: EnvironmentKey {
+    static let defaultValue = Binding<Bool>.constant(false)
+}
+
+extension EnvironmentValues {
+    var showSettingsBinding: Binding<Bool> {
+        get { self[ShowSettingsKey.self] }
+        set { self[ShowSettingsKey.self] = newValue }
+    }
+}
+
+// MARK: - Main Tab View
+
 /// Main tab view with collection tabs and pinned search
 struct MainTabView: View {
     
