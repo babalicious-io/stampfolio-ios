@@ -15,7 +15,6 @@ struct SearchView: View {
     
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.dismiss) private var dismiss
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -34,13 +33,6 @@ struct SearchView: View {
                     noResultsView
                 } else {
                     searchResults
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(role: .close) {
-                        dismiss()
-                    }
                 }
             }
         }

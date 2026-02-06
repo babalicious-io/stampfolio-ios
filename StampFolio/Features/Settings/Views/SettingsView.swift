@@ -15,6 +15,7 @@ struct SettingsView: View {
     
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -81,6 +82,13 @@ struct SettingsView: View {
             }
             .listSectionSpacing(16)
             .navigationTitle("Settings")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Close", role: .close) {
+                        dismiss()
+                    }
+                }
+            }
             .sheet(isPresented: $viewModel.showAddWallet) {
                 AddWalletView()
             }
