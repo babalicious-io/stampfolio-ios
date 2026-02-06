@@ -105,16 +105,22 @@ struct EditWalletView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
+                    Button(role: .cancel) {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
                     }
+                    .accessibilityLabel("Cancel")
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
+                    Button {
                         saveWalletName()
+                    } label: {
+                        Image(systemName: "checkmark")
                     }
                     .fontWeight(.semibold)
+                    .accessibilityLabel("Save changes")
                 }
             }
             .onAppear {

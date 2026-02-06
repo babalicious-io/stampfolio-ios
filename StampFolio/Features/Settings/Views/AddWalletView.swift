@@ -121,17 +121,20 @@ struct AddWalletView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
+                    Button(role: .cancel) {
                         viewModel.walletAddressInput = ""
                         walletName = ""
                         selectedColor = .gray
                         viewModel.resetValidation()
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
                     }
+                    .accessibilityLabel("Cancel")
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add") {
+                    Button {
                         Task {
                             let trimmedName = walletName.trimmingCharacters(in: .whitespacesAndNewlines)
                             let label = trimmedName.isEmpty ? nil : trimmedName
@@ -147,9 +150,12 @@ struct AddWalletView: View {
                                 selectedColor = .gray
                             }
                         }
+                    } label: {
+                        Image(systemName: "plus")
                     }
                     .disabled(viewModel.walletAddressInput.isEmpty || viewModel.isValidating)
                     .fontWeight(.semibold)
+                    .accessibilityLabel("Add wallet")
                 }
             }
             .overlay {
