@@ -22,8 +22,12 @@ extension EnvironmentValues {
 
 // MARK: - Main Tab View
 
-/// Main tab view with collection tabs and pinned search
+/// Main tab view with collection tabs and adaptive search
 struct MainTabView: View {
+    
+    // MARK: - Environment
+    
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     // MARK: - State
     
@@ -45,8 +49,11 @@ struct MainTabView: View {
                 CounterpartyView()
             }
             
-            Tab(role: .search) {
-                SearchView()
+            // Show search tab only on iPhone (compact size class)
+            if horizontalSizeClass == .compact {
+                Tab(role: .search) {
+                    SearchView()
+                }
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)

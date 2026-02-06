@@ -12,6 +12,7 @@ struct CounterpartyView: View {
     
     // MARK: - Environment
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
     
     // MARK: - Body
@@ -24,12 +25,28 @@ struct CounterpartyView: View {
             }
             .navigationTitle("Counterparty")
             .toolbar {
+                // Show search button only on iPad (regular)
+                if horizontalSizeClass == .regular {
+                    searchToolbarItem
+                }
+                
                 settingsToolbarItem
             }
         }
     }
     
     // MARK: - Toolbar Items
+    
+    private var searchToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            NavigationLink(destination: SearchView()) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16))
+            }
+            .accessibilityLabel("Search")
+            .accessibilityHint("Search stamps")
+        }
+    }
     
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {

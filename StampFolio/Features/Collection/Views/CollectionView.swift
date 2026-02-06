@@ -75,6 +75,12 @@ struct CollectionView: View {
                 .toolbar {
                     viewModeToolbarItem
                     filterAndSortGroupToolbarItem
+                    
+                    // Show search button only on iPad (regular)
+                    if horizontalSizeClass == .regular {
+                        searchToolbarItemIPad
+                    }
+                    
                     settingsToolbarItem
                 }
         }
@@ -261,6 +267,18 @@ struct CollectionView: View {
                 .accessibilityLabel("Sort stamps")
                 .accessibilityHint("Choose how to sort your stamp collection")
             }
+        }
+    }
+    
+    private var searchToolbarItemIPad: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            NavigationLink(destination: SearchView()) {
+                Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
+            }
+            .accessibilityLabel("Search")
+            .accessibilityHint("Search for stamps")
         }
     }
     
