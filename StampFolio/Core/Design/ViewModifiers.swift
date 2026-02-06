@@ -62,9 +62,12 @@ struct EmptyWalletViewModifier: ViewModifier {
                     showAddWallet = true
                 } label: {
                     Text("Add Wallet")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
+                        .glassEffect(.regular.interactive(), in: .capsule)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
             }
         } else {
             content
