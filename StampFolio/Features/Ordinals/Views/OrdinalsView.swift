@@ -38,6 +38,7 @@ struct OrdinalsView: View {
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")
