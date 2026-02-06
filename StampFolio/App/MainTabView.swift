@@ -7,9 +7,13 @@
 
 import SwiftUI
 
-// MARK: - Environment Key
+// MARK: - Environment Keys
 
 private struct ShowSettingsKey: EnvironmentKey {
+    static let defaultValue = Binding<Bool>.constant(false)
+}
+
+private struct ShowSearchKey: EnvironmentKey {
     static let defaultValue = Binding<Bool>.constant(false)
 }
 
@@ -17,6 +21,11 @@ extension EnvironmentValues {
     var showSettingsBinding: Binding<Bool> {
         get { self[ShowSettingsKey.self] }
         set { self[ShowSettingsKey.self] = newValue }
+    }
+    
+    var showSearchBinding: Binding<Bool> {
+        get { self[ShowSearchKey.self] }
+        set { self[ShowSearchKey.self] = newValue }
     }
 }
 
@@ -32,6 +41,7 @@ struct MainTabView: View {
     // MARK: - State
     
     @State private var showSettings = false
+    @State private var showSearch = false
     
     // MARK: - Body
     
@@ -58,8 +68,12 @@ struct MainTabView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(\.showSettingsBinding, $showSettings)
+        .environment(\.showSearchBinding, $showSearch)
         .sheet(isPresented: $showSettings) {
             SettingsView()
+        }
+        .fullScreenCover(isPresented: $showSearch) {
+            SearchView()
         }
     }
 }

@@ -26,6 +26,7 @@ struct CollectionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
+    @Environment(\.showSearchBinding) private var showSearch
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -272,7 +273,9 @@ struct CollectionView: View {
     
     private var searchToolbarItemIPad: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            NavigationLink(destination: SearchView()) {
+            Button {
+                showSearch.wrappedValue = true
+            } label: {
                 Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
                     .font(.system(size: 16))
                     .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)

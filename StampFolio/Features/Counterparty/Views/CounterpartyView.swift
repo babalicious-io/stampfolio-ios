@@ -14,6 +14,7 @@ struct CounterpartyView: View {
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
+    @Environment(\.showSearchBinding) private var showSearch
     
     // MARK: - Body
     
@@ -39,7 +40,9 @@ struct CounterpartyView: View {
     
     private var searchToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            NavigationLink(destination: SearchView()) {
+            Button {
+                showSearch.wrappedValue = true
+            } label: {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 16))
             }
