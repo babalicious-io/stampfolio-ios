@@ -32,6 +32,7 @@ struct CollectionView: View {
     
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
+    @State private var showAddWallet = false
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -105,6 +106,9 @@ struct CollectionView: View {
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(isPresented: $showAddWallet) {
+            AddWalletView()
+        }
     }
     
     // MARK: - Main Content
@@ -117,6 +121,7 @@ struct CollectionView: View {
                     .ignoresSafeArea()
                 
                 content
+                    .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             }
             .onAppear {
                 viewSize = geometry.size
@@ -282,9 +287,7 @@ struct CollectionView: View {
     
     @ViewBuilder
     private var content: some View {
-        if wallets.isEmpty {
-            emptyWalletsView
-        } else if viewModel.isLoading && viewModel.stamps.isEmpty {
+        if viewModel.isLoading && viewModel.stamps.isEmpty {
             loadingView
         } else if viewModel.showError {
             errorView
@@ -294,23 +297,6 @@ struct CollectionView: View {
             noFilterResultsView
         } else {
             stampsGrid
-        }
-    }
-    
-    
-    // MARK: - Empty Wallets View
-    
-    private var emptyWalletsView: some View {
-        ContentUnavailableView {
-            Label {
-                Text("No Wallets Added")
-                    .foregroundStyle(.orange)
-            } icon: {
-                Image(systemName: "wallet.bifold")
-                    .foregroundStyle(.orange.secondary)
-            }
-        } description: {
-            Text("Add a Bitcoin wallet to view your stamp collection.\nTap the Settings tab below to get started.")
         }
     }
     

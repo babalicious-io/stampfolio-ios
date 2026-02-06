@@ -6,13 +6,21 @@
 //
 
 import SwiftUI
+import SwiftData
 
 /// View for displaying Ordinals
 struct OrdinalsView: View {
     
     // MARK: - Environment
     
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
+    @Environment(\.showSearchBinding) private var showSearch
+    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    
+    // MARK: - State
+    
+    @State private var showAddWallet = false
     
     // MARK: - Body
     
@@ -22,14 +30,38 @@ struct OrdinalsView: View {
                 Text("Ordinals")
                     .font(.title2)
             }
+            .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             .navigationTitle("Ordinals")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Show search button only on iPad (regular)
+                if horizontalSizeClass == .regular {
+                    searchToolbarItem
+                }
+                
                 settingsToolbarItem
             }
+        }
+        .sheet(isPresented: $showAddWallet) {
+            AddWalletView()
         }
     }
     
     // MARK: - Toolbar Items
+    
+    private var searchToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                showSearch.wrappedValue = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.primary)
+            }
+            .accessibilityLabel("Search")
+            .accessibilityHint("Search for ordinals")
+        }
+    }
     
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
