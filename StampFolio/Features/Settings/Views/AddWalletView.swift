@@ -152,12 +152,11 @@ struct AddWalletView: View {
                         }
                     } label: {
                         Image(systemName: "plus")
-                            .foregroundStyle(.white)
-                            .fontWeight(.semibold)
-                            .padding(16)
-                            .background(Circle().fill(.orange))
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
                     .disabled(viewModel.walletAddressInput.isEmpty || viewModel.isValidating)
+                    .fontWeight(.semibold)
                     .accessibilityLabel("Add wallet")
                 }
             }
