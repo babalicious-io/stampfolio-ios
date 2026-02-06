@@ -53,7 +53,23 @@ struct SettingsView: View {
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
-                    Text("Protocols")
+                    HStack {
+                        Text("Protocols")
+                        Spacer()
+                        Button {
+                            withAnimation {
+                                if editMode?.wrappedValue == .active {
+                                    editMode?.wrappedValue = .inactive
+                                } else {
+                                    editMode?.wrappedValue = .active
+                                }
+                            }
+                        } label: {
+                            Text(editMode?.wrappedValue == .active ? "Done" : "Reorder")
+                                .font(.caption)
+                                .textCase(.none)
+                        }
+                    }
                 }
                 
                 // Wallets Section
@@ -105,22 +121,7 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        withAnimation {
-                            if editMode?.wrappedValue == .active {
-                                editMode?.wrappedValue = .inactive
-                            } else {
-                                editMode?.wrappedValue = .active
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "line.3.horizontal")
-                            .foregroundStyle(.orange)
-                    }
-                    .accessibilityLabel(editMode?.wrappedValue == .active ? "Done reordering" : "Reorder protocols")
-                }
-            }
+$            }
             .onAppear {
                 loadProtocolOrder()
             }
