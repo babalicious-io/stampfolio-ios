@@ -121,7 +121,7 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
-$            }
+            }
             .onAppear {
                 loadProtocolOrder()
             }
