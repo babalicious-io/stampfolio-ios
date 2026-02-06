@@ -16,7 +16,7 @@ struct CounterpartyView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.showSearchBinding) private var showSearch
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - Body
     
@@ -75,4 +75,5 @@ struct CounterpartyView: View {
 
 #Preview {
     CounterpartyView()
+        .modelContainer(for: Wallet.self, inMemory: true)
 }

@@ -27,7 +27,7 @@ struct CollectionView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.showSearchBinding) private var showSearch
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
