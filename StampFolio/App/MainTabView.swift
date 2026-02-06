@@ -28,21 +28,30 @@ struct MainTabView: View {
     // MARK: - State
     
     @State private var showSettings = false
+    @AppStorage("showOrdinals") private var showOrdinals = true
+    @AppStorage("showCounterparty") private var showCounterparty = true
+    @AppStorage("showStamps") private var showStamps = true
     
     // MARK: - Body
     
     var body: some View {
         TabView {
-            Tab("Stamps", systemImage: "bitcoinsign.square.fill") {
-                CollectionView()
+            if showStamps {
+                Tab("Stamps", systemImage: "bitcoinsign.square.fill") {
+                    CollectionView()
+                }
             }
             
-            Tab("Ordinals", systemImage: "circle.hexagongrid.fill") {
-                OrdinalsView()
+            if showOrdinals {
+                Tab("Ordinals", systemImage: "circle.hexagongrid.fill") {
+                    OrdinalsView()
+                }
             }
             
-            Tab("Counterparty", systemImage: "square.3.layers.3d") {
-                CounterpartyView()
+            if showCounterparty {
+                Tab("Counterparty", systemImage: "square.3.layers.3d") {
+                    CounterpartyView()
+                }
             }
             
             Tab(role: .search) {

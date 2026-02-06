@@ -22,6 +22,9 @@ struct SettingsView: View {
     
     @AppStorage("isDarkMode") private var isDarkMode = true
     @AppStorage("showWalletIcons") private var showWalletIcons = false
+    @AppStorage("showOrdinals") private var showOrdinals = true
+    @AppStorage("showCounterparty") private var showCounterparty = true
+    @AppStorage("showStamps") private var showStamps = true
     @State private var editingWallet: Wallet?
     
     // MARK: - Body
@@ -36,6 +39,15 @@ struct SettingsView: View {
                     themeToggle
                 } header: {
                     Text("Appearance")
+                }
+                
+                // Protocols Section
+                Section {
+                    stampsToggle
+                    ordinalsToggle
+                    counterpartyToggle
+                } header: {
+                    Text("Protocols")
                 }
                 
                 // Wallets Section
@@ -119,6 +131,50 @@ struct SettingsView: View {
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
+    }
+    
+    // MARK: - Protocol Toggles
+    
+    private var stampsToggle: some View {
+        Toggle(isOn: $showStamps) {
+            HStack(spacing: 14) {
+                Image(systemName: "bitcoinsign.square.fill")
+                    .foregroundStyle(.orange)
+                Text(showStamps ? "Display Stamps" : "Hide Stamps")
+            }
+        }
+        .tint(.orange)
+        .accessibilityLabel(showStamps ? "Display Stamps toggle" : "Hide Stamps toggle")
+        .accessibilityValue(showStamps ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle Stamps tab visibility")
+    }
+    
+    private var ordinalsToggle: some View {
+        Toggle(isOn: $showOrdinals) {
+            HStack(spacing: 14) {
+                Image(systemName: "circle.hexagongrid.fill")
+                    .foregroundStyle(.orange)
+                Text(showOrdinals ? "Display Ordinals" : "Hide Ordinals")
+            }
+        }
+        .tint(.orange)
+        .accessibilityLabel(showOrdinals ? "Display Ordinals toggle" : "Hide Ordinals toggle")
+        .accessibilityValue(showOrdinals ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle Ordinals tab visibility")
+    }
+    
+    private var counterpartyToggle: some View {
+        Toggle(isOn: $showCounterparty) {
+            HStack(spacing: 14) {
+                Image(systemName: "square.3.layers.3d")
+                    .foregroundStyle(.orange)
+                Text(showCounterparty ? "Display Counterparty" : "Hide Counterparty")
+            }
+        }
+        .tint(.orange)
+        .accessibilityLabel(showCounterparty ? "Display Counterparty toggle" : "Hide Counterparty toggle")
+        .accessibilityValue(showCounterparty ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle Counterparty tab visibility")
     }
     
     // MARK: - Add Wallet Button
