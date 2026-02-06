@@ -16,7 +16,17 @@ struct MainTabView: View {
         TabView {
             CollectionView()
                 .tabItem {
-                    Label("Collection", systemImage: "bitcoinsign.square.fill")
+                    Label("Stamps", systemImage: "bitcoinsign.square.fill")
+                }
+            
+            OrdinalsView()
+                .tabItem {
+                    Label("Ordinals", systemImage: "circle.hexagongrid.fill")
+                }
+            
+            CounterpartyView()
+                .tabItem {
+                    Label("Counterparty", systemImage: "square.3.layers.3d")
                 }
             
             SettingsView()
