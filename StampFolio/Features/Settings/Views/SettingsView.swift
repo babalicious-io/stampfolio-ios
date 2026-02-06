@@ -46,10 +46,14 @@ struct SettingsView: View {
                 // Protocols Section
                 Section {
                     ForEach(protocolOrder) { protocolType in
-                        protocolToggle(for: protocolType)
-                            .onChange(of: toggleState(for: protocolType)) { _, _ in
-                                enforceProtocolSelection()
-                            }
+                        if editMode?.wrappedValue == .active {
+                            protocolReorderRow(for: protocolType)
+                        } else {
+                            protocolToggle(for: protocolType)
+                                .onChange(of: toggleState(for: protocolType)) { _, _ in
+                                    enforceProtocolSelection()
+                                }
+                        }
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
@@ -156,6 +160,19 @@ struct SettingsView: View {
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
+    }
+    
+    // MARK: - Protocol Reorder Row
+    
+    private func protocolReorderRow(for protocolType: ProtocolType) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: protocolType.icon)
+                .foregroundStyle(.orange)
+            Text(protocolType.rawValue)
+            Spacer()
+            Image(systemName: "line.3.horizontal")
+                .foregroundStyle(.secondary)
+        }
     }
     
     // MARK: - Protocol Toggles
