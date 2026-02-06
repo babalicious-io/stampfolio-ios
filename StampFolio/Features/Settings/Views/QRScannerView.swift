@@ -91,12 +91,12 @@ struct QRScannerView: View {
             Image(systemName: "camera")
                 .font(.system(size: 64))
                 .fontWeight(.regular)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.orange.secondary)
             
             Text("Camera Not Available")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.orange)
             
             Text("QR code scanning requires camera access. Please enable camera permissions in Settings.")
                 .font(.body)

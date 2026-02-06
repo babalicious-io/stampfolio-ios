@@ -64,7 +64,7 @@ struct SearchView: View {
                     .foregroundStyle(.orange)
             } icon: {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.orange.secondary)
             }
         } description: {
             Text("Search by stamp or ordinals number, CPID, txHash, creator or genesis addy, or artist name")
