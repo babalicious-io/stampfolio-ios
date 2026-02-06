@@ -124,6 +124,7 @@ struct CollectionView: View {
                     .ignoresSafeArea()
                 
                 content
+                    .emptyWalletOverlay(walletCount: wallets.count)
             }
             .onAppear {
                 viewSize = geometry.size
@@ -278,7 +279,7 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: viewModel.searchText.isEmpty ? "magnifyingglass" : "magnifyingglass.circle.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.secondary : Color.purple)
+                    .foregroundStyle(viewModel.searchText.isEmpty ? Color.primary : Color.orange)
             }
             .accessibilityLabel("Search")
             .accessibilityHint("Search for stamps")
@@ -292,6 +293,7 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")
@@ -302,9 +304,7 @@ struct CollectionView: View {
     
     @ViewBuilder
     private var content: some View {
-        if wallets.isEmpty {
-            emptyWalletsView
-        } else if viewModel.isLoading && viewModel.stamps.isEmpty {
+        if viewModel.isLoading && viewModel.stamps.isEmpty {
             loadingView
         } else if viewModel.showError {
             errorView
@@ -314,23 +314,6 @@ struct CollectionView: View {
             noSearchResultsView
         } else {
             stampsGrid
-        }
-    }
-    
-    
-    // MARK: - Empty Wallets View
-    
-    private var emptyWalletsView: some View {
-        ContentUnavailableView {
-            Label {
-                Text("No Wallets Added")
-                    .foregroundStyle(.orange)
-            } icon: {
-                Image(systemName: "wallet.bifold")
-                    .foregroundStyle(.orange.secondary)
-            }
-        } description: {
-            Text("Add a Bitcoin wallet to view your stamp collection.\nTap the Settings tab below to get started.")
         }
     }
     

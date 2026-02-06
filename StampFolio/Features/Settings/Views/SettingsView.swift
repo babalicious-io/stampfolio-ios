@@ -80,6 +80,7 @@ struct SettingsView: View {
             }
             .listSectionSpacing(16)
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(role: .close) {
