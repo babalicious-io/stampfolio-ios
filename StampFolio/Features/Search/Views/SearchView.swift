@@ -39,9 +39,6 @@ struct SearchView: View {
             set: { viewModel.searchText = $0 }
         ), prompt: "Search")
         .navigationTitle("Search")
-        .toolbar {
-            filterToolbarItem
-        }
         .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampDetailView(
