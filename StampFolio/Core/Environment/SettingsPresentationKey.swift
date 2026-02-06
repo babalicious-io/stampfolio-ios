@@ -8,12 +8,12 @@
 import SwiftUI
 
 /// Environment key for Settings presentation
-private struct SettingsPresentationKey: EnvironmentKey {
-    static let defaultValue: () -> Void = {}
+struct SettingsPresentationKey: EnvironmentKey {
+    static let defaultValue = Binding<Bool>.constant(false)
 }
 
 extension EnvironmentValues {
-    var showSettings: () -> Void {
+    var showSettingsBinding: Binding<Bool> {
         get { self[SettingsPresentationKey.self] }
         set { self[SettingsPresentationKey.self] = newValue }
     }

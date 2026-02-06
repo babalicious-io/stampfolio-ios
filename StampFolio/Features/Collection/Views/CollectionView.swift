@@ -25,7 +25,7 @@ struct CollectionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @Environment(\.showSettings) private var showSettings
+    @Environment(\.showSettingsBinding) private var showSettings
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -267,7 +267,7 @@ struct CollectionView: View {
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                showSettings()
+                showSettings.wrappedValue = true
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))

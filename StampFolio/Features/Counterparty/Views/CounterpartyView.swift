@@ -12,7 +12,7 @@ struct CounterpartyView: View {
     
     // MARK: - Environment
     
-    @Environment(\.showSettings) private var showSettings
+    @Environment(\.showSettingsBinding) private var showSettings
     
     // MARK: - Body
     
@@ -34,7 +34,7 @@ struct CounterpartyView: View {
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                showSettings()
+                showSettings.wrappedValue = true
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))

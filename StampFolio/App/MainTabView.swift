@@ -35,7 +35,7 @@ struct MainTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .environment(\.showSettings, { showSettings = true })
+        .environment(\.showSettingsBinding, $showSettings)
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
