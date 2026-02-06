@@ -152,7 +152,7 @@ struct SettingsView: View {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
                     .textCase(.none)
-                    .foregroundStyle(protocolEditMode.isEditing ? Color.orange : Color.orange.secondary)
+                    .foregroundStyle(protocolEditMode.isEditing ? Color.orange : Color.orange.opacity(0.7))
             }
         }
     }
