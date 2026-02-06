@@ -148,6 +148,7 @@ struct AddWalletView: View {
                                 // Reset wallet name and color if successfully added
                                 walletName = ""
                                 selectedColor = .gray
+                                dismiss()
                             }
                         }
                     } label: {
