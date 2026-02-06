@@ -143,6 +143,7 @@ struct SettingsView: View {
                 Image(systemName: "plus.circle.fill")
                     .foregroundStyle(.orange)
                 Text("Add Wallet")
+                    .foregroundStyle(.orange)
             }
         }
         .accessibilityLabel("Add wallet")
