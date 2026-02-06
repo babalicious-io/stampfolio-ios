@@ -43,6 +43,7 @@ struct ShimmerModifier: ViewModifier {
 
 struct EmptyWalletViewModifier: ViewModifier {
     let walletCount: Int
+    @Binding var showAddWallet: Bool
     
     func body(content: Content) -> some View {
         if walletCount == 0 {
@@ -84,8 +85,8 @@ extension View {
     }
     
     /// Show empty wallet state when no wallets are added
-    func emptyWalletOverlay(walletCount: Int) -> some View {
-        modifier(EmptyWalletViewModifier(walletCount: walletCount))
+    func emptyWalletOverlay(walletCount: Int, showAddWallet: Binding<Bool>) -> some View {
+        modifier(EmptyWalletViewModifier(walletCount: walletCount, showAddWallet: showAddWallet))
     }
 }
 

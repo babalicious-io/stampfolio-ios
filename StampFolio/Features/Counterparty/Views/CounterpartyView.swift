@@ -16,7 +16,11 @@ struct CounterpartyView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.showSearchBinding) private var showSearch
-    @Query(sort: \.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    
+    // MARK: - State
+    
+    @State private var showAddWallet = false
     
     // MARK: - Body
     
@@ -26,7 +30,7 @@ struct CounterpartyView: View {
                 Text("Counterparty")
                     .font(.title2)
             }
-            .emptyWalletOverlay(walletCount: wallets.count)
+            .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             .navigationTitle("Counterparty")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -37,6 +41,9 @@ struct CounterpartyView: View {
                 
                 settingsToolbarItem
             }
+        }
+        .sheet(isPresented: $showAddWallet) {
+            AddWalletView()
         }
     }
     

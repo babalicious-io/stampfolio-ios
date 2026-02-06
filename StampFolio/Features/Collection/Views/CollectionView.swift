@@ -27,12 +27,13 @@ struct CollectionView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.showSearchBinding) private var showSearch
-    @Query(sort: \.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
+    @State private var showAddWallet = false
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -112,6 +113,9 @@ struct CollectionView: View {
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
         }
+        .sheet(isPresented: $showAddWallet) {
+            AddWalletView()
+        }
     }
     
     // MARK: - Main Content
@@ -125,7 +129,7 @@ struct CollectionView: View {
                 
                 content
             }
-            .emptyWalletOverlay(walletCount: wallets.count)
+            .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
             .onAppear {
                 viewSize = geometry.size
             }
