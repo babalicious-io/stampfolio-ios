@@ -169,9 +169,6 @@ struct SettingsView: View {
             Image(systemName: protocolType.icon)
                 .foregroundStyle(.orange)
             Text(protocolType.rawValue)
-            Spacer()
-            Image(systemName: "line.3.horizontal")
-                .foregroundStyle(.secondary)
         }
     }
     
