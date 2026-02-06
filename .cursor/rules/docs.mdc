@@ -1,0 +1,449 @@
+---
+description: Comprehensive documentation reference for StampFolio - Bitcoin Stamps iOS app
+globs: 
+alwaysApply: false
+---
+
+# StampFolio Documentation Reference
+
+This rule provides quick access to all essential documentation for building StampFolio, including iOS development resources, Bitcoin protocol documentation, and project-specific guides.
+
+## Project Documentation
+
+Quick reference to local project documentation files:
+
+- **[CURSOR-RULES.md](../CURSOR-RULES.md)** - Available Cursor rules and workflows for iOS development
+- **[.cursor/QUICKSTART.md](.cursor/QUICKSTART.md)** - Quick reference guide for all 24 development rules
+- **[SETUP-COMPLETE.md](../SETUP-COMPLETE.md)** - Initial project setup summary and configuration
+- **[SWEETPAD-SETUP.md](../SWEETPAD-SETUP.md)** - Detailed SweetPad configuration for building without Xcode
+- **[SWEETPAD-QUICKSTART.md](../SWEETPAD-QUICKSTART.md)** - Quick guide to build and run using SweetPad
+
+## Apple Official Documentation
+
+### SwiftUI
+- **[SwiftUI Documentation](https://developer.apple.com/documentation/SwiftUI)** - Official Apple SwiftUI framework reference
+- **Views & Controls**: Building user interfaces with SwiftUI components
+- **Layout**: Stacks, grids, and adaptive layouts
+- **Navigation**: NavigationStack, tabs, and deep linking
+- **Data Flow**: @State, @Binding, @Observable, and state management
+
+### SwiftData
+- **[SwiftData Documentation](https://developer.apple.com/documentation/SwiftData)** - Official Apple SwiftData framework reference
+- **Model Creation**: Defining data models with @Model macro
+- **Queries**: @Query macro for fetching and filtering data
+- **Relationships**: One-to-many and many-to-many relationships
+- **Migration**: Schema evolution and data migration strategies
+
+### Human Interface Guidelines (HIG)
+- **[Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)** - Official Apple design guidelines
+- **iOS Design Patterns**: Navigation, modals, sheets
+- **Typography**: Dynamic Type and font styles
+- **Color & Materials**: System colors and visual effects
+- **Layout**: Safe areas, margins, and spacing
+
+### App Store Guidelines
+- **[App Store Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)** - App Store submission requirements
+- **Metadata**: App descriptions, keywords, screenshots
+- **Privacy**: Privacy nutrition labels and tracking
+- **In-App Purchase**: Guidelines for monetization
+
+### Accessibility
+- **[Accessibility Documentation](https://developer.apple.com/accessibility/)** - Building accessible iOS apps
+- **VoiceOver**: Screen reader support and labels
+- **Dynamic Type**: Supporting different text sizes
+- **Color Contrast**: Meeting WCAG standards
+- **Keyboard Navigation**: Full keyboard support
+
+### Testing
+- **[XCTest Documentation](https://developer.apple.com/documentation/xctest)** - Official testing framework reference
+- **XCTest**: Unit and integration testing
+- **UI Testing**: Automated UI tests with XCUITest
+- **Performance Testing**: XCTMetric and performance baselines
+- **Test Plans**: Organizing and running test suites
+
+## External iOS Libraries
+
+### Kingfisher
+- **Purpose**: Efficient image loading and caching for remote images
+- **Usage**: Loading inscription images from CDNs and IPFS
+- **Configuration**: Cache policies, placeholder images, transformations
+- **Documentation**: [Kingfisher GitHub](https://github.com/onevcat/Kingfisher)
+
+### AVFoundation
+- **Purpose**: Camera access for QR code scanning
+- **Usage**: Scanning Bitcoin wallet addresses
+- **Configuration**: Camera permissions, capture session setup
+- **Documentation**: [Apple AVFoundation](https://developer.apple.com/av-foundation/)
+
+## Bitcoin Protocol Documentation
+
+### Bitcoin Core
+
+**Blockchain Explorer:**
+- [Mempool.space](https://mempool.space/) - Bitcoin blockchain explorer and visualization
+
+**APIs:**
+- [Mempool REST API](https://mempool.space/docs/api/rest) - RESTful API for Bitcoin blockchain data
+- [Mempool WebSocket API](https://mempool.space/docs/api/websocket) - Real-time Bitcoin data streaming
+- [Mempool Electrs API](https://mempool.space/docs/api/electrs) - Electrum server compatible API
+
+**Use Cases:**
+- Transaction confirmation status
+- Fee estimation
+- UTXO queries
+- Address balance checking
+
+---
+
+### Bitcoin Stamps
+
+Bitcoin Stamps are immutable digital artifacts stored in Bitcoin's UTXO set, ensuring permanent on-chain storage.
+
+**Documentation & Tools:**
+- [Bitcoin Stamps Documentation](https://bitcoinstamps.xyz/en/) - Official protocol documentation and guides
+- [Stamps Transaction Builder](https://github.com/btc-stamps/tx-builder) - TypeScript/JavaScript library for building stamp transactions
+
+**Stampchain Explorer Ecosystem:**
+- [Explorer Website](https://github.com/stampchain-io/BTCStampsExplorer) - Main explorer repository (Deno/Fresh)
+- [Database Schema](https://raw.githubusercontent.com/stampchain-io/btc_stamps/refs/heads/dev/indexer/table_schema.sql) - Complete SQL schema reference
+- [Explorer API Documentation](https://stampchain.io/docs#/) - REST API for stamps, collections, and market data
+- [Indexer Repository](https://github.com/stampchain-io/btc_stamps) - Python-based indexer implementation
+
+**Key Concepts:**
+- **UTXO-based storage**: Unlike Ordinals, stamps use UTXO data for permanence
+- **SRC-20**: Fungible token standard on Bitcoin Stamps
+- **SRC-721**: NFT collections on Bitcoin Stamps
+- **OLGA format**: Optimized encoding reducing transaction size by 50%
+
+**API Endpoints (Stampchain):**
+```
+GET /stamps - List all stamps
+GET /stamp/{id} - Get stamp details
+GET /address/{address}/stamps - Get stamps by address
+GET /collection/{slug} - Get collection info
+GET /src20/tokens - List SRC-20 tokens
+GET /src20/balance/{address} - Get SRC-20 balances
+```
+
+---
+
+### Ordinals
+
+Ordinals inscribe arbitrary data into the witness data of Bitcoin transactions, creating digital artifacts tied to specific satoshis.
+
+#### API Provider Comparison (Free/Trial Tiers)
+
+| Provider | RPS (Calls/Sec) | Calls/Day | Calls/Month | Status |
+|----------|----------------|-----------|-------------|---------|
+| **Xverse** | ~1.6 (100/min) | N/A | 100,000 total | 10-Day Free Trial |
+| **UniSat** | 5 | 2,000 | 60,000 | Ongoing Free Tier ✓ |
+| **Magic Eden** | ~8 (500/min) | N/A | Uncapped | Public Dev Access |
+| **ordinals.com** | ~1-5 (est.) | Uncapped | Uncapped | Open Source/Self-hosted |
+| **OrdiScan** | ~1.6 (100/min) | N/A | 1,000 | Ongoing Free Tier |
+| **OrdinalsBot** | 0.2 (2/10s) | N/A | Unspecified | Highly Restricted |
+| **OrdinalsWallet** | ~1-2 (est.) | N/A | N/A | Standard Web Limits |
+
+**Provider Selection Guide:**
+
+- **Xverse**: Best for short-term development (10-day trial, 100K calls). Converts to $59/month after trial.
+- **UniSat**: Best "truly free" option for ongoing development (2,000 calls/day resets daily)
+- **Magic Eden**: Highest throughput (8 RPS) for marketplace data (listings, sales, floor prices)
+- **OrdiScan**: Proof-of-concept only (1,000 calls/month exhausts quickly)
+- **ordinals.com**: Self-hosted option with no rate limits (requires infrastructure)
+
+---
+
+#### UniSat
+
+**Documentation:**
+- [UniSat API Documentation](https://unisat.io/open-api) - Overview, authentication, and usage guides
+- [UniSat API Reference](https://open-api.unisat.io/) - Complete endpoint reference with examples
+
+**Rate Limits:**
+- 5 requests per second (RPS)
+- 2,000 requests per day (resets daily)
+- 60,000 requests per month
+- Free tier (no credit card required)
+
+**Key Endpoints:**
+```
+GET /v1/indexer/address/{address}/inscription-data - Get inscriptions by address
+GET /v1/indexer/inscription/info/{inscriptionId} - Get inscription details
+GET /v1/indexer/inscription/content/{inscriptionId} - Get inscription content
+GET /v1/indexer/brc20/list - List BRC-20 tokens
+GET /v1/indexer/brc20/{ticker}/holders - Get BRC-20 holders
+```
+
+**Use Cases:**
+- Fetching user's inscription collection
+- Displaying inscription metadata and content
+- BRC-20 token balances and transfers
+- Runes protocol data
+
+---
+
+#### Ordinals Wallet
+
+**Documentation:**
+- [OrdinalsWallet API](https://blog.ordinalswallet.com/api/) - RESTful API documentation
+
+**Rate Limits:**
+- Standard web limits (~1-2 RPS estimated)
+- No published monthly limits
+
+**Key Endpoints:**
+```
+GET /inscription/:inscription_id - Fetch inscription details
+GET /inscription/:inscription_id/outpoint - Get inscription location (UTXO)
+GET /inscription/content/:inscription_id - Raw inscription content
+GET /inscription/preview/:inscription_id - Image preview (when supported)
+GET /collection/:slug - Collection information
+GET /collection/:slug/inscriptions - List collection inscriptions
+```
+
+**Features:**
+- Collection management and verification
+- Inscription metadata with attributes
+- Market data (escrows, sales)
+- Message signature verification (BIP-322)
+
+---
+
+#### OrdiScan
+
+**Documentation:**
+- [OrdiScan API](https://ordiscan.com/docs/api#introduction) - Explorer API with transaction and inscription data
+
+**Rate Limits:**
+- 1.6 RPS (100 requests per minute)
+- 1,000 requests per month (free tier)
+- ⚠️ Limited - suitable for proof-of-concept only
+
+**Key Endpoints:**
+```
+GET /inscription/{id} - Inscription details
+GET /address/{address}/inscriptions - Address inscriptions
+GET /collection/{slug} - Collection data
+GET /stats - Network statistics
+```
+
+---
+
+#### Xverse
+
+**Documentation:**
+- [Xverse API Documentation](https://docs.xverse.app/api) - Complete API reference
+- [Xverse Portfolio App](https://github.com/MadalinaRaicu/xverse-ordinal-app) - Sample React implementation
+
+**Rate Limits:**
+- 1.6 RPS (100 requests per minute)
+- 100,000 total requests (10-day trial)
+- Converts to $59/month Developer plan after trial
+
+**Key Endpoints:**
+```
+GET /address/:address - Get address info (inscriptions, runes, balances)
+GET /inscription/:id - Get inscription details
+GET /rune/:rune - Get rune information
+GET /block/:height - Get block information
+GET /output/:outpoint - Get UTXO details
+POST /inscriptions - Batch fetch inscription details
+```
+
+**Features:**
+- Multi-protocol support (Ordinals, Runes, BRC-20, Spark)
+- Portfolio tracking with activity history
+- Market data integration
+- Swap aggregation
+
+---
+
+#### OrdinalsBot
+
+**Documentation:**
+- [OrdinalsBot API](https://docs.ordinalsbot.com/) - Inscription service API
+
+**Rate Limits:**
+- 0.2 RPS (2 requests per 10 seconds) - highly restricted
+- Unspecified monthly limits
+- ⚠️ Not suitable for high-volume applications
+
+**Key Endpoints:**
+```
+POST /order - Create inscription order
+GET /order/:id - Get order status
+GET /price - Get inscription pricing
+POST /collection - Create collection
+POST /rune/etch - Etch rune
+POST /rune/mint - Mint rune
+```
+
+**Features:**
+- Automated inscription creation
+- Rune etching and minting
+- BRC-20 deployment and minting
+- Collection management
+
+---
+
+#### Ordinals.com (ord)
+
+**Documentation:**
+- [ord Explorer Repository](https://github.com/ordinals/ord/) - Reference implementation
+- [ord Documentation](https://docs.ordinals.com/introduction.html) - Complete guide to ordinal theory
+- [ord API Guide](https://docs.ordinals.com/guides/api.html) - JSON-API documentation
+
+**Rate Limits:**
+- Self-hosted deployment (no external limits)
+- Depends on your infrastructure
+- Requires Bitcoin Core node with `-txindex`
+
+**Key Endpoints:**
+```
+GET /inscription/:id - Inscription details (JSON with Accept: application/json)
+GET /inscriptions - List latest inscriptions
+GET /inscriptions/:page - Paginated inscriptions
+GET /sat/:sat - Satoshi details
+GET /output/:outpoint - UTXO information
+GET /block/:height - Block information
+GET /rune/:rune - Rune details
+POST /inscriptions - Batch inscription lookup
+```
+
+**Features:**
+- Reference implementation of Ordinals protocol
+- Complete indexer with `--index-sats`, `--index-runes`, `--index-addresses`
+- Self-hosted control and reliability
+- No API rate limits (infrastructure-dependent)
+
+---
+
+#### Magic Eden
+
+**Documentation:**
+- [Magic Eden API](https://api.magiceden.dev/) - Public development access
+
+**Rate Limits:**
+- 8 RPS (500 requests per minute) - highest throughput
+- Uncapped monthly requests
+- Optimized for marketplace data
+
+**Key Focus:**
+- Marketplace listings and sales
+- Collection floor prices and volumes
+- Trading activity and statistics
+- ⚠️ Less suited for raw inscription file queries
+
+---
+
+### Counterparty
+
+Counterparty is a protocol built on Bitcoin that enables asset issuance, decentralized exchange, and smart contracts.
+
+**Documentation:**
+- [What is Counterparty?](https://docs.counterparty.io/docs/basics/what-is-counterparty/) - Protocol overview and concepts
+- [Counterparty API](https://counterpartycore.docs.apiary.io/) - Complete API reference
+
+**Key Concepts:**
+- **Asset Issuance**: Create named tokens on Bitcoin
+- **Decentralized Exchange**: Trade assets without intermediaries
+- **Proof-of-Burn**: XCP creation mechanism
+- **Bitcoin Stamps Integration**: Many stamps use Counterparty assets
+
+**Use Cases for StampFolio:**
+- Fetching asset metadata for stamps
+- Querying asset holders
+- Transaction history
+- Asset transfers and balances
+
+**Common API Calls:**
+```
+get_asset_info - Get asset details
+get_holders - Get asset holder addresses
+get_balances - Get address balances
+get_asset_names - Resolve asset names
+```
+
+## Cross-References to Other Rules
+
+These Cursor rules work together with `@docs` to provide comprehensive development guidance:
+
+- **@with-swift** - Swift coding standards and best practices
+- **@with-ios** - iOS-specific patterns and architecture
+- **@clean-architecture-swift** - Clean Architecture principles for Swift
+- **@with-ddd-swift** - Domain-Driven Design patterns
+- **@object-calisthenics-swift** - Code quality constraints and rules
+- **@create-tests-swift** - Testing guidelines and best practices
+- **@swift-testing-policy** - Testing standards and policies
+
+## Quick Reference Tables
+
+### When to Use Which API
+
+| Use Case | Recommended API | Reason |
+|----------|----------------|---------|
+| **Development/Testing** | UniSat (free tier) | 2,000 daily calls, truly free |
+| **Production (Low Volume)** | UniSat (free tier) | Reliable, consistent limits |
+| **Production (High Volume)** | Xverse (paid) or self-hosted ord | Better rate limits |
+| **Marketplace Data** | Magic Eden | Optimized for listings/sales |
+| **Complete Control** | ord (self-hosted) | No rate limits, full features |
+| **Proof of Concept** | Any free tier | Test before committing |
+
+### Bitcoin Protocol Comparison
+
+| Protocol | Storage | Prunable | Token Standards | Best For |
+|----------|---------|----------|----------------|----------|
+| **Bitcoin Stamps** | UTXO set | No ❌ | SRC-20, SRC-721 | Permanent digital artifacts |
+| **Ordinals** | Witness data | Yes ✓ | BRC-20, Runes | Large files, rich metadata |
+| **Counterparty** | OP_RETURN | No ❌ | XCP assets | Token issuance, DEX |
+
+### StampFolio Architecture
+
+| Layer | Technology | Purpose |
+|-------|-----------|----------|
+| **UI** | SwiftUI | Modern declarative UI |
+| **Data** | SwiftData | Local persistence |
+| **Networking** | URLSession + async/await | API communication |
+| **Images** | Kingfisher | Remote image loading |
+| **Camera** | AVFoundation | QR code scanning |
+| **Build** | SweetPad | Alternative to Xcode |
+
+## Best Practices
+
+### API Usage
+- **Cache aggressively**: Store inscription metadata locally with SwiftData
+- **Respect rate limits**: Implement exponential backoff
+- **Batch requests**: Use batch endpoints when available (e.g., Xverse POST /inscriptions)
+- **Monitor usage**: Track API calls to avoid hitting limits
+- **Graceful degradation**: Handle API failures with cached data
+
+### Performance
+- **Pagination**: Load inscriptions in pages (20-50 items)
+- **Image optimization**: Use Kingfisher's caching and thumbnails
+- **Background fetching**: Use Tasks for API calls
+- **Lazy loading**: Defer loading inscription content until needed
+
+### User Experience
+- **Loading states**: Show progress for network operations
+- **Error handling**: Provide clear, actionable error messages
+- **Offline support**: Cache essential data for offline viewing
+- **Pull-to-refresh**: Let users manually refresh data
+
+### Security
+- **Validate addresses**: Use BitcoinAddressValidator for user input
+- **HTTPS only**: All API calls must use HTTPS
+- **No private keys**: Never store or transmit private keys
+- **API key security**: Store API keys in environment variables or Keychain
+
+## Development Workflow
+
+1. **Use @docs** to reference API documentation
+2. **Use @with-swift** for Swift coding patterns
+3. **Use @with-ios** for iOS-specific implementations
+4. **Use @clean-architecture-swift** for architectural guidance
+5. **Use @create-tests-swift** when writing tests
+6. **Use @finalize** before committing code
+
+---
+
+**Remember**: This documentation reference is your quick access hub. For detailed implementation patterns, combine with other specialized rules like `@with-ios` and `@clean-architecture-swift`.
