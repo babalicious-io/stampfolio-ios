@@ -59,8 +59,13 @@ struct SearchView: View {
     
     private var searchEmptyState: some View {
         ContentUnavailableView {
-            Label("Search", systemImage: "magnifyingglass")
-                .foregroundStyle(.orange)
+            Label {
+                Text("Search")
+                    .foregroundStyle(.orange)
+            } icon: {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+            }
         } description: {
             Text("Search by stamp or ordinals number, CPID, txHash, creator or genesis addy, or artist name")
         }
