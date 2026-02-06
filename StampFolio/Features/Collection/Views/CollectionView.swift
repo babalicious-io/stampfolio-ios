@@ -267,15 +267,20 @@ struct CollectionView: View {
     }
     
     private var searchToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSearch.wrappedValue = true
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16))
+        Group {
+            // Only show search button on iPad (regular size class)
+            if horizontalSizeClass == .regular {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSearch.wrappedValue = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 16))
+                    }
+                    .accessibilityLabel("Search")
+                    .accessibilityHint("Search for stamps")
+                }
             }
-            .accessibilityLabel("Search")
-            .accessibilityHint("Search for stamps")
         }
     }
     
@@ -286,6 +291,7 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")

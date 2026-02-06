@@ -31,8 +31,12 @@ extension EnvironmentValues {
 
 // MARK: - Main Tab View
 
-/// Main tab view with collection tabs
+/// Main tab view with adaptive search (tab on iPhone, toolbar on iPad)
 struct MainTabView: View {
+    
+    // MARK: - Environment
+    
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     // MARK: - State
     
@@ -42,6 +46,51 @@ struct MainTabView: View {
     // MARK: - Body
     
     var body: some View {
+        Group {
+            if horizontalSizeClass == .compact {
+                // iPhone: Search as tab
+                compactTabView
+            } else {
+                // iPad: Search as toolbar button
+                regularTabView
+            }
+        }
+        .environment(\.showSettingsBinding, $showSettings)
+        .environment(\.showSearchBinding, $showSearch)
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
+        .sheet(isPresented: $showSearch) {
+            SearchView()
+        }
+    }
+    
+    // MARK: - Compact Layout (iPhone)
+    
+    private var compactTabView: some View {
+        TabView {
+            Tab("Stamps", systemImage: "bitcoinsign.square.fill") {
+                CollectionView()
+            }
+            
+            Tab("Ordinals", systemImage: "circle.hexagongrid.fill") {
+                OrdinalsView()
+            }
+            
+            Tab("Counterparty", systemImage: "square.3.layers.3d") {
+                CounterpartyView()
+            }
+            
+            Tab("Search", systemImage: "magnifyingglass") {
+                SearchView()
+            }
+        }
+        .tabBarMinimizeBehavior(.onScrollDown)
+    }
+    
+    // MARK: - Regular Layout (iPad)
+    
+    private var regularTabView: some View {
         TabView {
             Tab("Stamps", systemImage: "bitcoinsign.square.fill") {
                 CollectionView()
@@ -56,14 +105,6 @@ struct MainTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .environment(\.showSettingsBinding, $showSettings)
-        .environment(\.showSearchBinding, $showSearch)
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-        }
-        .sheet(isPresented: $showSearch) {
-            SearchView()
-        }
     }
 }
 

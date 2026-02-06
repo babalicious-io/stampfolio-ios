@@ -14,6 +14,7 @@ struct OrdinalsView: View {
     
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.showSearchBinding) private var showSearch
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     // MARK: - Body
     
@@ -34,15 +35,20 @@ struct OrdinalsView: View {
     // MARK: - Toolbar Items
     
     private var searchToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSearch.wrappedValue = true
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16))
+        Group {
+            // Only show search button on iPad (regular size class)
+            if horizontalSizeClass == .regular {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSearch.wrappedValue = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 16))
+                    }
+                    .accessibilityLabel("Search")
+                    .accessibilityHint("Search for stamps")
+                }
             }
-            .accessibilityLabel("Search")
-            .accessibilityHint("Search for stamps")
         }
     }
     
@@ -53,6 +59,7 @@ struct OrdinalsView: View {
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")
