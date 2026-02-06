@@ -14,20 +14,26 @@ struct MainTabView: View {
     
     var body: some View {
         TabView {
-            CollectionView()
-                .tabItem {
-                    Label("Stamps", systemImage: "bitcoinsign.square.fill")
-                }
+            // MARK: Collection Group
             
-            OrdinalsView()
-                .tabItem {
-                    Label("Ordinals", systemImage: "circle.hexagongrid.fill")
-                }
+            Group {
+                CollectionView()
+                    .tabItem {
+                        Label("Stamps", systemImage: "bitcoinsign.square.fill")
+                    }
+                
+                OrdinalsView()
+                    .tabItem {
+                        Label("Ordinals", systemImage: "circle.hexagongrid.fill")
+                    }
+                
+                CounterpartyView()
+                    .tabItem {
+                        Label("Counterparty", systemImage: "square.3.layers.3d")
+                    }
+            }
             
-            CounterpartyView()
-                .tabItem {
-                    Label("Counterparty", systemImage: "square.3.layers.3d")
-                }
+            // MARK: Settings
             
             SettingsView()
                 .tabItem {
