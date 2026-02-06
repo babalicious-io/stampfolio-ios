@@ -144,7 +144,8 @@ struct AddWalletView: View {
                                 colorName: selectedColor.rawValue,
                                 context: modelContext
                             )
-                            if !viewModel.showAddWallet {
+                            // Check if wallet was successfully added (input cleared, no validation error)
+                            if viewModel.walletAddressInput.isEmpty && viewModel.validationError == nil {
                                 // Reset wallet name and color if successfully added
                                 walletName = ""
                                 selectedColor = .gray
