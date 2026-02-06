@@ -72,9 +72,6 @@ final class CollectionViewModel {
     /// Search text for filtering stamps
     var searchText: String = ""
     
-    /// Whether search is active
-    var isSearching: Bool = false
-    
     /// Filter state: Active ident filters (e.g., "STAMP", "POSH")
     var activeIdentFilters: Set<String> = []
     
