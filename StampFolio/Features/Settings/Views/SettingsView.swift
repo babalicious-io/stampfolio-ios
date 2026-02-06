@@ -152,6 +152,7 @@ struct SettingsView: View {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
                     .textCase(.uppercase)
+                    .foregroundStyle(protocolEditMode.isEditing ? .orange : .orange.secondary)
             }
         }
     }
@@ -174,6 +175,7 @@ struct SettingsView: View {
                     .tint(.orange)
             }
         }
+        .frame(minHeight: 34)
         .onChange(of: toggleState(for: protocolType)) { _, _ in
             enforceProtocolSelection()
         }
