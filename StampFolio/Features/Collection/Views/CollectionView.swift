@@ -301,7 +301,13 @@ struct CollectionView: View {
     
     private var emptyWalletsView: some View {
         ContentUnavailableView {
-            Label("No Wallets Added", systemImage: "wallet.bifold")
+            Label {
+                Text("No Wallets Added")
+                    .foregroundStyle(.orange)
+            } icon: {
+                Image(systemName: "wallet.bifold")
+                    .foregroundStyle(.orange.secondary)
+            }
         } description: {
             Text("Add a Bitcoin wallet to view your stamp collection.\nTap the Settings tab below to get started.")
         }

@@ -126,10 +126,10 @@ struct SettingsView: View {
     
     private var emptyWalletsRow: some View {
         HStack {
-            Image(systemName: "wallet.pass")
-                .foregroundStyle(.orange.secondary)
+            Image(systemName: "wallet.bifold.fill")
+                .foregroundStyle(.secondary)
             Text("No wallets added")
-                .foregroundStyle(.orange)
+                .foregroundStyle(.primary)
         }
     }
     
