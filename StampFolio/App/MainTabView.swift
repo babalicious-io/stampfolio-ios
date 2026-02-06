@@ -28,74 +28,48 @@ struct MainTabView: View {
     // MARK: - State
     
     @State private var showSettings = false
-    @AppStorage("showOrdinals") private var showOrdinals = true
-    @AppStorage("showCounterparty") private var showCounterparty = true
-    @AppStorage("showStamps") private var showStamps = true
-    @State private var protocolOrder: [ProtocolType] = []
+    @AppStorage("TabViewCustomization") private var customization: TabViewCustomization
     
     // MARK: - Body
     
     var body: some View {
         TabView {
-            Group {
-                ForEach(protocolOrder) { protocolType in
-                    if shouldShowProtocol(protocolType) {
-                        protocolTab(for: protocolType)
+            TabSection("Protocols") {
+                ForEach(ProtocolType.allCases) { protocolType in
+                    Tab(protocolType.rawValue, systemImage: protocolType.icon, value: protocolType) {
+                        viewForProtocol(protocolType)
                     }
+                    .customizationID("Tab.\(protocolType.rawValue)")
                 }
             }
+            .customizationID("Tab.protocols")
             
             Tab(role: .search) {
                 SearchView()
             }
         }
+        .tabViewCustomization($customization)
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(\.showSettingsBinding, $showSettings)
         .sheet(isPresented: $showSettings) {
             SettingsView()
-        }
-        .onAppear {
-            loadProtocolOrder()
         }
     }
     
     // MARK: - Helper Methods
     
     @ViewBuilder
-    private func protocolTab(for protocolType: ProtocolType) -> some View {
+    private func viewForProtocol(_ protocolType: ProtocolType) -> some View {
         switch protocolType {
         case .stamps:
-            Tab("Stamps", systemImage: protocolType.icon) {
-                CollectionView()
-            }
+            CollectionView()
         case .ordinals:
-            Tab("Ordinals", systemImage: protocolType.icon) {
-                OrdinalsView()
-            }
+            OrdinalsView()
         case .counterparty:
-            Tab("Counterparty", systemImage: protocolType.icon) {
-                CounterpartyView()
-            }
+            CounterpartyView()
         }
     }
     
-    private func shouldShowProtocol(_ protocolType: ProtocolType) -> Bool {
-        switch protocolType {
-        case .stamps: return showStamps
-        case .ordinals: return showOrdinals
-        case .counterparty: return showCounterparty
-        }
-    }
-    
-    private func loadProtocolOrder() {
-        if let data = UserDefaults.standard.data(forKey: "protocolOrder"),
-           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
-            protocolOrder = decoded
-        } else {
-            // Default order
-            protocolOrder = [.stamps, .ordinals, .counterparty]
-        }
-    }
 }
 
 // MARK: - Preview
