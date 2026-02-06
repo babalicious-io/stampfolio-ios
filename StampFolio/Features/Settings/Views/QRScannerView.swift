@@ -90,7 +90,7 @@ struct QRScannerView: View {
     // MARK: - Unsupported View
     
     private var unsupportedView: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 8) {
             Image(systemName: "camera")
                 .font(.system(size: 64))
                 .fontWeight(.regular)
