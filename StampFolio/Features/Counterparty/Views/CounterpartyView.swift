@@ -82,4 +82,5 @@ struct CounterpartyView: View {
 
 #Preview {
     CounterpartyView()
+        .modelContainer(for: Wallet.self, inMemory: true)
 }

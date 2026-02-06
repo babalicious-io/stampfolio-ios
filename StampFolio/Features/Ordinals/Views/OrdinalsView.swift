@@ -82,4 +82,5 @@ struct OrdinalsView: View {
 
 #Preview {
     OrdinalsView()
+        .modelContainer(for: Wallet.self, inMemory: true)
 }
