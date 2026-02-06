@@ -175,7 +175,7 @@ struct SettingsView: View {
                     .tint(.orange)
             }
         }
-        .frame(minHeight: 30)
+        .frame(minHeight: 28)
         .onChange(of: toggleState(for: protocolType)) { _, _ in
             enforceProtocolSelection()
         }
