@@ -40,9 +40,7 @@ struct SettingsView: View {
                 
                 // Wallets Section
                 Section {
-                    if wallets.isEmpty {
-                        emptyWalletsRow
-                    } else {
+                    if !wallets.isEmpty {
                         ForEach(wallets) { wallet in
                             WalletRow(wallet: wallet)
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -120,17 +118,6 @@ struct SettingsView: View {
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
-    }
-    
-    // MARK: - Empty Wallets Row
-    
-    private var emptyWalletsRow: some View {
-        HStack {
-            Image(systemName: "wallet.bifold.fill")
-                .foregroundStyle(.secondary)
-            Text("No wallets added")
-                .foregroundStyle(.primary)
-        }
     }
     
     // MARK: - Add Wallet Button
