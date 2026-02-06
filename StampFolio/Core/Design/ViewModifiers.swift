@@ -49,7 +49,7 @@ struct EmptyWalletViewModifier: ViewModifier {
         if walletCount == 0 {
             ContentUnavailableView {
                 Label {
-                    Text("No Wallets Added")
+                    Text("No Wallets Configured")
                         .foregroundStyle(.orange)
                 } icon: {
                     Image(systemName: "wallet.bifold")
