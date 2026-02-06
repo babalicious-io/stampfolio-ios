@@ -120,7 +120,6 @@ struct EditWalletView: View {
                         Image(systemName: "checkmark")
                             .foregroundStyle(.white)
                             .fontWeight(.semibold)
-                            .padding(8)
                             .background(Circle().fill(.orange))
                     }
                     .accessibilityLabel("Save changes")

@@ -154,7 +154,7 @@ struct AddWalletView: View {
                         Image(systemName: "plus")
                             .foregroundStyle(.white)
                             .fontWeight(.semibold)
-                            .padding(8)
+                            .padding(16)
                             .background(Circle().fill(.orange))
                     }
                     .disabled(viewModel.walletAddressInput.isEmpty || viewModel.isValidating)
