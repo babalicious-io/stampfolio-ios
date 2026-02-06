@@ -163,17 +163,6 @@ struct SearchView: View {
     }
 }
 
-// MARK: - Bindable Extension for Optional Binding
-
-extension Bindable where Value: AnyObject {
-    subscript<T>(dynamicMember keyPath: ReferenceWritableKeyPath<Value, T?>) -> Binding<T?> {
-        Binding(
-            get: { self.wrappedValue[keyPath: keyPath] },
-            set: { self.wrappedValue[keyPath: keyPath] = $0 }
-        )
-    }
-}
-
 // MARK: - Preview
 
 #Preview {

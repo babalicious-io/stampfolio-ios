@@ -267,7 +267,7 @@ struct CollectionView: View {
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                showSettings.wrappedValue = true
+                showSettings()
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16))

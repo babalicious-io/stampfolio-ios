@@ -18,27 +18,24 @@ struct MainTabView: View {
     
     var body: some View {
         TabView {
-            CollectionView()
-                .tabItem {
-                    Label("Stamps", systemImage: "bitcoinsign.square.fill")
-                }
+            Tab("Stamps", systemImage: "bitcoinsign.square.fill") {
+                CollectionView()
+            }
             
-            OrdinalsView()
-                .tabItem {
-                    Label("Ordinals", systemImage: "circle.hexagongrid.fill")
-                }
+            Tab("Ordinals", systemImage: "circle.hexagongrid.fill") {
+                OrdinalsView()
+            }
             
-            CounterpartyView()
-                .tabItem {
-                    Label("Counterparty", systemImage: "square.3.layers.3d")
-                }
+            Tab("Counterparty", systemImage: "square.3.layers.3d") {
+                CounterpartyView()
+            }
             
             Tab(role: .search) {
                 SearchView()
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .environment(\.showSettings, $showSettings)
+        .environment(\.showSettings, { showSettings = true })
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
