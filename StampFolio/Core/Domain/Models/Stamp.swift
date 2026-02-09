@@ -14,13 +14,13 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
         
     /// Stamp identifier type ("STAMP", "CURSED", etc.) - optional in balance endpoint
-    let ident: String?
+    let stampType: String?
 
     /// Stamp ID (e.g., 1384303)
-    let id: Int
+    let stampId: Int
     
     /// Counterparty ID (e.g., "A888354448084788958")
-    let cpid: String
+    let counterpartyId: String
     
     /// Creator's Bitcoin address
     let creatorAddy: String
@@ -61,9 +61,9 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
-        case ident
-        case id = "stamp"
-        case cpid
+        case stampType = "ident"
+        case stampId = "stamp"
+        case counterpartyId = "cpid"
         case creatorAddy = "creator"
         case creatorName = "creator_name"
         case supply
@@ -80,9 +80,12 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Computed Properties
     
+    /// Identifiable conformance - uses stampId
+    var id: Int { stampId }
+    
     /// URL to the stamp detail page on Stampchain.io
     var stampchainURL: URL {
-        URL(string: "https://stampchain.io/stamp/\(id)")!
+        URL(string: "https://stampchain.io/stamp/\(stampId)")!
     }
 
     /// URL for loading the stamp image
@@ -102,12 +105,12 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
 
     /// Formatted stamp ID (number)
     var formattedStampId: String {
-        "STAMP #\(id)"
+        "STAMP #\(stampId)"
     }
 
     /// Formatted counterparty ID
     var formattedCounterpartyId: String {
-        "CPID \(cpid)"
+        "CPID \(counterpartyId)"
     }
     
     /// Formatted file size
@@ -199,9 +202,9 @@ extension Stamp {
     
     /// Sample stamp for previews and testing
     static let sample = Stamp(
-        ident: "STAMP",
-        id: 1384303,
-        cpid: "A888354448084788958",
+        stampType: "STAMP",
+        stampId: 1384303,
+        counterpartyId: "A888354448084788958",
         creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
         creatorName: "babalicious",
         supply: 1,
@@ -220,9 +223,9 @@ extension Stamp {
     static let samples: [Stamp] = [
         sample,
         Stamp(
-            ident: "STAMP",
-            id: 1384302,
-            cpid: "A888354448084788957",
+            stampType: "STAMP",
+            stampId: 1384302,
+            counterpartyId: "A888354448084788957",
             creatorAddy: "bc1qabc123def456",
             creatorName: nil,
             supply: 42,
@@ -237,9 +240,9 @@ extension Stamp {
             stampUrl: "https://stampchain.io/stamps/1384302.gif"
         ),
         Stamp(
-            ident: "STAMP",
-            id: 74705,
-            cpid: "A888354448084788999",
+            stampType: "STAMP",
+            stampId: 74705,
+            counterpartyId: "A888354448084788999",
             creatorAddy: "bc1qtest",
             creatorName: "divisible_test",
             supply: 1_000_000_000,

@@ -70,9 +70,9 @@ struct DisplayStamp: Identifiable {
     /// Create from StampBalance
     init(from stampBalance: StampBalance) {
         self.stamp = Stamp(
-            ident: "STAMP",
-            id: stampBalance.stamp,
-            cpid: stampBalance.cpid,
+            stampType: "STAMP",
+            stampId: stampBalance.stamp,
+            counterpartyId: stampBalance.cpid,
             creatorAddy: stampBalance.creatorAddy,
             creatorName: stampBalance.creatorName,
             supply: stampBalance.supply ?? Int(stampBalance.balance),

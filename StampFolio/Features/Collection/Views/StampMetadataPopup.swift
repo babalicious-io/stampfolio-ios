@@ -76,7 +76,7 @@ struct StampMetadataPopup: View {
             Spacer()
             
             // Stamp type badge
-            Text(stamp.ident ?? "STAMP")
+            Text(stamp.stampType ?? "STAMP")
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(.primary)

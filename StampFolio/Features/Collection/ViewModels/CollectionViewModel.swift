@@ -104,7 +104,7 @@ final class CollectionViewModel {
                 }
                 
                 // Search by CPID
-                if stamp.cpid.localizedCaseInsensitiveContains(searchText) {
+                if stamp.counterpartyId.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
                 
@@ -131,8 +131,8 @@ final class CollectionViewModel {
         // Apply ident filters
         if !activeIdentFilters.isEmpty {
             result = result.filter { displayStamp in
-                guard let ident = displayStamp.stamp.ident else { return false }
-                return activeIdentFilters.contains(ident)
+                guard let stampType = displayStamp.stamp.stampType else { return false }
+                return activeIdentFilters.contains(stampType)
             }
         }
         
