@@ -18,10 +18,7 @@ struct StampMetadataPopup: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.appColorScheme) private var appColorScheme
-    
-    private var listSectionBackground: Color { colorScheme == .dark ? .black : .white }
     
     // MARK: - Body
     
@@ -31,7 +28,6 @@ struct StampMetadataPopup: View {
                 // Section 1: Stamp Identification
                 Section {
                     stampIdentificationSection
-                        .listRowBackground(listSectionBackground)
                 }
                 
                 // Section 2: Creator, Supply & Market Data
@@ -52,7 +48,6 @@ struct StampMetadataPopup: View {
                 // View on Stampchain Button
                 Section {
                     stampchainLinkButton
-                        .listRowBackground(listSectionBackground)
                 }
             }
             .listSectionSpacing(16)
@@ -98,122 +93,70 @@ struct StampMetadataPopup: View {
                 .background(appColorScheme.primary.opacity(0.8))
                 .clipShape(Capsule())
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.vertical, 4)
     }
     
     // MARK: - Section 2: Creator, Supply & Market Data
     
-    private var creatorAndMarketSection: some View {
-        VStack(spacing: 12) {
-            // Creator name (if available)
-            if let creatorName = stamp.creatorName {
-                MetadataRow(
-                    label: "Creator",
-                    value: creatorName
-                )
+    @ViewBuilder
+    private var creatorAndMarketContent: some View {
+        if let creatorName = stamp.creatorName {
+            MetadataRow(label: "Creator", value: creatorName)
+        }
+        
+        MetadataRow(
+            label: "Address",
+            value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
+            fullValue: stamp.creatorAddy,
+            isMonospace: true
+        )
+        
+        MetadataRow(label: "Editions", value: "\(stamp.supply)")
+        
+        if let marketData = stamp.marketData {
+            if let floorPrice = marketData.formattedFloorPrice {
+                MetadataRow(label: "Floor Price", value: floorPrice)
             }
-            
-            // Creator address
-            MetadataRow(
-                label: "Address",
-                value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
-                fullValue: stamp.creatorAddy,
-                isMonospace: true
-            )
-            
-            // Editions
-            MetadataRow(
-                label: "Editions",
-                value: "\(stamp.supply)"
-            )
-            
-            // Market Data (if available)
-            if let marketData = stamp.marketData {
-                if let floorPrice = marketData.formattedFloorPrice {
-                    MetadataRow(
-                        label: "Floor Price",
-                        value: floorPrice
-                    )
-                }
-                
-                if let holders = marketData.formattedHolderCount {
-                    MetadataRow(
-                        label: "Holders",
-                        value: holders
-                    )
-                }
-                
-                if let dispensers = marketData.openDispensersCount, dispensers > 0 {
-                    MetadataRow(
-                        label: "Listings",
-                        value: "\(dispensers)"
-                    )
-                }
+            if let holders = marketData.formattedHolderCount {
+                MetadataRow(label: "Holders", value: holders)
+            }
+            if let dispensers = marketData.openDispensersCount, dispensers > 0 {
+                MetadataRow(label: "Listings", value: "\(dispensers)")
             }
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     // MARK: - Section 3: File Information
     
-    private var fileInformationSection: some View {
-        VStack(spacing: 12) {
-            // File Type
-            if let mimetype = stamp.stampMimetype {
-                MetadataRow(
-                    label: "File Type",
-                    value: mimetype
-                )
-            }
-            
-            // File Size
-            if let formattedSize = stamp.formattedFileSize {
-                MetadataRow(
-                    label: "File Size",
-                    value: formattedSize
-                )
-            }
+    @ViewBuilder
+    private var fileInformationContent: some View {
+        if let mimetype = stamp.stampMimetype {
+            MetadataRow(label: "File Type", value: mimetype)
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        if let formattedSize = stamp.formattedFileSize {
+            MetadataRow(label: "File Size", value: formattedSize)
+        }
     }
     
     // MARK: - Section 4: Blockchain Information
     
-    private var blockchainInformationSection: some View {
-        VStack(spacing: 12) {
-            // Date (optional)
-            if let blockTime = stamp.blockTime {
-                MetadataRow(
-                    label: "Date",
-                    value: blockTime.formatted(date: .abbreviated, time: .shortened)
-                )
-            }
-            
-            // Block Height (optional)
-            if let blockIndex = stamp.blockIndex {
-                MetadataRow(
-                    label: "Block",
-                    value: "#\(blockIndex)"
-                )
-            }
-            
-            // Transaction Hash
+    @ViewBuilder
+    private var blockchainInformationContent: some View {
+        if let blockTime = stamp.blockTime {
             MetadataRow(
-                label: "Tx Hash",
-                value: stamp.txHash.prefix(8) + "..." + stamp.txHash.suffix(8),
-                fullValue: stamp.txHash,
-                isMonospace: true
+                label: "Date",
+                value: blockTime.formatted(date: .abbreviated, time: .shortened)
             )
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        if let blockIndex = stamp.blockIndex {
+            MetadataRow(label: "Block", value: "#\(blockIndex)")
+        }
+        MetadataRow(
+            label: "Tx Hash",
+            value: stamp.txHash.prefix(8) + "..." + stamp.txHash.suffix(8),
+            fullValue: stamp.txHash,
+            isMonospace: true
+        )
     }
     
     // MARK: - Stampchain Link Button
