@@ -166,7 +166,7 @@ struct CollectionView: View {
                 cycleViewMode()
             } label: {
                 Image(systemName: viewModeIcon)
-                    .font(.system(size: 20))
+                    .font(.system(size: 18))
                     .foregroundStyle(Color.primary)
             }
             .accessibilityLabel("View mode")
