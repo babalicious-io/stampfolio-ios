@@ -115,7 +115,7 @@ struct StampDetailView: View {
             KFAnimatedImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
-                        .tint(appColorScheme.primaryColor)
+                        .tint(appColorScheme.primary)
                 }
                 .cacheOriginalImage()
                 .aspectRatio(contentMode: .fit)
@@ -125,7 +125,7 @@ struct StampDetailView: View {
             KFImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
-                        .tint(appColorScheme.primaryColor)
+                        .tint(appColorScheme.primary)
                 }
                 .retry(maxCount: 3)
                 .resizable()
@@ -301,7 +301,7 @@ struct TextContentView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackground(color: appColorScheme.primaryColor)
+        LinearGradient.stampFullscreenBackground(color: appColorScheme.primary)
     }
     
     var body: some View {
@@ -356,7 +356,7 @@ struct AudioContentView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackground(color: appColorScheme.primaryColor)
+        LinearGradient.stampFullscreenBackground(color: appColorScheme.primary)
     }
     
     var body: some View {
@@ -421,7 +421,7 @@ struct VideoContentView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackground(color: appColorScheme.primaryColor)
+        LinearGradient.stampFullscreenBackground(color: appColorScheme.primary)
     }
     
     var body: some View {

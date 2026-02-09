@@ -58,7 +58,7 @@ struct StampFolioApp: App {
                 .environment(networkMonitor)
                 .environment(\.appColorScheme, colorScheme)
                 .preferredColorScheme(isDarkMode ? .dark : .light)
-                .tint(colorScheme.primaryColor)
+                .tint(colorScheme.primary)
                 .onAppear {
                     networkMonitor.start()
                 }

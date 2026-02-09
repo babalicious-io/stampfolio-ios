@@ -51,10 +51,10 @@ struct EmptyWalletViewModifier: ViewModifier {
             ContentUnavailableView {
                 Label {
                     Text("No Wallets Configured")
-                        .foregroundStyle(appColorScheme.primaryColor)
+                        .foregroundStyle(appColorScheme.primary)
                 } icon: {
                     Image(systemName: "wallet.bifold")
-                        .foregroundStyle(appColorScheme.secondaryColor)
+                        .foregroundStyle(appColorScheme.secondary)
                 }
             } description: {
                 Text("Add a Bitcoin wallet to view your digital art collections.")

@@ -204,7 +204,7 @@ struct CollectionView: View {
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 18))
-                        .foregroundStyle(viewModel.hasActiveFilters ? appColorScheme.primaryColor : Color.primary)
+                        .foregroundStyle(viewModel.hasActiveFilters ? appColorScheme.primary : Color.primary)
                 }
                 .accessibilityLabel("Filter stamps")
                 .accessibilityHint("Filter stamps by type, format, or edition count")
@@ -263,7 +263,7 @@ struct CollectionView: View {
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
                         .font(.system(size: 20))
-                        .foregroundStyle(hasActiveSort ? appColorScheme.primaryColor : Color.primary)
+                        .foregroundStyle(hasActiveSort ? appColorScheme.primary : Color.primary)
                 }
                 .accessibilityLabel("Sort stamps")
                 .accessibilityHint("Choose how to sort your stamp collection")
@@ -309,7 +309,7 @@ struct CollectionView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1)
-                .tint(appColorScheme.primaryColor)
+                .tint(appColorScheme.primary)
         }
     }
     
@@ -410,7 +410,7 @@ struct CollectionView: View {
         .foregroundStyle(.primary)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
-        .glassEffect(.regular.tint(appColorScheme.primaryColor).interactive(), in: .rect(cornerRadius: 8))
+        .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .rect(cornerRadius: 8))
         .padding()
     }
     

@@ -62,10 +62,10 @@ struct SearchView: View {
         ContentUnavailableView {
             Label {
                 Text("Search")
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
             } icon: {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(appColorScheme.secondaryColor)
+                    .foregroundStyle(appColorScheme.secondary)
             }
         } description: {
             Text("Search by stamp or ordinals number, CPID, txHash, creator or genesis addy, or artist name.")

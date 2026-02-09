@@ -177,7 +177,7 @@ struct StampRowView: View {
                     .foregroundStyle(.secondary)
                 
                 ProgressView()
-                    .tint(appColorScheme.primaryColor)
+                    .tint(appColorScheme.primary)
                     .scaleEffect(0.7)
             }
         }
@@ -192,7 +192,7 @@ struct StampRowView: View {
             VStack(spacing: 4) {
                 Image(systemName: "photo.badge.exclamationmark")
                     .font(.caption)
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
                 
                 Text("Failed")
                     .font(.caption2)
@@ -204,7 +204,7 @@ struct StampRowView: View {
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primaryColor)
+        LinearGradient.stampCardBackground(color: appColorScheme.primary)
     }
     
     // MARK: - Audio Placeholder View

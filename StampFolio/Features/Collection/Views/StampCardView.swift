@@ -156,7 +156,7 @@ struct StampCardView: View {
                     .foregroundStyle(.secondary)
                 
                 ProgressView()
-                    .tint(appColorScheme.primaryColor)
+                    .tint(appColorScheme.primary)
             }
         }
     }
@@ -170,7 +170,7 @@ struct StampCardView: View {
             VStack(spacing: 8) {
                 Image(systemName: "photo.badge.exclamationmark")
                     .font(.title)
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
                 
                 Text("Failed to load")
                     .font(.caption2)
@@ -181,7 +181,7 @@ struct StampCardView: View {
                 } label: {
                     Text("Retry")
                         .font(.caption2)
-                        .foregroundStyle(appColorScheme.primaryColor)
+                        .foregroundStyle(appColorScheme.primary)
                 }
             }
         }
@@ -190,7 +190,7 @@ struct StampCardView: View {
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primaryColor)
+        LinearGradient.stampCardBackground(color: appColorScheme.primary)
     }
     
     // MARK: - Audio Placeholder View
@@ -392,7 +392,7 @@ struct TextStampView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primaryColor)
+        LinearGradient.stampCardBackground(color: appColorScheme.primary)
     }
     
     var body: some View {

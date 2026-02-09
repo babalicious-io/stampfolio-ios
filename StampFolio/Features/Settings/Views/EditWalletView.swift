@@ -96,7 +96,7 @@ struct EditWalletView: View {
                         
                         Text(wallet.addressType.rawValue)
                             .font(.caption)
-                            .foregroundStyle(appColorScheme.primaryColor)
+                            .foregroundStyle(appColorScheme.primary)
                     }
                 } header: {
                     Text("Wallet Details")
@@ -121,7 +121,7 @@ struct EditWalletView: View {
                         Image(systemName: "checkmark")
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(appColorScheme.primaryColor)
+                    .tint(appColorScheme.primary)
                     .fontWeight(.semibold)
                     .accessibilityLabel("Save changes")
                 }

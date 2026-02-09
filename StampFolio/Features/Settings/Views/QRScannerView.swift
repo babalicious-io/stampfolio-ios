@@ -73,7 +73,7 @@ struct QRScannerView: View {
             VStack(spacing: 16) {
                 Image(systemName: "qrcode.viewfinder")
                     .font(.system(size: 48))
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
                 
                 Text("Scan your Bitcoin wallet address QR code")
                     .font(.body)
@@ -94,10 +94,10 @@ struct QRScannerView: View {
         ContentUnavailableView {
             Label {
                 Text("Camera Not Available")
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
             } icon: {
                 Image(systemName: "camera")
-                    .foregroundStyle(appColorScheme.secondaryColor)
+                    .foregroundStyle(appColorScheme.secondary)
             }
         } description: {
             Text("QR code scanning requires camera access. Please enable camera permissions in Settings.")

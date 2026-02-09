@@ -23,25 +23,32 @@ enum AppColorScheme: String, CaseIterable, Identifiable, Codable {
         }
     }
     
-    var primaryColor: Color {
+    var primary: Color {
         switch self {
         case .satoshiOrange:
             return .orange
         case .kevinPurple:
-            return Color(red: 0.58, green: 0.4, blue: 0.8)
+            return .purple
         case .pepeGreen:
-            return Color(red: 0.5, green: 0.8, blue: 0.4)
+            return .green
         }
     }
     
-    var secondaryColor: Color {
-        primaryColor.opacity(0.7)
+    var secondary: Color {
+        switch self {
+        case .satoshiOrange:
+            return .orange.secondary
+        case .kevinPurple:
+            return .purple.secondary
+        case .pepeGreen:
+            return .green.secondary
+        }
     }
     
     /// Gradient from bottom-left (primary) to top-right (secondary)
     var gradient: LinearGradient {
         LinearGradient(
-            colors: [primaryColor, secondaryColor],
+            colors: [primary, secondary],
             startPoint: .bottomLeading,
             endPoint: .topTrailing
         )

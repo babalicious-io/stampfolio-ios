@@ -73,7 +73,7 @@ struct SettingsView: View {
                                     } label: {
                                         Label("Edit", systemImage: "pencil")
                                     }
-                                    .tint(appColorScheme.primaryColor)
+                                    .tint(appColorScheme.primary)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
@@ -139,11 +139,11 @@ struct SettingsView: View {
         Toggle(isOn: $isDarkMode) {
             HStack(spacing: isDarkMode ? 14 : 8) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
             }
         }
-        .tint(appColorScheme.primaryColor)
+        .tint(appColorScheme.primary)
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
@@ -161,7 +161,7 @@ struct SettingsView: View {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
                     .textCase(.uppercase)
-                    .foregroundStyle(protocolEditMode.isEditing ? appColorScheme.primaryColor : appColorScheme.primaryColor.opacity(0.8))
+                    .foregroundStyle(protocolEditMode.isEditing ? appColorScheme.primary : appColorScheme.primary.opacity(0.8))
             }
         }
     }
@@ -173,7 +173,7 @@ struct SettingsView: View {
     private func protocolRow(for protocolType: ProtocolType) -> some View {
         HStack(spacing: 14) {
             Image(systemName: protocolType.icon)
-                .foregroundStyle(appColorScheme.primaryColor)
+                .foregroundStyle(appColorScheme.primary)
             Text(protocolEditMode.isEditing
                  ? protocolType.rawValue
                  : (toggleState(for: protocolType) ? "Display \(protocolType.rawValue)" : "Hide \(protocolType.rawValue)"))
@@ -181,7 +181,7 @@ struct SettingsView: View {
             if !protocolEditMode.isEditing {
                 Toggle("", isOn: toggleBinding(for: protocolType))
                     .labelsHidden()
-                    .tint(appColorScheme.primaryColor)
+                    .tint(appColorScheme.primary)
             }
         }
         .frame(minHeight: 28)
@@ -214,9 +214,9 @@ struct SettingsView: View {
         } label: {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
                 Text("Add Wallet")
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
             }
         }
         .accessibilityLabel("Add wallet")
@@ -270,11 +270,11 @@ struct SettingsView: View {
         Toggle(isOn: $showWalletIcons) {
             HStack(spacing: 14) {
                 Image(systemName: "wallet.bifold.fill")
-                    .foregroundStyle(appColorScheme.primaryColor)
+                    .foregroundStyle(appColorScheme.primary)
                 Text(showWalletIcons ? "Display Wallet Icon" : "Hide Wallet Icon")    
             }
         }
-        .tint(appColorScheme.primaryColor)
+        .tint(appColorScheme.primary)
         .accessibilityLabel(showWalletIcons ? "Display wallet icon toggle" : "Hide wallet icon toggle")
         .accessibilityValue(showWalletIcons ? "On" : "Off")
         .accessibilityHint(showWalletIcons ? "Double tap to toggle wallet icon display on stamp cards" : "Double tap to toggle wallet icon hide on stamp cards")
@@ -304,7 +304,7 @@ struct SettingsView: View {
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption)
                 }
-                .foregroundStyle(appColorScheme.primaryColor)
+                .foregroundStyle(appColorScheme.primary)
             }
             .accessibilityLabel("Visit Stampchain.io")
         }
@@ -376,7 +376,7 @@ struct WalletRow: View {
                 
                 Text(wallet.addressType.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(appColorScheme.secondaryColor)
+                    .foregroundStyle(appColorScheme.secondary)
             }
             
             HStack {
