@@ -104,13 +104,13 @@ struct ScaledSpacing {
 // MARK: - Reusable Gradients
 
 extension LinearGradient {
-    /// Standard stamp card background gradient with custom accent color
-    static func stampCardBackground(color: Color) -> LinearGradient {
+    /// Standard stamp card background gradient with custom accent color and theme-adaptive background
+    static func stampCardBackground(color: Color, backgroundColor: Color = .black) -> LinearGradient {
         LinearGradient(
             stops: [
                 Gradient.Stop(color: color, location: 0),
-                Gradient.Stop(color: .black, location: 0.3),
-                Gradient.Stop(color: .black, location: 0.8),
+                Gradient.Stop(color: backgroundColor, location: 0.3),
+                Gradient.Stop(color: backgroundColor, location: 0.8),
                 Gradient.Stop(color: color, location: 1)
             ],
             startPoint: .bottomLeading,

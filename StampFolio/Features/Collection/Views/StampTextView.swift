@@ -23,9 +23,11 @@ struct StampTextView: View {
     // MARK: - Environment
     
     @Environment(\.appColorScheme) private var appColorScheme
+    @Environment(\.colorScheme) private var colorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primary)
+        let backgroundColor: Color = colorScheme == .dark ? .black : .white
+        return LinearGradient.stampCardBackground(color: appColorScheme.primary, backgroundColor: backgroundColor)
     }
     
     // MARK: - Body
@@ -36,12 +38,12 @@ struct StampTextView: View {
             
             if isLoading {
                 ProgressView()
-                    .tint(appColorScheme.primary)
+                    .tint(colorScheme == .dark ? .white : .black)
             } else {
                 Text(content)
                     .font(.system(.caption2))
                     .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(colorScheme == .dark ? .white : .black)
                     .multilineTextAlignment(.center)
                     .lineLimit(8)
                     .padding(8)

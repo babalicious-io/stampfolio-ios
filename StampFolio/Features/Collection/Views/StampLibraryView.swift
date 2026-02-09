@@ -17,6 +17,7 @@ struct StampLibraryView: View {
     // MARK: - Environment
     
     @Environment(\.appColorScheme) private var appColorScheme
+    @Environment(\.colorScheme) private var colorScheme
     
     // MARK: - Body
     
@@ -27,13 +28,14 @@ struct StampLibraryView: View {
             Text(label)
                 .font(.system(size: 44))
                 .fontWeight(.bold)
-                .foregroundStyle(.white)
+                .foregroundStyle(colorScheme == .dark ? .white : .black)
         }
     }
     
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primary)
+        let backgroundColor: Color = colorScheme == .dark ? .black : .white
+        return LinearGradient.stampCardBackground(color: appColorScheme.primary, backgroundColor: backgroundColor)
     }
 }

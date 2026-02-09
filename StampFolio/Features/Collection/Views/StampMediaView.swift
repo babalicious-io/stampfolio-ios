@@ -31,6 +31,7 @@ struct StampMediaView: View {
     // MARK: - Environment
     
     @Environment(\.appColorScheme) private var appColorScheme
+    @Environment(\.colorScheme) private var colorScheme
     
     // MARK: - Body
     
@@ -40,13 +41,14 @@ struct StampMediaView: View {
             
             Image(systemName: type.iconName)
                 .font(.system(size: 44))
-                .foregroundStyle(.white)
+                .foregroundStyle(colorScheme == .dark ? .white : .black)
         }
     }
     
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primary)
+        let backgroundColor: Color = colorScheme == .dark ? .black : .white
+        return LinearGradient.stampCardBackground(color: appColorScheme.primary, backgroundColor: backgroundColor)
     }
 }
