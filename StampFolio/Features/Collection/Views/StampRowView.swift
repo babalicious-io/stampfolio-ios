@@ -37,11 +37,18 @@ struct StampRowView: View {
     
     var body: some View {
         rowContent
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
             .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onInfoTap()
+            }
+            .onLongPressGesture(minimumDuration: 0.5) {
+                onTap()
+            }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(stamp.formattedNumber), \(artistName), Balance: \(displayStamp.formattedQuantity)")
-            .accessibilityHint("Double tap to view full screen")
+            .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
     
@@ -76,24 +83,9 @@ struct StampRowView: View {
             
             Spacer()
             
-            // Action buttons
-            HStack(spacing: 8) {
-                // Wallet icon (conditional)
-                if showWalletIcons, displayStamp.walletAddress != nil {
-                    walletIcon
-                }
-                
-                // Info button
-                Button {
-                    onInfoTap()
-                } label: {
-                    Image(systemName: "info.circle")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Stamp metadata")
-                .accessibilityHint("Opens stamp metadata popup")
+            // Wallet icon (conditional)
+            if showWalletIcons, displayStamp.walletAddress != nil {
+                walletIcon
             }
         }
         .padding(12)
