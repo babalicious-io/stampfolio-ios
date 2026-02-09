@@ -106,7 +106,9 @@ struct SearchView: View {
                             viewModel.selectedStamp = displayStamp
                         },
                         onInfoTap: {
-                            viewModel.metadataStamp = displayStamp
+                            Task { @MainActor in
+                                viewModel.metadataStamp = displayStamp
+                            }
                         }
                     )
                 }

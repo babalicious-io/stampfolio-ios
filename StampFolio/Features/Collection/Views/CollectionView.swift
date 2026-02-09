@@ -400,7 +400,9 @@ struct CollectionView: View {
                                 viewModel.selectedStamp = displayStamp
                             },
                             onInfoTap: {
-                                viewModel.metadataStamp = displayStamp
+                                Task { @MainActor in
+                                    viewModel.metadataStamp = displayStamp
+                                }
                             }
                         )
                     }
@@ -416,7 +418,9 @@ struct CollectionView: View {
                                 viewModel.selectedStamp = displayStamp
                             },
                             onInfoTap: {
-                                viewModel.metadataStamp = displayStamp
+                                Task { @MainActor in
+                                    viewModel.metadataStamp = displayStamp
+                                }
                             }
                         )
                     }
