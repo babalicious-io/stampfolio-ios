@@ -15,6 +15,7 @@ struct SearchView: View {
     
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -61,10 +62,10 @@ struct SearchView: View {
         ContentUnavailableView {
             Label {
                 Text("Search")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(appColorScheme.primaryColor)
             } icon: {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.orange.secondary)
+                    .foregroundStyle(appColorScheme.secondaryColor)
             }
         } description: {
             Text("Search by stamp or ordinals number, CPID, txHash, creator or genesis addy, or artist name.")

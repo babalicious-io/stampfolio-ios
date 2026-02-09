@@ -16,6 +16,7 @@ struct AddWalletView: View {
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorScheme) private var appColorScheme
     
     // MARK: - State
     
@@ -88,7 +89,7 @@ struct AddWalletView: View {
                             viewModel.showQRScanner = true
                         } label: {
                             Image(systemName: "qrcode")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(appColorScheme.primaryColor)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Scan QR code")
@@ -156,7 +157,7 @@ struct AddWalletView: View {
                         Image(systemName: "plus")
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.orange)
+                    .tint(appColorScheme.primaryColor)
                     .disabled(viewModel.walletAddressInput.isEmpty || viewModel.isValidating)
                     .fontWeight(.semibold)
                     .accessibilityLabel("Add wallet")
@@ -185,7 +186,7 @@ struct AddWalletView: View {
         
         return HStack {
             Image(systemName: addressTypeIcon(for: addressType))
-                .foregroundStyle(.orange)
+                .foregroundStyle(appColorScheme.primaryColor)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(addressType.rawValue)
@@ -223,7 +224,7 @@ struct AddWalletView: View {
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(.orange)
+                    .tint(appColorScheme.primaryColor)
                 
                 Text("Validating wallet...")
                     .font(.body)

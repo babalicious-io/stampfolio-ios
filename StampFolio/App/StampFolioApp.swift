@@ -24,6 +24,9 @@ struct StampFolioApp: App {
     /// Theme preference stored in UserDefaults
     @AppStorage("isDarkMode") private var isDarkMode = true
     
+    /// Color scheme preference stored in UserDefaults
+    @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
+    
     // MARK: - SwiftData
     
     /// Model container for SwiftData persistence
@@ -47,11 +50,15 @@ struct StampFolioApp: App {
     
     var body: some Scene {
         WindowGroup {
+            let colorScheme = AppColorScheme(rawValue: colorSchemeRawValue) ?? .satoshiOrange
+            
             ContentView()
                 .environment(settingsViewModel)
                 .environment(collectionViewModel)
                 .environment(networkMonitor)
+                .environment(\.appColorScheme, colorScheme)
                 .preferredColorScheme(isDarkMode ? .dark : .light)
+                .tint(colorScheme.primaryColor)
                 .onAppear {
                     networkMonitor.start()
                 }

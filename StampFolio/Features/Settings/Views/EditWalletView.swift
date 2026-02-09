@@ -15,6 +15,7 @@ struct EditWalletView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorScheme) private var appColorScheme
     
     // MARK: - Properties
     
@@ -95,7 +96,7 @@ struct EditWalletView: View {
                         
                         Text(wallet.addressType.rawValue)
                             .font(.caption)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(appColorScheme.primaryColor)
                     }
                 } header: {
                     Text("Wallet Details")
@@ -120,7 +121,7 @@ struct EditWalletView: View {
                         Image(systemName: "checkmark")
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.orange)
+                    .tint(appColorScheme.primaryColor)
                     .fontWeight(.semibold)
                     .accessibilityLabel("Save changes")
                 }

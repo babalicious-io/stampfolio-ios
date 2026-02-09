@@ -18,6 +18,7 @@ struct StampMetadataPopup: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.appColorScheme) private var appColorScheme
     
     // MARK: - Body
     
@@ -69,7 +70,7 @@ struct StampMetadataPopup: View {
                 if let creatorName = stamp.creatorName {
                     Text("by \(creatorName)")
                         .font(.subheadline)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(appColorScheme.primaryColor)
                 }
             }
             
@@ -82,7 +83,7 @@ struct StampMetadataPopup: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.orange.opacity(0.8))
+                .background(appColorScheme.primaryColor.opacity(0.8))
                 .clipShape(Capsule())
         }
     }

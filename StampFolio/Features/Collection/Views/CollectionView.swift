@@ -26,6 +26,7 @@ struct CollectionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
+    @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
@@ -203,7 +204,7 @@ struct CollectionView: View {
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 18))
-                        .foregroundStyle(viewModel.hasActiveFilters ? Color.orange : Color.primary)
+                        .foregroundStyle(viewModel.hasActiveFilters ? appColorScheme.primaryColor : Color.primary)
                 }
                 .accessibilityLabel("Filter stamps")
                 .accessibilityHint("Filter stamps by type, format, or edition count")
@@ -262,7 +263,7 @@ struct CollectionView: View {
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
                         .font(.system(size: 20))
-                        .foregroundStyle(hasActiveSort ? Color.orange : Color.primary)
+                        .foregroundStyle(hasActiveSort ? appColorScheme.primaryColor : Color.primary)
                 }
                 .accessibilityLabel("Sort stamps")
                 .accessibilityHint("Choose how to sort your stamp collection")
@@ -308,7 +309,7 @@ struct CollectionView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1)
-                .tint(.orange)
+                .tint(appColorScheme.primaryColor)
         }
     }
     
@@ -409,7 +410,7 @@ struct CollectionView: View {
         .foregroundStyle(.primary)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
-        .glassEffect(.regular.tint(.orange).interactive(), in: .rect(cornerRadius: 8))
+        .glassEffect(.regular.tint(appColorScheme.primaryColor).interactive(), in: .rect(cornerRadius: 8))
         .padding()
     }
     

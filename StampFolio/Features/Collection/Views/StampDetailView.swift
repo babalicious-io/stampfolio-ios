@@ -22,6 +22,7 @@ struct StampDetailView: View {
     // MARK: - Environment
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorScheme) private var appColorScheme
     
     // MARK: - State
     
@@ -114,7 +115,7 @@ struct StampDetailView: View {
             KFAnimatedImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
-                        .tint(.orange)
+                        .tint(appColorScheme.primaryColor)
                 }
                 .cacheOriginalImage()
                 .aspectRatio(contentMode: .fit)
@@ -124,7 +125,7 @@ struct StampDetailView: View {
             KFImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
-                        .tint(.orange)
+                        .tint(appColorScheme.primaryColor)
                 }
                 .retry(maxCount: 3)
                 .resizable()
@@ -297,9 +298,10 @@ struct TextContentView: View {
     let url: URL?
     @State private var content: String = ""
     @State private var isLoading = true
+    @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackgroundGradient
+        LinearGradient.stampFullscreenBackground(color: appColorScheme.primaryColor)
     }
     
     var body: some View {
@@ -351,9 +353,10 @@ struct AudioContentView: View {
     let url: URL?
     @State private var isPlaying = false
     @State private var player: AVPlayer?
+    @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackgroundGradient
+        LinearGradient.stampFullscreenBackground(color: appColorScheme.primaryColor)
     }
     
     var body: some View {
@@ -415,9 +418,10 @@ struct AudioContentView: View {
 struct VideoContentView: View {
     let url: URL?
     @State private var player: AVPlayer?
+    @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackgroundGradient
+        LinearGradient.stampFullscreenBackground(color: appColorScheme.primaryColor)
     }
     
     var body: some View {

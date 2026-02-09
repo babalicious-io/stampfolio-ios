@@ -25,6 +25,7 @@ struct StampRowView: View {
     // MARK: - Environment
     
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \Wallet.addedDate) private var wallets: [Wallet]
     
     // MARK: - State
@@ -176,7 +177,7 @@ struct StampRowView: View {
                     .foregroundStyle(.secondary)
                 
                 ProgressView()
-                    .tint(.orange)
+                    .tint(appColorScheme.primaryColor)
                     .scaleEffect(0.7)
             }
         }
@@ -191,7 +192,7 @@ struct StampRowView: View {
             VStack(spacing: 4) {
                 Image(systemName: "photo.badge.exclamationmark")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(appColorScheme.primaryColor)
                 
                 Text("Failed")
                     .font(.caption2)
@@ -203,7 +204,7 @@ struct StampRowView: View {
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient
+        LinearGradient.stampCardBackground(color: appColorScheme.primaryColor)
     }
     
     // MARK: - Audio Placeholder View

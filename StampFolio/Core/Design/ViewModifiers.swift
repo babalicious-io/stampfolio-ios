@@ -44,16 +44,17 @@ struct ShimmerModifier: ViewModifier {
 struct EmptyWalletViewModifier: ViewModifier {
     let walletCount: Int
     @Binding var showAddWallet: Bool
+    @Environment(\.appColorScheme) private var appColorScheme
     
     func body(content: Content) -> some View {
         if walletCount == 0 {
             ContentUnavailableView {
                 Label {
                     Text("No Wallets Configured")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(appColorScheme.primaryColor)
                 } icon: {
                     Image(systemName: "wallet.bifold")
-                        .foregroundStyle(.orange.secondary)
+                        .foregroundStyle(appColorScheme.secondaryColor)
                 }
             } description: {
                 Text("Add a Bitcoin wallet to view your digital art collections.")
@@ -103,27 +104,39 @@ struct ScaledSpacing {
 // MARK: - Reusable Gradients
 
 extension LinearGradient {
-    /// Standard stamp card background gradient - orange to orange with black center
-    static let stampCardBackgroundGradient = LinearGradient(
-        stops: [
-            Gradient.Stop(color: .orange, location: 0),
-            Gradient.Stop(color: .black, location: 0.3),
-            Gradient.Stop(color: .black, location: 0.8),
-            Gradient.Stop(color: .orange, location: 1)
-        ],
-        startPoint: .bottomLeading,
-        endPoint: .topTrailing
-    )
+    /// Standard stamp card background gradient with custom accent color
+    static func stampCardBackground(color: Color) -> LinearGradient {
+        LinearGradient(
+            stops: [
+                Gradient.Stop(color: color, location: 0),
+                Gradient.Stop(color: .black, location: 0.3),
+                Gradient.Stop(color: .black, location: 0.8),
+                Gradient.Stop(color: color, location: 1)
+            ],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
     
-    /// Fullscreen background gradient - orange to orange with black center
-    static let stampFullscreenBackgroundGradient = LinearGradient(
-        stops: [
-            Gradient.Stop(color: .orange, location: 0),
-            Gradient.Stop(color: .black, location: 0.2),
-            Gradient.Stop(color: .black, location: 0.9),
-            Gradient.Stop(color: .orange, location: 1)
-        ],
-        startPoint: .bottomLeading,
-        endPoint: .topTrailing
-    )
+    /// Fullscreen background gradient with custom accent color
+    static func stampFullscreenBackground(color: Color) -> LinearGradient {
+        LinearGradient(
+            stops: [
+                Gradient.Stop(color: color, location: 0),
+                Gradient.Stop(color: .black, location: 0.2),
+                Gradient.Stop(color: .black, location: 0.9),
+                Gradient.Stop(color: color, location: 1)
+            ],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
+    
+    /// Legacy support - orange card background gradient
+    @available(*, deprecated, message: "Use stampCardBackground(color:) instead")
+    static let stampCardBackgroundGradient = LinearGradient.stampCardBackground(color: .orange)
+    
+    /// Legacy support - orange fullscreen background gradient
+    @available(*, deprecated, message: "Use stampFullscreenBackground(color:) instead")
+    static let stampFullscreenBackgroundGradient = LinearGradient.stampFullscreenBackground(color: .orange)
 }

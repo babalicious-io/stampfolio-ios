@@ -25,9 +25,11 @@ struct SettingsView: View {
     @AppStorage("showOrdinals") private var showOrdinals = true
     @AppStorage("showCounterparty") private var showCounterparty = true
     @AppStorage("showStamps") private var showStamps = true
+    @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
     @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: Wallet?
     @State private var protocolEditMode: EditMode = .inactive
+    @Environment(\.appColorScheme) private var appColorScheme
     
     // MARK: - Body
     
@@ -41,6 +43,13 @@ struct SettingsView: View {
                     themeToggle
                 } header: {
                     Text("Appearance")
+                }
+                
+                // Color Scheme Section
+                Section {
+                    colorSchemeRow
+                } header: {
+                    Text("Color Scheme")
                 }
                 
                 // Protocols Section
@@ -64,7 +73,7 @@ struct SettingsView: View {
                                     } label: {
                                         Label("Edit", systemImage: "pencil")
                                     }
-                                    .tint(.orange)
+                                    .tint(appColorScheme.primaryColor)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
@@ -130,11 +139,11 @@ struct SettingsView: View {
         Toggle(isOn: $isDarkMode) {
             HStack(spacing: isDarkMode ? 14 : 8) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(appColorScheme.primaryColor)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
             }
         }
-        .tint(.orange)
+        .tint(appColorScheme.primaryColor)
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
@@ -152,7 +161,7 @@ struct SettingsView: View {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
                     .textCase(.uppercase)
-                    .foregroundStyle(protocolEditMode.isEditing ? Color.orange : Color.orange.opacity(0.8))
+                    .foregroundStyle(protocolEditMode.isEditing ? appColorScheme.primaryColor : appColorScheme.primaryColor.opacity(0.8))
             }
         }
     }
@@ -164,7 +173,7 @@ struct SettingsView: View {
     private func protocolRow(for protocolType: ProtocolType) -> some View {
         HStack(spacing: 14) {
             Image(systemName: protocolType.icon)
-                .foregroundStyle(.orange)
+                .foregroundStyle(appColorScheme.primaryColor)
             Text(protocolEditMode.isEditing
                  ? protocolType.rawValue
                  : (toggleState(for: protocolType) ? "Display \(protocolType.rawValue)" : "Hide \(protocolType.rawValue)"))
@@ -172,7 +181,7 @@ struct SettingsView: View {
             if !protocolEditMode.isEditing {
                 Toggle("", isOn: toggleBinding(for: protocolType))
                     .labelsHidden()
-                    .tint(.orange)
+                    .tint(appColorScheme.primaryColor)
             }
         }
         .frame(minHeight: 28)
@@ -205,13 +214,54 @@ struct SettingsView: View {
         } label: {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(appColorScheme.primaryColor)
                 Text("Add Wallet")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(appColorScheme.primaryColor)
             }
         }
         .accessibilityLabel("Add wallet")
         .accessibilityHint("Opens a form to add a new Bitcoin wallet")
+    }
+    
+    // MARK: - Color Scheme Row
+    
+    private var colorSchemeRow: some View {
+        let currentScheme = AppColorScheme(rawValue: colorSchemeRawValue) ?? .satoshiOrange
+        
+        return HStack(spacing: 16) {
+            Text(currentScheme.displayName)
+                .foregroundStyle(.primary)
+            
+            Spacer()
+            
+            HStack(spacing: 12) {
+                ForEach(AppColorScheme.allCases) { scheme in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            colorSchemeRawValue = scheme.rawValue
+                        }
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(scheme.gradient)
+                                .frame(width: 32, height: 32)
+                            
+                            if currentScheme == scheme {
+                                Image(systemName: "checkmark")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(scheme.displayName) color scheme")
+                    .accessibilityHint(currentScheme == scheme ? "Selected" : "Select this color scheme")
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
     
     // MARK: - Wallet Icon Toggle
@@ -220,11 +270,11 @@ struct SettingsView: View {
         Toggle(isOn: $showWalletIcons) {
             HStack(spacing: 14) {
                 Image(systemName: "wallet.bifold.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(appColorScheme.primaryColor)
                 Text(showWalletIcons ? "Display Wallet Icon" : "Hide Wallet Icon")    
             }
         }
-        .tint(.orange)
+        .tint(appColorScheme.primaryColor)
         .accessibilityLabel(showWalletIcons ? "Display wallet icon toggle" : "Hide wallet icon toggle")
         .accessibilityValue(showWalletIcons ? "On" : "Off")
         .accessibilityHint(showWalletIcons ? "Double tap to toggle wallet icon display on stamp cards" : "Double tap to toggle wallet icon hide on stamp cards")
@@ -254,7 +304,7 @@ struct SettingsView: View {
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption)
                 }
-                .foregroundStyle(.orange)
+                .foregroundStyle(appColorScheme.primaryColor)
             }
             .accessibilityLabel("Visit Stampchain.io")
         }
@@ -324,7 +374,7 @@ struct WalletRow: View {
                 
                 Text(wallet.addressType.rawValue)
                     .font(.caption2)
-                    .foregroundStyle(.orange.secondary)
+                    .foregroundStyle(appColorScheme.secondaryColor)
             }
             
             HStack {

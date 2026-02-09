@@ -25,6 +25,7 @@ struct StampCardView: View {
     // MARK: - Environment
     
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \Wallet.addedDate) private var wallets: [Wallet]
     
     // MARK: - State
@@ -155,7 +156,7 @@ struct StampCardView: View {
                     .foregroundStyle(.secondary)
                 
                 ProgressView()
-                    .tint(.orange)
+                    .tint(appColorScheme.primaryColor)
             }
         }
     }
@@ -169,7 +170,7 @@ struct StampCardView: View {
             VStack(spacing: 8) {
                 Image(systemName: "photo.badge.exclamationmark")
                     .font(.title)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(appColorScheme.primaryColor)
                 
                 Text("Failed to load")
                     .font(.caption2)
@@ -180,7 +181,7 @@ struct StampCardView: View {
                 } label: {
                     Text("Retry")
                         .font(.caption2)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(appColorScheme.primaryColor)
                 }
             }
         }
@@ -189,7 +190,7 @@ struct StampCardView: View {
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient
+        LinearGradient.stampCardBackground(color: appColorScheme.primaryColor)
     }
     
     // MARK: - Audio Placeholder View
@@ -388,9 +389,10 @@ struct TextStampView: View {
     let url: URL?
     @State private var content: String = ""
     @State private var isLoading = true
+    @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackgroundGradient
+        LinearGradient.stampCardBackground(color: appColorScheme.primaryColor)
     }
     
     var body: some View {
