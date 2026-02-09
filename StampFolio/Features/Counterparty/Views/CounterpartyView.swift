@@ -52,6 +52,7 @@ struct CounterpartyView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(.secondary)
             }
+            .buttonStyle(.plain)
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")
         }
