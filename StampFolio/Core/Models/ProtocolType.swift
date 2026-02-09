@@ -21,9 +21,9 @@ enum ProtocolType: String, Identifiable, Codable, CaseIterable, Hashable {
     
     var icon: String {
         switch self {
-        case .stamps: return "bitcoinsign.square"
-        case .ordinals: return "bitcoinsign.circle"
-        case .counterparty: return "xmark.triangle.circle.square"
+        case .stamps: return "bitcoinsign.square.fill"
+        case .ordinals: return "bitcoinsign.circle.fill"
+        case .counterparty: return "xmark.triangle.circle.square.fill"
         }
     }
     

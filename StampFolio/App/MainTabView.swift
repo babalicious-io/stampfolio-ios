@@ -71,7 +71,6 @@ struct MainTabView: View {
             Tab(protocolType.rawValue, systemImage: protocolType.icon) {
                 viewForProtocol(protocolType)
             }
-            .symbolVariant(.none)
         }
     }
     
