@@ -228,7 +228,9 @@ struct SettingsView: View {
     private var colorSchemeRow: some View {
         let currentScheme = AppColorScheme(rawValue: colorSchemeRawValue) ?? .satoshiOrange
         
-        return HStack(spacing: 16) {
+        return HStack(spacing: 14) {
+            Image(systemName: "person.fill")
+                .foregroundStyle(appColorScheme.primary)
             Text(currentScheme.displayName)
                 .foregroundStyle(.primary)
             
@@ -285,7 +287,7 @@ struct SettingsView: View {
     private var aboutRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("BitArt")
+                Text("StampFolio")
                     .font(.headline)
                 Spacer()
                 Text("v1.0")
@@ -293,7 +295,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             
-            Text("A portfolio viewer for Bitcoin Art")
+            Text("A portfolio viewer for Bitcoin Stamps")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             
