@@ -31,6 +31,8 @@ struct SettingsView: View {
     @State private var protocolEditMode: EditMode = .inactive
     @Environment(\.appColorScheme) private var appColorScheme
     
+    private var listSectionBackground: Color { isDarkMode ? .black : .white }
+    
     // MARK: - Body
     
     var body: some View {
@@ -41,6 +43,7 @@ struct SettingsView: View {
                 // Theme Section
                 Section {
                     themeToggle
+                        .listRowBackground(listSectionBackground)
                 } header: {
                     Text("Appearance")
                 }
@@ -48,6 +51,7 @@ struct SettingsView: View {
                 // Color Scheme Section
                 Section {
                     colorSchemeRow
+                        .listRowBackground(listSectionBackground)
                 } header: {
                     Text("Color Scheme")
                 }
@@ -56,6 +60,7 @@ struct SettingsView: View {
                 Section {
                     ForEach(protocolOrder) { protocolType in
                         protocolRow(for: protocolType)
+                            .listRowBackground(listSectionBackground)
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
@@ -67,6 +72,7 @@ struct SettingsView: View {
                     if !wallets.isEmpty {
                         ForEach(wallets) { wallet in
                             WalletRow(wallet: wallet)
+                                .listRowBackground(listSectionBackground)
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
                                         editingWallet = wallet
@@ -86,6 +92,7 @@ struct SettingsView: View {
                     }
                     
                     addWalletButton
+                        .listRowBackground(listSectionBackground)
                 } header: {
                     Text("Wallets")
                 }
@@ -93,11 +100,13 @@ struct SettingsView: View {
                 // Wallet Icons Section
                 Section {
                     walletIconToggle
+                        .listRowBackground(listSectionBackground)
                 }
                 
                 // About Section
                 Section {
                     aboutRow
+                        .listRowBackground(listSectionBackground)
                 } header: {
                     Text("About")
                 }
