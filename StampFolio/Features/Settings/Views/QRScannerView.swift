@@ -109,11 +109,11 @@ struct QRScannerView: View {
             } label: {
                 Text("Open Settings")
                     .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 16)
                     .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
             }
+            .tint(.primary)
         }
     }
     

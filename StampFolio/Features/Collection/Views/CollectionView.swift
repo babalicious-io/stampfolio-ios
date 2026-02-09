@@ -433,10 +433,10 @@ struct CollectionView: View {
             Text("You're offline. Showing cached content.")
         }
         .font(.caption)
-        .foregroundStyle(.primary)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
         .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .rect(cornerRadius: 8))
+        .tint(.primary)
         .padding()
     }
     

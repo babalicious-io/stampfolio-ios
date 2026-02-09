@@ -183,12 +183,12 @@ struct StampMetadataPopup: View {
                 
                 Image(systemName: "arrow.up.right.square")
             }
-            .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
         }
+        .tint(.primary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
     }
