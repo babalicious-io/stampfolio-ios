@@ -399,10 +399,10 @@ struct CollectionView: View {
                         StampRowView(
                             displayStamp: displayStamp,
                             onTap: {
-                                selectedStamp = displayStamp
-                            },
-                            onInfoTap: {
                                 metadataStamp = displayStamp
+                            },
+                            onLongPress: {
+                                selectedStamp = displayStamp
                             }
                         )
                     }
@@ -415,10 +415,10 @@ struct CollectionView: View {
                         StampCardView(
                             displayStamp: displayStamp,
                             onTap: {
-                                selectedStamp = displayStamp
-                            },
-                            onInfoTap: {
                                 metadataStamp = displayStamp
+                            },
+                            onLongPress: {
+                                selectedStamp = displayStamp
                             }
                         )
                     }

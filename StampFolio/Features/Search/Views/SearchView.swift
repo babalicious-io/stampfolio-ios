@@ -104,10 +104,10 @@ struct SearchView: View {
                     StampRowView(
                         displayStamp: displayStamp,
                         onTap: {
-                            selectedStamp = displayStamp
-                        },
-                        onInfoTap: {
                             metadataStamp = displayStamp
+                        },
+                        onLongPress: {
+                            selectedStamp = displayStamp
                         }
                     )
                 }

@@ -15,7 +15,7 @@ struct StampRowView: View {
     
     let displayStamp: DisplayStamp
     let onTap: () -> Void
-    let onInfoTap: () -> Void
+    let onLongPress: () -> Void
     
     // Convenience accessor
     private var stamp: Stamp { displayStamp.stamp }
@@ -42,12 +42,12 @@ struct StampRowView: View {
             .animation(.easeInOut(duration: 0.1), value: isPressed)
             .contentShape(Rectangle())
             .onTapGesture {
-                onInfoTap()  // Show metadata sheet
+                onTap()  // Show metadata sheet
             }
             .onLongPressGesture(minimumDuration: 0.5, pressing: { pressing in
                 isPressed = pressing
             }, perform: {
-                onTap()  // Show detail view
+                onLongPress()  // Show detail view
             })
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(stamp.formattedNumber), \(artistName), Balance: \(displayStamp.formattedQuantity)")
@@ -173,13 +173,13 @@ struct StampRowView: View {
         StampRowView(
             displayStamp: DisplayStamp(from: .sample),
             onTap: {},
-            onInfoTap: {}
+            onLongPress: {}
         )
         
         StampRowView(
             displayStamp: DisplayStamp(from: .samples[1]),
             onTap: {},
-            onInfoTap: {}
+            onLongPress: {}
         )
     }
     .padding()
