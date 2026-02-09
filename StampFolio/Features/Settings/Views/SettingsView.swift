@@ -137,7 +137,7 @@ struct SettingsView: View {
     
     private var themeToggle: some View {
         Toggle(isOn: $isDarkMode) {
-            HStack(spacing: isDarkMode ? 14 : 10) {
+            HStack(spacing: isDarkMode ? 14 : 12) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
                     .foregroundStyle(appColorScheme.primary)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
@@ -270,7 +270,7 @@ struct SettingsView: View {
     
     private var walletIconToggle: some View {
         Toggle(isOn: $showWalletIcons) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Image(systemName: "wallet.bifold.fill")
                     .foregroundStyle(appColorScheme.primary)
                 Text(showWalletIcons ? "Display Wallet Icon" : "Hide Wallet Icon")    
@@ -366,7 +366,7 @@ struct WalletRow: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Image(systemName: "wallet.bifold.fill")
                     .font(.body)
                     .foregroundStyle(wallet.walletColor.color)
