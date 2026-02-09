@@ -25,16 +25,18 @@ struct StampMetadataPopup: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Stamp Number Header
-                    headerSection
+                VStack(spacing: 16) {
+                    // Section 1: Stamp Identification
+                    stampIdentificationSection
                     
-                    Divider()
+                    // Section 2: Creator, Supply & Market Data
+                    creatorAndMarketSection
                     
-                    // Metadata Grid
-                    metadataSection
+                    // Section 3: File Information
+                    fileInformationSection
                     
-                    Divider()
+                    // Section 4: Blockchain Information
+                    blockchainInformationSection
                     
                     // View on Stampchain Button
                     stampchainLinkButton
@@ -51,24 +53,24 @@ struct StampMetadataPopup: View {
                 }
             }
         }
-         .tint(.primary)
+        .tint(.primary)
     }
     
-    // MARK: - Header Section
+    // MARK: - Section 1: Stamp Identification
     
-    private var headerSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
+    private var stampIdentificationSection: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(stamp.formattedNumber)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
                 
-                if let creatorName = stamp.creatorName {
-                    Text("by \(creatorName)")
-                        .font(.subheadline)
-                        .foregroundStyle(appColorScheme.primary)
-                }
+                Text(stamp.cpid)
+                    .font(.footnote)
+                    .fontDesign(.monospaced)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
             }
             
             Spacer()
@@ -83,22 +85,26 @@ struct StampMetadataPopup: View {
                 .background(appColorScheme.primary.opacity(0.8))
                 .clipShape(Capsule())
         }
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
-    // MARK: - Metadata Section
+    // MARK: - Section 2: Creator, Supply & Market Data
     
-    private var metadataSection: some View {
-        VStack(spacing: 16) {
-            // CPID
-            MetadataRow(
-                label: "CPID",
-                value: stamp.cpid,
-                isMonospace: true
-            )
+    private var creatorAndMarketSection: some View {
+        VStack(spacing: 12) {
+            // Creator name (if available)
+            if let creatorName = stamp.creatorName {
+                MetadataRow(
+                    label: "Creator",
+                    value: creatorName
+                )
+            }
             
-            // Creator
+            // Creator address
             MetadataRow(
-                label: "Creator",
+                label: "Address",
                 value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
                 fullValue: stamp.creatorAddy,
                 isMonospace: true
@@ -109,38 +115,6 @@ struct StampMetadataPopup: View {
                 label: "Editions",
                 value: "\(stamp.supply)"
             )
-            
-            // File Type
-            if let mimetype = stamp.stampMimetype {
-                MetadataRow(
-                    label: "File Type",
-                    value: mimetype
-                )
-            }
-            
-            // File Size
-            if let formattedSize = stamp.formattedFileSize {
-                MetadataRow(
-                    label: "File Size",
-                    value: formattedSize
-                )
-            }
-            
-            // Block (optional - not in balance endpoint)
-            if let blockIndex = stamp.blockIndex {
-                MetadataRow(
-                    label: "Block",
-                    value: "#\(blockIndex)"
-                )
-            }
-            
-            // Date (optional - not in balance endpoint)
-            if let blockTime = stamp.blockTime {
-                MetadataRow(
-                    label: "Created",
-                    value: blockTime.formatted(date: .abbreviated, time: .shortened)
-                )
-            }
             
             // Market Data (if available)
             if let marketData = stamp.marketData {
@@ -160,12 +134,73 @@ struct StampMetadataPopup: View {
                 
                 if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                     MetadataRow(
-                        label: "Active Listings",
+                        label: "Listings",
                         value: "\(dispensers)"
                     )
                 }
             }
         }
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
+    // MARK: - Section 3: File Information
+    
+    private var fileInformationSection: some View {
+        VStack(spacing: 12) {
+            // File Type
+            if let mimetype = stamp.stampMimetype {
+                MetadataRow(
+                    label: "File Type",
+                    value: mimetype
+                )
+            }
+            
+            // File Size
+            if let formattedSize = stamp.formattedFileSize {
+                MetadataRow(
+                    label: "File Size",
+                    value: formattedSize
+                )
+            }
+        }
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
+    // MARK: - Section 4: Blockchain Information
+    
+    private var blockchainInformationSection: some View {
+        VStack(spacing: 12) {
+            // Date (optional)
+            if let blockTime = stamp.blockTime {
+                MetadataRow(
+                    label: "Date",
+                    value: blockTime.formatted(date: .abbreviated, time: .shortened)
+                )
+            }
+            
+            // Block Height (optional)
+            if let blockIndex = stamp.blockIndex {
+                MetadataRow(
+                    label: "Block",
+                    value: "#\(blockIndex)"
+                )
+            }
+            
+            // Transaction Hash
+            MetadataRow(
+                label: "Tx Hash",
+                value: stamp.txHash.prefix(8) + "..." + stamp.txHash.suffix(8),
+                fullValue: stamp.txHash,
+                isMonospace: true
+            )
+        }
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     // MARK: - Stampchain Link Button
