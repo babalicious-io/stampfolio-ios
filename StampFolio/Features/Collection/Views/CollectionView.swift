@@ -128,6 +128,7 @@ struct CollectionView: View {
         }
         .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
+                .presentationDetents([.medium])
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()

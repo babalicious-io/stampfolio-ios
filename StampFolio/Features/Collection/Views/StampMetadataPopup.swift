@@ -44,14 +44,10 @@ struct StampMetadataPopup: View {
             .navigationTitle("Stamp Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(role: .close) {
                         dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel("Close")
                 }
             }
         }
@@ -253,4 +249,5 @@ struct MetadataRow: View {
 
 #Preview {
     StampMetadataPopup(stamp: .sample)
+        .presentationDetents([.medium])
 }
