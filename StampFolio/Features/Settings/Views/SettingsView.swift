@@ -350,6 +350,8 @@ struct SettingsView: View {
 struct WalletRow: View {
     let wallet: Wallet
     
+    @Environment(\.appColorScheme) private var appColorScheme
+    
     private var displayName: String {
         let name = wallet.displayName
         if name.count > 24 {
