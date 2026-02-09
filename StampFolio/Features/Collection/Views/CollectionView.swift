@@ -75,11 +75,11 @@ struct CollectionView: View {
     private var viewModeIcon: String {
         switch viewMode {
         case .normalGrid:
-            return "square.grid.2x2.fill"
+            return "square.grid.2x2"
         case .denseGrid:
-            return "square.grid.3x3.fill"
+            return "square.grid.3x3"
         case .list:
-            return "rectangle.grid.1x3.fill"
+            return "rectangle.grid.1x3"
         }
     }
     
