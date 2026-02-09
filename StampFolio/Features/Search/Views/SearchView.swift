@@ -52,8 +52,6 @@ struct SearchView: View {
         }
         .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
-                .presentationDetents([.medium, .large])
-                .presentationBackground(.ultraThinMaterial)
         }
     }
     
