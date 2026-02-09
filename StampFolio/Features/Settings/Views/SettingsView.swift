@@ -137,7 +137,7 @@ struct SettingsView: View {
     
     private var themeToggle: some View {
         Toggle(isOn: $isDarkMode) {
-            HStack(spacing: isDarkMode ? 14 : 8) {
+            HStack(spacing: isDarkMode ? 14 : 10) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
                     .foregroundStyle(appColorScheme.primary)
                 Text(isDarkMode ? "Dark Mode" : "Light Mode")
@@ -152,7 +152,7 @@ struct SettingsView: View {
     // MARK: - Protocol Section Header
     
     private var protocolSectionHeader: some View {
-        HStack {
+        HStack(spacing: 14) {
             Text("Protocols")
             Spacer()
             Button {
@@ -212,7 +212,7 @@ struct SettingsView: View {
         Button {
             viewModel.showAddWallet = true
         } label: {
-            HStack {
+            HStack(spacing: 14) {
                 Image(systemName: "plus.circle.fill")
                     .foregroundStyle(appColorScheme.primary)
                 Text("Add Wallet")
@@ -286,7 +286,7 @@ struct SettingsView: View {
     
     private var aboutRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            HStack(spacing: 14) {
                 Text("StampFolio")
                     .font(.headline)
                 Spacer()
@@ -300,7 +300,7 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
             
             Link(destination: URL(string: "https://stampchain.io")!) {
-                HStack {
+                HStack(spacing: 14) {
                     Text("Powered by Stampchain.io")
                         .font(.caption)
                     Image(systemName: "arrow.up.right.square")
@@ -366,7 +366,7 @@ struct WalletRow: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
+            HStack(spacing: 14) {
                 Image(systemName: "wallet.bifold.fill")
                     .font(.body)
                     .foregroundStyle(wallet.walletColor.color)
@@ -381,7 +381,7 @@ struct WalletRow: View {
                     .foregroundStyle(appColorScheme.secondary)
             }
             
-            HStack {
+            HStack(spacing: 14) {
                 Text(wallet.address)
                     .font(.caption)
                     .foregroundStyle(.secondary)
