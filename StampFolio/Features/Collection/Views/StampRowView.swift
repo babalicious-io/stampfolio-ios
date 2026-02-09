@@ -50,7 +50,7 @@ struct StampRowView: View {
                 onLongPress()  // Show detail view
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(stamp.formattedNumber), \(artistName), Balance: \(displayStamp.formattedQuantity)")
+            .accessibilityLabel("\(stamp.formattedStampId), \(artistName), Balance: \(displayStamp.formattedQuantity)")
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
@@ -67,7 +67,7 @@ struct StampRowView: View {
             // Stamp information
             VStack(alignment: .leading, spacing: 4) {
                 // Stamp number
-                Text(stamp.formattedNumber)
+                Text(stamp.formattedStampId)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)

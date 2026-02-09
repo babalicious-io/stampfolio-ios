@@ -61,12 +61,12 @@ struct StampMetadataPopup: View {
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(stamp.formattedNumber)
+                Text(stamp.formattedStampId)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
                 
-                Text(stamp.cpid)
+                Text(stamp.formattedCounterpartyId)
                     .font(.footnote)
                     .fontDesign(.monospaced)
                     .foregroundStyle(.secondary)

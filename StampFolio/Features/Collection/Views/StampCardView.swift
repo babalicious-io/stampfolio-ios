@@ -50,7 +50,7 @@ struct StampCardView: View {
                 onLongPress()  // Show detail view
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(stamp.formattedNumber)
+            .accessibilityLabel(stamp.formattedStampId)
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }

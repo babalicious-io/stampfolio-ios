@@ -12,7 +12,11 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
-    /// Unique stamp number (primary identifier)
+        
+    /// Stamp identifier type ("STAMP", "CURSED", etc.) - optional in balance endpoint
+    let ident: String?
+
+    /// Stamp ID (e.g., 1384303)
     let id: Int
     
     /// Counterparty ID (e.g., "A888354448084788958")
@@ -23,15 +27,15 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
     /// Creator's display name (if available)
     let creatorName: String?
-    
-    /// URL to the stamp content/image
-    let stampUrl: String
+
+    /// Total supply/editions
+    let supply: Int
     
     /// MIME type of the stamp content (e.g., "image/png", "image/gif")
     let stampMimetype: String?
-    
-    /// Total supply/editions
-    let supply: Int
+
+    /// Size of the stamp file in bytes
+    let fileSize: Int?
     
     /// Whether the stamp is divisible (0 = false, 1 = true)
     let divisible: Int
@@ -45,36 +49,33 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     /// Bitcoin transaction hash
     let txHash: String
     
-    /// Stamp identifier type ("STAMP", "CURSED", etc.) - optional in balance endpoint
-    let ident: String?
-    
     /// Hash of the stamp content
     let fileHash: String?
     
-    /// Size of the stamp file in bytes
-    let fileSize: Int?
-    
     /// Market data (floor price, holder count, etc.)
     let marketData: MarketData?
+
+    /// URL to the stamp content/image
+    let stampUrl: String
     
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
+        case ident
         case id = "stamp"
         case cpid
         case creatorAddy = "creator"
         case creatorName = "creator_name"
-        case stampUrl = "stamp_url"
-        case stampMimetype = "stamp_mimetype"
         case supply
+        case stampMimetype = "stamp_mimetype"
+        case fileSize = "file_size_bytes"
         case divisible
         case blockTime = "block_time"
         case blockIndex = "block_index"
         case txHash = "tx_hash"
-        case ident
         case fileHash = "file_hash"
-        case fileSize = "file_size_bytes"
         case marketData = "market_data"
+        case stampUrl = "stamp_url"
     }
     
     // MARK: - Computed Properties
@@ -84,14 +85,6 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         URL(string: "https://stampchain.io/stamp/\(id)")!
     }
 
-    /// Formatted stamp number with prefix
-    var formattedNumber: String {
-        if let identType = ident {
-            return "\(identType) #\(id)"
-        }
-        return "STAMP #\(id)"
-    }
-    
     /// URL for loading the stamp image
     /// Note: HTML stamps use /content/ endpoint which processes and makes them responsive,
     /// other stamps use /s/ endpoint with txHash for correct content-type headers
@@ -106,7 +99,18 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         return URL(string: "https://stampchain.io/s/\(txHash)")
     }
     
-    /// Human-readable file size
+
+    /// Formatted stamp ID (number)
+    var formattedStampId: String {
+        "STAMP #\(id)"
+    }
+
+    /// Formatted counterparty ID
+    var formattedCounterpartyId: String {
+        "CPID \(cpid)"
+    }
+    
+    /// Formatted file size
     var formattedFileSize: String? {
         guard let bytes = fileSize else { return nil }
         
@@ -121,7 +125,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         return mimetype.hasPrefix("image/")
     }
     
-    /// Whether the stamp content is animated (GIF)
+    /// Whether the stamp content is (animated) GIF
     var isGIF: Bool {
         stampMimetype?.lowercased() == "image/gif"
     }

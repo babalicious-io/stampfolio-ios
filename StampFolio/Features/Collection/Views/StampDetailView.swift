@@ -90,7 +90,7 @@ struct StampDetailView: View {
         .ignoresSafeArea()
         .persistentSystemOverlays(.hidden)
         .accessibilityAddTraits(.isImage)
-        .accessibilityLabel("\(currentStamp.formattedNumber), \(currentIndex + 1) of \(stamps.count)")
+        .accessibilityLabel("\(currentStamp.formattedStampId), \(currentIndex + 1) of \(stamps.count)")
         .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
     }
     
