@@ -29,7 +29,7 @@ struct StampMetadataPopup: View {
                     // Section 1: Stamp Identification
                     stampIdentificationSection
                     
-                    // Section 2: Creator & Market Data
+                    // Section 2: Creator, Supply & Market Data
                     creatorAndMarketSection
                     
                     // Section 3: File Information
@@ -40,11 +40,9 @@ struct StampMetadataPopup: View {
                     
                     // View on Stampchain Button
                     stampchainLinkButton
-                        .padding(.top, 4)
                 }
                 .padding()
             }
-            .background(Color(.secondarySystemGroupedBackground))
             .navigationTitle("Stamp Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -61,47 +59,47 @@ struct StampMetadataPopup: View {
     // MARK: - Section 1: Stamp Identification
     
     private var stampIdentificationSection: some View {
-        VStack(spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(stamp.formattedNumber)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.primary)
-                    
-                    Text(stamp.cpid)
-                        .font(.caption)
-                        .fontDesign(.monospaced)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(stamp.formattedNumber)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.primary)
                 
-                Spacer()
-                
-                // Stamp type badge
-                Text(stamp.ident ?? "STAMP")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(appColorScheme.primary)
-                    .clipShape(Capsule())
+                Text(stamp.cpid)
+                    .font(.footnote)
+                    .fontDesign(.monospaced)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
             }
+            
+            Spacer()
+            
+            // Stamp type badge
+            Text(stamp.ident ?? "STAMP")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(appColorScheme.primary.opacity(0.8))
+                .clipShape(Capsule())
         }
-        .padding()
-        .background(Color(.systemBackground))
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
-    // MARK: - Section 2: Creator & Market Data
+    // MARK: - Section 2: Creator, Supply & Market Data
     
     private var creatorAndMarketSection: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 12) {
             // Creator name (if available)
             if let creatorName = stamp.creatorName {
-                MetadataRow(label: "Creator", value: creatorName)
-                Divider().padding(.leading)
+                MetadataRow(
+                    label: "Creator",
+                    value: creatorName
+                )
             }
             
             // Creator address
@@ -111,83 +109,97 @@ struct StampMetadataPopup: View {
                 fullValue: stamp.creatorAddy,
                 isMonospace: true
             )
-            Divider().padding(.leading)
             
             // Editions
-            MetadataRow(label: "Editions", value: "\(stamp.supply)")
+            MetadataRow(
+                label: "Editions",
+                value: "\(stamp.supply)"
+            )
             
-            // Market Data
+            // Market Data (if available)
             if let marketData = stamp.marketData {
-                if let holders = marketData.formattedHolderCount {
-                    Divider().padding(.leading)
-                    MetadataRow(label: "Holders", value: holders)
+                if let floorPrice = marketData.formattedFloorPrice {
+                    MetadataRow(
+                        label: "Floor Price",
+                        value: floorPrice
+                    )
                 }
                 
-                if let floorPrice = marketData.formattedFloorPrice {
-                    Divider().padding(.leading)
-                    MetadataRow(label: "Floor Price", value: floorPrice)
+                if let holders = marketData.formattedHolderCount {
+                    MetadataRow(
+                        label: "Holders",
+                        value: holders
+                    )
                 }
                 
                 if let dispensers = marketData.openDispensersCount, dispensers > 0 {
-                    Divider().padding(.leading)
-                    MetadataRow(label: "Active Listings", value: "\(dispensers)")
+                    MetadataRow(
+                        label: "Listings",
+                        value: "\(dispensers)"
+                    )
                 }
             }
         }
-        .padding(.vertical, 4)
-        .background(Color(.systemBackground))
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     // MARK: - Section 3: File Information
     
     private var fileInformationSection: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 12) {
+            // File Type
             if let mimetype = stamp.stampMimetype {
-                MetadataRow(label: "File Type", value: mimetype)
+                MetadataRow(
+                    label: "File Type",
+                    value: mimetype
+                )
             }
             
+            // File Size
             if let formattedSize = stamp.formattedFileSize {
-                if stamp.stampMimetype != nil {
-                    Divider().padding(.leading)
-                }
-                MetadataRow(label: "File Size", value: formattedSize)
+                MetadataRow(
+                    label: "File Size",
+                    value: formattedSize
+                )
             }
         }
-        .padding(.vertical, 4)
-        .background(Color(.systemBackground))
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     // MARK: - Section 4: Blockchain Information
     
     private var blockchainInformationSection: some View {
-        VStack(spacing: 0) {
-            // Date
+        VStack(spacing: 12) {
+            // Date (optional)
             if let blockTime = stamp.blockTime {
                 MetadataRow(
-                    label: "Created",
+                    label: "Date",
                     value: blockTime.formatted(date: .abbreviated, time: .shortened)
                 )
-                Divider().padding(.leading)
             }
             
-            // Block height
+            // Block Height (optional)
             if let blockIndex = stamp.blockIndex {
-                MetadataRow(label: "Block", value: "#\(blockIndex)")
-                Divider().padding(.leading)
+                MetadataRow(
+                    label: "Block",
+                    value: "#\(blockIndex)"
+                )
             }
             
-            // Tx Hash
+            // Transaction Hash
             MetadataRow(
                 label: "Tx Hash",
-                value: stamp.txHash.truncatedAddress(prefixLength: 8, suffixLength: 8),
+                value: stamp.txHash.prefix(8) + "..." + stamp.txHash.suffix(8),
                 fullValue: stamp.txHash,
                 isMonospace: true
             )
         }
-        .padding(.vertical, 4)
-        .background(Color(.systemBackground))
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
@@ -203,12 +215,12 @@ struct StampMetadataPopup: View {
                 
                 Image(systemName: "arrow.up.right.square")
             }
-            .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
         }
+        .tint(.secondary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
     }
@@ -226,18 +238,20 @@ struct MetadataRow: View {
     @State private var showCopied = false
     
     var body: some View {
-        HStack(alignment: .center) {
+        HStack(alignment: .top) {
             Text(label)
-                .font(.subheadline)
+                .font(.caption)
+                .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
-            
-            Spacer()
+                .frame(width: 100, alignment: .leading)
             
             Text(value)
-                .font(isMonospace ? .footnote : .subheadline)
+                .font(isMonospace ? .footnote : .caption)
                 .fontDesign(isMonospace ? .monospaced : .default)
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
+            
+            Spacer()
             
             // Copy button for values with full value
             if let fullValue = fullValue {
@@ -245,18 +259,23 @@ struct MetadataRow: View {
                     UIPasteboard.general.string = fullValue
                     showCopied = true
                     
+                    // Hide "Copied" after 2 seconds
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                         showCopied = false
                     }
                 } label: {
-                    Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
-                        .foregroundStyle(showCopied ? .green : .secondary)
-                        .font(.caption)
+                    if showCopied {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.green)
+                    } else {
+                        Image(systemName: "doc.on.doc")
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .font(.caption)
+                .accessibilityLabel("Copy \(label)")
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(fullValue ?? value)")
     }
@@ -267,5 +286,4 @@ struct MetadataRow: View {
 #Preview {
     StampMetadataPopup(stamp: .sample)
         .presentationDetents([.medium, .large])
-        .presentationBackground(.ultraThinMaterial)
 }

@@ -31,21 +31,26 @@ struct StampRowView: View {
     // MARK: - State
     
     @AppStorage("showWalletIcons") private var showWalletIcons = false
+    @State private var isPressed = false
     @State private var imageLoadFailed = false
     
     // MARK: - Body
     
     var body: some View {
         rowContent
-            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
             .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
             .contentShape(Rectangle())
             .onTapGesture {
-                onInfoTap()
+                onInfoTap()  // Show metadata sheet
             }
-            .onLongPressGesture(minimumDuration: 0.5) {
-                onTap()
-            }
+            .onLongPressGesture(minimumDuration: 0.5, pressing: { pressing in
+                isPressed = pressing
+            }, perform: {
+                onTap()  // Show detail view
+            })
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(stamp.formattedNumber), \(artistName), Balance: \(displayStamp.formattedQuantity)")
             .accessibilityHint("Tap for details, hold for fullscreen")
