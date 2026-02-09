@@ -119,7 +119,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         return formatter.string(fromByteCount: Int64(bytes))
     }
     
-    /// Whether the stamp content is an image
+    /// Whether the stamp content is an image (jpg, png, webp, bmp, avif)
     var isImage: Bool {
         guard let mimetype = stampMimetype?.lowercased() else { return true }
         return mimetype.hasPrefix("image/")
@@ -199,6 +199,7 @@ extension Stamp {
     
     /// Sample stamp for previews and testing
     static let sample = Stamp(
+        ident: "STAMP",
         id: 1384303,
         cpid: "A888354448084788958",
         creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
@@ -210,7 +211,6 @@ extension Stamp {
         blockTime: Date(),
         blockIndex: 933837,
         txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
-        ident: "STAMP",
         fileHash: "sha256hash",
         fileSize: 198,
         marketData: MarketData.sample
@@ -220,6 +220,7 @@ extension Stamp {
     static let samples: [Stamp] = [
         sample,
         Stamp(
+            ident: "STAMP",
             id: 1384302,
             cpid: "A888354448084788957",
             creatorAddy: "bc1qabc123def456",
@@ -231,12 +232,12 @@ extension Stamp {
             blockTime: Date().addingTimeInterval(-86400),
             blockIndex: 933836,
             txHash: "def456abc789",
-            ident: "STAMP",
             fileHash: nil,
             fileSize: 1024,
             marketData: nil
         ),
         Stamp(
+            ident: "STAMP",
             id: 74705,
             cpid: "A888354448084788999",
             creatorAddy: "bc1qtest",
@@ -248,7 +249,6 @@ extension Stamp {
             blockTime: Date().addingTimeInterval(-172800),
             blockIndex: 933835,
             txHash: "test123",
-            ident: "STAMP",
             fileHash: nil,
             fileSize: 500,
             marketData: nil

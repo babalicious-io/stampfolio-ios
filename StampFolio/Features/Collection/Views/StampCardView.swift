@@ -195,13 +195,13 @@ struct StampCardView: View {
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
         StampCardView(
-            displayStamp: DisplayStamp(from: .sample),
+            displayStamp: DisplayStamp(from: Stamp.sample),
             onTap: {},
             onLongPress: {}
         )
         
         StampCardView(
-            displayStamp: DisplayStamp(from: .samples[1]),
+            displayStamp: DisplayStamp(from: Stamp.samples[1]),
             onTap: {},
             onLongPress: {}
         )

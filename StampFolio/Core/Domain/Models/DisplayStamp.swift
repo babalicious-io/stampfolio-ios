@@ -70,6 +70,7 @@ struct DisplayStamp: Identifiable {
     /// Create from StampBalance
     init(from stampBalance: StampBalance) {
         self.stamp = Stamp(
+            ident: "STAMP",
             id: stampBalance.stamp,
             cpid: stampBalance.cpid,
             creatorAddy: stampBalance.creatorAddy,
@@ -81,7 +82,6 @@ struct DisplayStamp: Identifiable {
             blockTime: nil,
             blockIndex: nil,
             txHash: stampBalance.txHash,
-            ident: "STAMP",
             fileHash: nil,
             fileSize: nil,
             marketData: nil

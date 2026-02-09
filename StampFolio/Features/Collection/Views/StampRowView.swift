@@ -171,13 +171,13 @@ struct StampRowView: View {
 #Preview {
     VStack(spacing: 12) {
         StampRowView(
-            displayStamp: DisplayStamp(from: .sample),
+            displayStamp: DisplayStamp(from: Stamp.sample),
             onTap: {},
             onLongPress: {}
         )
         
         StampRowView(
-            displayStamp: DisplayStamp(from: .samples[1]),
+            displayStamp: DisplayStamp(from: Stamp.samples[1]),
             onTap: {},
             onLongPress: {}
         )
