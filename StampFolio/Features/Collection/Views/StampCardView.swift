@@ -31,26 +31,26 @@ struct StampCardView: View {
     // MARK: - State
     
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @State private var isPressed = false
     @State private var imageLoadFailed = false
     
     // MARK: - Body
     
     var body: some View {
+        let longPressDrag = LongPressGesture(minimumDuration: 0.5)
+            .onEnded { _ in
+                onTap()  // Show detail view
+            }
+            .sequenced(before: DragGesture(minimumDistance: 0))
+            .onEnded { _ in }
+        
         stampContent
             .glassEffect(.regular, in: .rect(cornerRadius: 24))
             .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: isPressed)
             .contentShape(Rectangle())
             .onTapGesture {
                 onInfoTap()  // Show metadata sheet
             }
-            .onLongPressGesture(minimumDuration: 0.5, pressing: { pressing in
-                isPressed = pressing
-            }, perform: {
-                onTap()  // Show detail view
-            })
+            .gesture(longPressDrag)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(stamp.formattedNumber)
             .accessibilityHint("Tap for details, hold for fullscreen")
