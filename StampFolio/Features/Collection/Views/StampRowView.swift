@@ -31,7 +31,6 @@ struct StampRowView: View {
     // MARK: - State
     
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @State private var isPressed = false
     @State private var imageLoadFailed = false
     
     // MARK: - Body
@@ -40,14 +39,6 @@ struct StampRowView: View {
         rowContent
             .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
             .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: isPressed)
-            .onTapGesture {
-                onTap()
-            }
-            .onLongPressGesture(minimumDuration: 0.1, pressing: { pressing in
-                isPressed = pressing
-            }, perform: {})
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(stamp.formattedNumber), \(artistName), Balance: \(displayStamp.formattedQuantity)")
             .accessibilityHint("Double tap to view full screen")
