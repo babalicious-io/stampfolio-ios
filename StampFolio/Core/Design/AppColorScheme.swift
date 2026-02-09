@@ -35,14 +35,7 @@ enum AppColorScheme: String, CaseIterable, Identifiable, Codable {
     }
     
     var secondary: Color {
-        switch self {
-        case .satoshiOrange:
-            return .orange.secondary
-        case .kevinPurple:
-            return .purple.secondary
-        case .pepeGreen:
-            return .green.secondary
-        }
+        primary.opacity(0.7)
     }
     
     /// Gradient from bottom-left (primary) to top-right (secondary)
