@@ -131,7 +131,6 @@ struct CollectionView: View {
         .sheet(item: $metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
                 .presentationDetents([.medium, .large])
-                .presentationBackground(.ultraThinMaterial)
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()
