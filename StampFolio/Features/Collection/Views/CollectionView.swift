@@ -167,7 +167,7 @@ struct CollectionView: View {
                 cycleViewMode()
             } label: {
                 Image(systemName: viewModeIcon)
-                    .font(.system(size: 18))
+                    .font(.system(size: 16))
                     .foregroundStyle(Color.primary)
             }
             .accessibilityLabel("View mode")
@@ -291,7 +291,7 @@ struct CollectionView: View {
             Button {
                 showSettings.wrappedValue = true
             } label: {
-                Image(systemName: "gearshape.fill")
+                Image(systemName: "gearshape")
                     .font(.system(size: 16))
                     .foregroundStyle(.secondary)
             }
