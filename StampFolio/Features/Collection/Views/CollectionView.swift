@@ -34,6 +34,8 @@ struct CollectionView: View {
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
     @State private var showAddWallet = false
+    @State private var selectedStamp: DisplayStamp?
+    @State private var metadataStamp: DisplayStamp?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -96,8 +98,6 @@ struct CollectionView: View {
     // MARK: - Body
     
     var body: some View {
-        @Bindable var viewModel = viewModel
-        
         NavigationStack {
             mainContent
                 .toolbar {
@@ -120,7 +120,7 @@ struct CollectionView: View {
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             showOfflineBanner = !isConnected
         }
-        .fullScreenCover(item: $viewModel.selectedStamp) { displayStamp in
+        .fullScreenCover(item: $selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampDetailView(
                     stamps: viewModel.stamps.map(\.stamp),
@@ -128,7 +128,7 @@ struct CollectionView: View {
                 )
             }
         }
-        .sheet(item: $viewModel.metadataStamp) { displayStamp in
+        .sheet(item: $metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
@@ -400,10 +400,10 @@ struct CollectionView: View {
                         StampRowView(
                             displayStamp: displayStamp,
                             onTap: {
-                                viewModel.selectedStamp = displayStamp
+                                selectedStamp = displayStamp
                             },
                             onInfoTap: {
-                                viewModel.metadataStamp = displayStamp
+                                metadataStamp = displayStamp
                             }
                         )
                     }
@@ -416,10 +416,10 @@ struct CollectionView: View {
                         StampCardView(
                             displayStamp: displayStamp,
                             onTap: {
-                                viewModel.selectedStamp = displayStamp
+                                selectedStamp = displayStamp
                             },
                             onInfoTap: {
-                                viewModel.metadataStamp = displayStamp
+                                metadataStamp = displayStamp
                             }
                         )
                     }
