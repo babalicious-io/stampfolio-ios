@@ -75,16 +75,16 @@ struct DisplayStamp: Identifiable {
             cpid: stampBalance.cpid,
             creatorAddy: stampBalance.creatorAddy,
             creatorName: stampBalance.creatorName,
-            stampUrl: stampBalance.stampUrl,
-            stampMimetype: stampBalance.stampMimetype,
             supply: stampBalance.supply ?? Int(stampBalance.balance),
+            stampMimetype: stampBalance.stampMimetype,
+            fileSize: nil,
             divisible: stampBalance.divisible,
             blockTime: nil,
             blockIndex: nil,
             txHash: stampBalance.txHash,
             fileHash: nil,
-            fileSize: nil,
-            marketData: nil
+            marketData: nil,
+            stampUrl: stampBalance.stampUrl
         )
         self.balance = stampBalance.balance
         self.divisible = stampBalance.divisible

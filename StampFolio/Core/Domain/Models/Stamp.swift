@@ -204,16 +204,16 @@ extension Stamp {
         cpid: "A888354448084788958",
         creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
         creatorName: "babalicious",
-        stampUrl: "https://stampchain.io/stamps/e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca.png",
-        stampMimetype: "image/png",
         supply: 1,
+        stampMimetype: "image/png",
+        fileSize: 198,
         divisible: 0,
         blockTime: Date(),
         blockIndex: 933837,
         txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
         fileHash: "sha256hash",
-        fileSize: 198,
-        marketData: MarketData.sample
+        marketData: MarketData.sample,
+        stampUrl: "https://stampchain.io/stamps/e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca.png"
     )
     
     /// Array of sample stamps for previews
@@ -225,16 +225,16 @@ extension Stamp {
             cpid: "A888354448084788957",
             creatorAddy: "bc1qabc123def456",
             creatorName: nil,
-            stampUrl: "https://stampchain.io/stamps/1384302.gif",
-            stampMimetype: "image/gif",
             supply: 42,
+            stampMimetype: "image/gif",
+            fileSize: 1024,
             divisible: 0,
             blockTime: Date().addingTimeInterval(-86400),
             blockIndex: 933836,
             txHash: "def456abc789",
             fileHash: nil,
-            fileSize: 1024,
-            marketData: nil
+            marketData: nil,
+            stampUrl: "https://stampchain.io/stamps/1384302.gif"
         ),
         Stamp(
             ident: "STAMP",
@@ -242,16 +242,16 @@ extension Stamp {
             cpid: "A888354448084788999",
             creatorAddy: "bc1qtest",
             creatorName: "divisible_test",
-            stampUrl: "https://stampchain.io/stamps/test.png",
-            stampMimetype: "image/png",
             supply: 1_000_000_000,
+            stampMimetype: "image/png",
+            fileSize: 500,
             divisible: 1,
             blockTime: Date().addingTimeInterval(-172800),
             blockIndex: 933835,
             txHash: "test123",
             fileHash: nil,
-            fileSize: 500,
-            marketData: nil
+            marketData: nil,
+            stampUrl: "https://stampchain.io/stamps/test.png"
         )
     ]
 }
