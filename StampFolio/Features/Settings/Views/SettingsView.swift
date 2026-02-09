@@ -111,6 +111,7 @@ struct SettingsView: View {
                     Button(role: .close) {
                         dismiss()
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .onAppear {

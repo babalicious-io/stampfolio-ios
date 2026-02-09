@@ -280,6 +280,7 @@ struct CollectionView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(.secondary)
             }
+            .buttonStyle(.plain)
             .accessibilityLabel("Settings")
             .accessibilityHint("Open app settings")
         }
@@ -330,6 +331,7 @@ struct CollectionView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
+            .tint(appColorScheme.primary)
             .accessibilityLabel("Retry loading stamps")
         }
     }
