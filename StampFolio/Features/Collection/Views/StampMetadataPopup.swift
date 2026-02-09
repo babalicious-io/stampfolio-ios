@@ -25,18 +25,16 @@ struct StampMetadataPopup: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    // Section 1: Stamp Identification
-                    stampIdentificationSection
+                VStack(alignment: .leading, spacing: 20) {
+                    // Stamp Number Header
+                    headerSection
                     
-                    // Section 2: Creator, Supply & Market Data
-                    creatorAndMarketSection
+                    Divider()
                     
-                    // Section 3: File Information
-                    fileInformationSection
+                    // Metadata Grid
+                    metadataSection
                     
-                    // Section 4: Blockchain Information
-                    blockchainInformationSection
+                    Divider()
                     
                     // View on Stampchain Button
                     stampchainLinkButton
@@ -46,31 +44,34 @@ struct StampMetadataPopup: View {
             .navigationTitle("Stamp Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(role: .close) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
                     }
+                    .accessibilityLabel("Close")
                 }
             }
         }
-        .tint(.primary)
     }
     
-    // MARK: - Section 1: Stamp Identification
+    // MARK: - Header Section
     
-    private var stampIdentificationSection: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
+    private var headerSection: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(stamp.formattedNumber)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
                 
-                Text(stamp.cpid)
-                    .font(.footnote)
-                    .fontDesign(.monospaced)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+                if let creatorName = stamp.creatorName {
+                    Text("by \(creatorName)")
+                        .font(.subheadline)
+                        .foregroundStyle(appColorScheme.primary)
+                }
             }
             
             Spacer()
@@ -85,26 +86,22 @@ struct StampMetadataPopup: View {
                 .background(appColorScheme.primary.opacity(0.8))
                 .clipShape(Capsule())
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
-    // MARK: - Section 2: Creator, Supply & Market Data
+    // MARK: - Metadata Section
     
-    private var creatorAndMarketSection: some View {
-        VStack(spacing: 12) {
-            // Creator name (if available)
-            if let creatorName = stamp.creatorName {
-                MetadataRow(
-                    label: "Creator",
-                    value: creatorName
-                )
-            }
-            
-            // Creator address
+    private var metadataSection: some View {
+        VStack(spacing: 16) {
+            // CPID
             MetadataRow(
-                label: "Address",
+                label: "CPID",
+                value: stamp.cpid,
+                isMonospace: true
+            )
+            
+            // Creator
+            MetadataRow(
+                label: "Creator",
                 value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
                 fullValue: stamp.creatorAddy,
                 isMonospace: true
@@ -115,6 +112,38 @@ struct StampMetadataPopup: View {
                 label: "Editions",
                 value: "\(stamp.supply)"
             )
+            
+            // File Type
+            if let mimetype = stamp.stampMimetype {
+                MetadataRow(
+                    label: "File Type",
+                    value: mimetype
+                )
+            }
+            
+            // File Size
+            if let formattedSize = stamp.formattedFileSize {
+                MetadataRow(
+                    label: "File Size",
+                    value: formattedSize
+                )
+            }
+            
+            // Block (optional - not in balance endpoint)
+            if let blockIndex = stamp.blockIndex {
+                MetadataRow(
+                    label: "Block",
+                    value: "#\(blockIndex)"
+                )
+            }
+            
+            // Date (optional - not in balance endpoint)
+            if let blockTime = stamp.blockTime {
+                MetadataRow(
+                    label: "Created",
+                    value: blockTime.formatted(date: .abbreviated, time: .shortened)
+                )
+            }
             
             // Market Data (if available)
             if let marketData = stamp.marketData {
@@ -134,73 +163,12 @@ struct StampMetadataPopup: View {
                 
                 if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                     MetadataRow(
-                        label: "Listings",
+                        label: "Active Listings",
                         value: "\(dispensers)"
                     )
                 }
             }
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-    
-    // MARK: - Section 3: File Information
-    
-    private var fileInformationSection: some View {
-        VStack(spacing: 12) {
-            // File Type
-            if let mimetype = stamp.stampMimetype {
-                MetadataRow(
-                    label: "File Type",
-                    value: mimetype
-                )
-            }
-            
-            // File Size
-            if let formattedSize = stamp.formattedFileSize {
-                MetadataRow(
-                    label: "File Size",
-                    value: formattedSize
-                )
-            }
-        }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-    
-    // MARK: - Section 4: Blockchain Information
-    
-    private var blockchainInformationSection: some View {
-        VStack(spacing: 12) {
-            // Date (optional)
-            if let blockTime = stamp.blockTime {
-                MetadataRow(
-                    label: "Date",
-                    value: blockTime.formatted(date: .abbreviated, time: .shortened)
-                )
-            }
-            
-            // Block Height (optional)
-            if let blockIndex = stamp.blockIndex {
-                MetadataRow(
-                    label: "Block",
-                    value: "#\(blockIndex)"
-                )
-            }
-            
-            // Transaction Hash
-            MetadataRow(
-                label: "Tx Hash",
-                value: stamp.txHash.prefix(8) + "..." + stamp.txHash.suffix(8),
-                fullValue: stamp.txHash,
-                isMonospace: true
-            )
-        }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     // MARK: - Stampchain Link Button
@@ -215,12 +183,12 @@ struct StampMetadataPopup: View {
                 
                 Image(systemName: "arrow.up.right.square")
             }
+            .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
         }
-        .tint(.secondary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
     }
@@ -285,5 +253,4 @@ struct MetadataRow: View {
 
 #Preview {
     StampMetadataPopup(stamp: .sample)
-        .presentationDetents([.medium, .large])
 }
