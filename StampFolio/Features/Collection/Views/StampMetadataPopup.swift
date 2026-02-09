@@ -51,6 +51,7 @@ struct StampMetadataPopup: View {
                 }
             }
         }
+         .tint(.primary)
     }
     
     // MARK: - Header Section
