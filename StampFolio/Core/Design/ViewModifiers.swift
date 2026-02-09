@@ -67,8 +67,8 @@ struct EmptyWalletViewModifier: ViewModifier {
                         .padding(.horizontal, 24)
                         .padding(.vertical, 16)
                         .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
-                }
-                .tint(.primary)
+                 }
+                .tint(.secondary)
             }
         } else {
             content

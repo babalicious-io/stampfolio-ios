@@ -128,7 +128,7 @@ struct CollectionView: View {
         }
         .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()
@@ -437,7 +437,7 @@ struct CollectionView: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
         .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .rect(cornerRadius: 8))
-        .tint(.primary)
+        .tint(.secondary)
         .padding()
     }
     

@@ -184,7 +184,7 @@ struct StampMetadataPopup: View {
             .padding(.vertical, 12)
             .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
         }
-        .tint(.primary)
+        .tint(.secondary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
     }
@@ -249,5 +249,5 @@ struct MetadataRow: View {
 
 #Preview {
     StampMetadataPopup(stamp: .sample)
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
 }
