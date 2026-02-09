@@ -128,6 +128,8 @@ struct CollectionView: View {
         }
         .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
+                .presentationDetents([.medium])
+                .presentationBackground(.ultraThinMaterial)
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()
@@ -433,10 +435,10 @@ struct CollectionView: View {
             Text("You're offline. Showing cached content.")
         }
         .font(.caption)
+        .foregroundStyle(.primary)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
         .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .rect(cornerRadius: 8))
-        .tint(.secondary)
         .padding()
     }
     

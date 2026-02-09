@@ -253,4 +253,6 @@ struct MetadataRow: View {
 
 #Preview {
     StampMetadataPopup(stamp: .sample)
+        .presentationDetents([.medium])
+        .presentationBackground(.ultraThinMaterial)
 }
