@@ -24,11 +24,15 @@ struct StampTextView: View {
     
     @Environment(\.appColorScheme) private var appColorScheme
     
+    private var gradientBackground: LinearGradient {
+        LinearGradient.stampCardBackground(color: appColorScheme.primary)
+    }
+    
     // MARK: - Body
     
     var body: some View {
         ZStack {
-            Color(uiColor: .systemBackground)
+            gradientBackground
             
             if isLoading {
                 ProgressView()
