@@ -77,7 +77,13 @@ struct SearchView: View {
     
     private var noResultsView: some View {
         ContentUnavailableView {
-            Label("No Results", systemImage: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle" : "magnifyingglass")
+            Label {
+                Text("No Results")
+                    .foregroundStyle(appColorScheme.primary)
+            } icon: {
+                Image(systemName: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle" : "magnifyingglass")
+                    .foregroundStyle(appColorScheme.secondary)
+            }
         } description: {
             if !viewModel.searchText.isEmpty && viewModel.hasActiveFilters {
                 Text("No stamps match '\(viewModel.searchText)' with the active filters")

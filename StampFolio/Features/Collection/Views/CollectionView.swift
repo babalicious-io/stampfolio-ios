@@ -353,18 +353,30 @@ struct CollectionView: View {
     // MARK: - No Stamps View
     
     private var noStampsView: some View {
-        ContentUnavailableView(
-            "No Stamps Found",
-            systemImage: "photo.on.rectangle.angled",
-            description: Text("Your wallets don't contain any Stamps")
-        )
+        ContentUnavailableView {
+            Label {
+                Text("No Stamps Found")
+                    .foregroundStyle(appColorScheme.primary)
+            } icon: {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .foregroundStyle(appColorScheme.secondary)
+            }
+        } description: {
+            Text("Your wallets don't contain any Stamps")
+        }
     }
     
     // MARK: - No Filter Results View
     
     private var noFilterResultsView: some View {
         ContentUnavailableView {
-            Label("No Results", systemImage: "line.3.horizontal.decrease.circle")
+            Label {
+                Text("No Results")
+                    .foregroundStyle(appColorScheme.primary)
+            } icon: {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .foregroundStyle(appColorScheme.secondary)
+            }
         } description: {
             Text("No stamps match the active filters")
         }
