@@ -96,6 +96,8 @@ struct CollectionView: View {
     // MARK: - Body
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         NavigationStack {
             mainContent
                 .toolbar {
@@ -118,7 +120,7 @@ struct CollectionView: View {
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             showOfflineBanner = !isConnected
         }
-        .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
+        .fullScreenCover(item: $viewModel.selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampDetailView(
                     stamps: viewModel.stamps.map(\.stamp),
@@ -126,7 +128,7 @@ struct CollectionView: View {
                 )
             }
         }
-        .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
+        .sheet(item: $viewModel.metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
@@ -442,17 +444,6 @@ struct CollectionView: View {
         .padding()
     }
     
-}
-
-// MARK: - Bindable Extension for Optional Binding
-
-extension Bindable where Value: AnyObject {
-    subscript<T>(dynamicMember keyPath: ReferenceWritableKeyPath<Value, T?>) -> Binding<T?> {
-        Binding(
-            get: { self.wrappedValue[keyPath: keyPath] },
-            set: { self.wrappedValue[keyPath: keyPath] = $0 }
-        )
-    }
 }
 
 // MARK: - Preview

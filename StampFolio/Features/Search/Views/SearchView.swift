@@ -26,6 +26,8 @@ struct SearchView: View {
     // MARK: - Body
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         NavigationStack {
             Group {
                 if viewModel.searchText.isEmpty && !viewModel.hasActiveFilters {
@@ -38,11 +40,8 @@ struct SearchView: View {
             }
             .tint(appColorScheme.primary)
         }
-        .searchable(text: Binding(
-            get: { viewModel.searchText },
-            set: { viewModel.searchText = $0 }
-        ), prompt: "Search")
-        .fullScreenCover(item: Bindable(viewModel).selectedStamp) { displayStamp in
+        .searchable(text: $viewModel.searchText, prompt: "Search")
+        .fullScreenCover(item: $viewModel.selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampDetailView(
                     stamps: viewModel.stamps.map(\.stamp),
@@ -50,7 +49,7 @@ struct SearchView: View {
                 )
             }
         }
-        .sheet(item: Bindable(viewModel).metadataStamp) { displayStamp in
+        .sheet(item: $viewModel.metadataStamp) { displayStamp in
             StampMetadataPopup(stamp: displayStamp.stamp)
                 .presentationDetents([.medium])
                 .presentationBackground(.ultraThinMaterial)
