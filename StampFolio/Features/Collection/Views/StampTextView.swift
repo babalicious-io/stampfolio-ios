@@ -36,12 +36,12 @@ struct StampTextView: View {
             
             if isLoading {
                 ProgressView()
-                    .tint(appColorScheme.primary)
+                    .tint(.white)
             } else {
                 Text(content)
                     .font(.system(.caption2))
                     .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(8)
                     .padding(8)
