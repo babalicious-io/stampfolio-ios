@@ -24,7 +24,7 @@ struct StampPixelView: View {
     // MARK: - Body
     
     var body: some View {
-        if stamp.isAnimated {
+        if stamp.isGIF {
             // Use KFAnimatedImage for GIFs
             KFAnimatedImage(stamp.imageURL)
                 .placeholder {

@@ -52,7 +52,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     let fileHash: String?
     
     /// Size of the stamp file in bytes
-    let fileSizeBytes: Int?
+    let fileSize: Int?
     
     /// Market data (floor price, holder count, etc.)
     let marketData: MarketData?
@@ -73,7 +73,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         case txHash = "tx_hash"
         case ident
         case fileHash = "file_hash"
-        case fileSizeBytes = "file_size_bytes"
+        case fileSize = "file_size_bytes"
         case marketData = "market_data"
     }
     
@@ -83,12 +83,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     var stampchainURL: URL {
         URL(string: "https://stampchain.io/stamp/\(id)")!
     }
-    
-    /// Display title - uses creator name if available, otherwise stamp number
-    var displayTitle: String {
-        creatorName ?? "Stamp #\(id)"
-    }
-    
+
     /// Formatted stamp number with prefix
     var formattedNumber: String {
         if let identType = ident {
@@ -113,7 +108,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
     /// Human-readable file size
     var formattedFileSize: String? {
-        guard let bytes = fileSizeBytes else { return nil }
+        guard let bytes = fileSize else { return nil }
         
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
@@ -127,7 +122,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     }
     
     /// Whether the stamp content is animated (GIF)
-    var isAnimated: Bool {
+    var isGIF: Bool {
         stampMimetype?.lowercased() == "image/gif"
     }
     
@@ -213,7 +208,7 @@ extension Stamp {
         txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
         ident: "STAMP",
         fileHash: "sha256hash",
-        fileSizeBytes: 198,
+        fileSize: 198,
         marketData: MarketData.sample
     )
     
@@ -234,7 +229,7 @@ extension Stamp {
             txHash: "def456abc789",
             ident: "STAMP",
             fileHash: nil,
-            fileSizeBytes: 1024,
+            fileSize: 1024,
             marketData: nil
         ),
         Stamp(
@@ -251,7 +246,7 @@ extension Stamp {
             txHash: "test123",
             ident: "STAMP",
             fileHash: nil,
-            fileSizeBytes: 500,
+            fileSize: 500,
             marketData: nil
         )
     ]

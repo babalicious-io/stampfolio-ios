@@ -83,7 +83,7 @@ struct DisplayStamp: Identifiable {
             txHash: stampBalance.txHash,
             ident: "STAMP",
             fileHash: nil,
-            fileSizeBytes: nil,
+            fileSize: nil,
             marketData: nil
         )
         self.balance = stampBalance.balance
