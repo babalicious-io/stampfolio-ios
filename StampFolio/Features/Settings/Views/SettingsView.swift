@@ -41,6 +41,7 @@ struct SettingsView: View {
                 // Theme Section
                 Section {
                     themeToggle
+                        .listRowBackground(Color.black)
                 } header: {
                     Text("Appearance")
                 }
@@ -48,6 +49,7 @@ struct SettingsView: View {
                 // Color Scheme Section
                 Section {
                     colorSchemeRow
+                        .listRowBackground(Color.black)
                 } header: {
                     Text("Color Scheme")
                 }
@@ -56,6 +58,7 @@ struct SettingsView: View {
                 Section {
                     ForEach(protocolOrder) { protocolType in
                         protocolRow(for: protocolType)
+                            .listRowBackground(Color.black)
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
@@ -67,6 +70,7 @@ struct SettingsView: View {
                     if !wallets.isEmpty {
                         ForEach(wallets) { wallet in
                             WalletRow(wallet: wallet)
+                                .listRowBackground(Color.black)
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
                                         editingWallet = wallet
@@ -86,6 +90,7 @@ struct SettingsView: View {
                     }
                     
                     addWalletButton
+                        .listRowBackground(Color.black)
                 } header: {
                     Text("Wallets")
                 }
@@ -93,19 +98,19 @@ struct SettingsView: View {
                 // Wallet Icons Section
                 Section {
                     walletIconToggle
+                        .listRowBackground(Color.black)
                 }
                 
                 // About Section
                 Section {
                     aboutRow
+                        .listRowBackground(Color.black)
                 } header: {
                     Text("About")
                 }
             }
             .environment(\.editMode, $protocolEditMode)
             .listSectionSpacing(16)
-            .scrollContentBackground(.hidden)
-            .background(Color.black)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
