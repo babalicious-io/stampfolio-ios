@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import Kingfisher
-import WebKit
 import SwiftData
 
 /// Row view displaying a stamp in the collection list
@@ -103,71 +101,20 @@ struct StampRowView: View {
         if imageLoadFailed {
             failedImageView
         } else if stamp.isHTML || stamp.isSVG {
-            // Use WebView for HTML and SVG content
-            StampWebView(url: stamp.imageURL)
+            // Vector: HTML/SVG via WebView
+            StampVectorView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
         } else if stamp.isText {
-            // Plain text stamp - fetch and display text
-            TextStampView(url: stamp.imageURL)
-        } else if stamp.isAudio {
-            // Audio stamp - gradient placeholder with waveform
-            audioPlaceholderView
-        } else if stamp.isVideo {
-            // Video stamp - gradient placeholder with play icon
-            videoPlaceholderView
-        } else if stamp.isAnimated {
-            // Use KFAnimatedImage for GIFs
-            KFAnimatedImage(stamp.imageURL)
-                .placeholder {
-                    placeholderView
-                }
-                .cacheOriginalImage()
-                .onFailure { error in
-                    print("GIF load failed for \(stamp.id): \(error.localizedDescription)")
-                    imageLoadFailed = true
-                }
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 64, height: 64)
-                .clipped()
+            // Text: Plain text content
+            StampTextView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
+        } else if stamp.isLibrary, let label = stamp.libraryLabel {
+            // Library: JS/CSS/GZIP files
+            StampLibraryView(label: label)
+        } else if stamp.isAudio || stamp.isVideo {
+            // Media: Audio/Video placeholders
+            StampMediaView(type: stamp.isAudio ? .audio : .video)
         } else {
-            // Use KFImage for regular images (jpg, png, webp) + SRC-721/cursed stamps
-            KFImage(stamp.imageURL)
-                .placeholder {
-                    placeholderView
-                }
-                .retry(maxCount: 3, interval: .seconds(1))
-                .fade(duration: 0.3)
-                .cacheOriginalImage()
-                .onSuccess { _ in
-                    imageLoadFailed = false
-                }
-                .onFailure { error in
-                    print("Image load failed for \(stamp.id): \(error.localizedDescription)")
-                    print("URL: \(stamp.stampUrl)")
-                    imageLoadFailed = true
-                }
-                .resizable()
-                .interpolation(.none) // Prevents pixelation for small/pixel art stamps
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 64, height: 64)
-                .clipped()
-        }
-    }
-    
-    // MARK: - Placeholder View
-    
-    private var placeholderView: some View {
-        ZStack {
-            Color(uiColor: .systemBackground)
-            
-            VStack(spacing: 4) {
-                Image(systemName: "photo")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                ProgressView()
-                    .tint(appColorScheme.primary)
-                    .scaleEffect(0.7)
-            }
+            // Raster: Pixel images (jpg, png, webp, gif)
+            StampPixelView(stamp: stamp, geometry: CGSize(width: 64, height: 64), onFailure: { imageLoadFailed = true })
         }
     }
     
@@ -186,36 +133,6 @@ struct StampRowView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
-        }
-    }
-    
-    // MARK: - Gradient Background
-    
-    private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primary)
-    }
-    
-    // MARK: - Audio Placeholder View
-    
-    private var audioPlaceholderView: some View {
-        ZStack {
-            gradientBackground
-            
-            Image(systemName: "waveform")
-                .font(.title3)
-                .foregroundStyle(.white)
-        }
-    }
-    
-    // MARK: - Video Placeholder View
-    
-    private var videoPlaceholderView: some View {
-        ZStack {
-            gradientBackground
-            
-            Image(systemName: "play.fill")
-                .font(.title3)
-                .foregroundStyle(.white)
         }
     }
     
