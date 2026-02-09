@@ -381,26 +381,15 @@ struct WalletRow: View {
                     .foregroundStyle(appColorScheme.secondary)
             }
             
-            HStack(spacing: 14) {
-                Text(wallet.address)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                
-                Spacer()
-                
-                if let count = wallet.cachedStampCount {
-                    Text("\(count) stamps")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Text(wallet.address)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Wallet \(wallet.displayName)")
-        .accessibilityValue("\(wallet.cachedStampCount ?? 0) stamps")
     }
 }
 
