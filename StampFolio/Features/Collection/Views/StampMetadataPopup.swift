@@ -18,31 +18,44 @@ struct StampMetadataPopup: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.appColorScheme) private var appColorScheme
+    
+    private var listSectionBackground: Color { colorScheme == .dark ? .black : .white }
     
     // MARK: - Body
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // Section 1: Stamp Identification
+            List {
+                // Section 1: Stamp Identification
+                Section {
                     stampIdentificationSection
-                    
-                    // Section 2: Creator, Supply & Market Data
-                    creatorAndMarketSection
-                    
-                    // Section 3: File Information
-                    fileInformationSection
-                    
-                    // Section 4: Blockchain Information
-                    blockchainInformationSection
-                    
-                    // View on Stampchain Button
-                    stampchainLinkButton
+                        .listRowBackground(listSectionBackground)
                 }
-                .padding()
+                
+                // Section 2: Creator, Supply & Market Data
+                Section {
+                    creatorAndMarketContent
+                }
+                
+                // Section 3: File Information
+                Section {
+                    fileInformationContent
+                }
+                
+                // Section 4: Blockchain Information
+                Section {
+                    blockchainInformationContent
+                }
+                
+                // View on Stampchain Button
+                Section {
+                    stampchainLinkButton
+                        .listRowBackground(listSectionBackground)
+                }
             }
+            .listSectionSpacing(16)
             .navigationTitle("Stamp Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
