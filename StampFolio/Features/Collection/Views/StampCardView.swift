@@ -42,15 +42,18 @@ struct StampCardView: View {
             .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)
+            .contentShape(Rectangle())
             .onTapGesture {
-                onTap()
+                onInfoTap()  // Show metadata sheet
             }
-            .onLongPressGesture(minimumDuration: 0.1, pressing: { pressing in
+            .onLongPressGesture(minimumDuration: 0.5, pressing: { pressing in
                 isPressed = pressing
-            }, perform: {})
+            }, perform: {
+                onTap()  // Show detail view
+            })
             .accessibilityElement(children: .combine)
             .accessibilityLabel(stamp.formattedNumber)
-            .accessibilityHint("Double tap to view full screen")
+            .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
     
@@ -220,45 +223,33 @@ struct StampCardView: View {
     // MARK: - Stamp Number Pill
     
     private var stampNumber: some View {
-        Button {
-            onInfoTap()
-        } label: {
-            Text("#\(stamp.id)")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(Color(uiColor: .systemBackground).opacity(0.85))
-                )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Stamp number \(stamp.id)")
-        .accessibilityHint("Opens stamp metadata popup")
+        Text("#\(stamp.id)")
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
+            )
+            .accessibilityLabel("Stamp number \(stamp.id)")
     }
     
     // MARK: - Stamp Editions Pill
     
     private var stampEditions: some View {
-        Button {
-            onInfoTap()
-        } label: {
-            Text(displayStamp.formattedBalanceWithSupply)
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(Color(uiColor: .systemBackground).opacity(0.85))
-                )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Balance: \(displayStamp.formattedBalanceWithSupply)")
-        .accessibilityHint("Opens stamp metadata popup")
+        Text(displayStamp.formattedBalanceWithSupply)
+            .font(.caption)
+            .fontWeight(.bold)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
+            )
+            .accessibilityLabel("Balance: \(displayStamp.formattedBalanceWithSupply)")
     }
     
     // MARK: - Wallet Icon Pill
@@ -267,23 +258,17 @@ struct StampCardView: View {
         let wallet = wallets.first { $0.address == displayStamp.walletAddress }
         let walletColor = wallet?.walletColor.color ?? .gray
         
-        return Button {
-            onInfoTap()
-        } label: {
-            Image(systemName: "wallet.bifold.fill")
-                .font(.caption)
-                .fontWeight(.regular)
-                .foregroundStyle(walletColor)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(Color(uiColor: .systemBackground).opacity(0.85))
-                )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Wallet indicator")
-        .accessibilityHint("Shows which wallet owns this stamp")
+        return Image(systemName: "wallet.bifold.fill")
+            .font(.caption)
+            .fontWeight(.regular)
+            .foregroundStyle(walletColor)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
+            )
+            .accessibilityLabel("Wallet indicator")
     }
 }
 

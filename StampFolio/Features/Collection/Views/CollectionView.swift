@@ -400,9 +400,7 @@ struct CollectionView: View {
                                 viewModel.selectedStamp = displayStamp
                             },
                             onInfoTap: {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    viewModel.metadataStamp = displayStamp
-                                }
+                                viewModel.metadataStamp = displayStamp
                             }
                         )
                     }
@@ -418,9 +416,7 @@ struct CollectionView: View {
                                 viewModel.selectedStamp = displayStamp
                             },
                             onInfoTap: {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    viewModel.metadataStamp = displayStamp
-                                }
+                                viewModel.metadataStamp = displayStamp
                             }
                         )
                     }
