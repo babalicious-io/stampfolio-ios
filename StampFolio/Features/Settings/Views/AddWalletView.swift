@@ -35,6 +35,7 @@ struct AddWalletView: View {
                 Section {
                     TextField("Wallet Name (Optional)", text: $walletName)
                         .textInputAutocapitalization(.words)
+                        .tint(appColorScheme.primary)
                         .accessibilityLabel("Wallet name")
                         .accessibilityHint("Enter a custom name for this wallet")
                 } header: {
@@ -82,6 +83,7 @@ struct AddWalletView: View {
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                             .focused($isAddressFocused)
+                            .tint(appColorScheme.primary)
                             .accessibilityLabel("Bitcoin wallet address")
                             .accessibilityHint("Enter a Bitcoin address starting with 1, 3, bc1q, or bc1p")
                         

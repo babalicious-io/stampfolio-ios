@@ -36,6 +36,7 @@ struct SearchView: View {
                     searchResults
                 }
             }
+            .tint(appColorScheme.primary)
         }
         .searchable(text: Binding(
             get: { viewModel.searchText },

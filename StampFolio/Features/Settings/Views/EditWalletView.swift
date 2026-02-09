@@ -36,6 +36,7 @@ struct EditWalletView: View {
                     TextField("Wallet Name (Optional)", text: $walletName)
                         .textInputAutocapitalization(.words)
                         .focused($isNameFocused)
+                        .tint(appColorScheme.primary)
                         .accessibilityLabel("Wallet name")
                         .accessibilityHint("Enter a custom name for this wallet")
                 } header: {

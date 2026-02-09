@@ -33,6 +33,7 @@ struct MainTabView: View {
     @AppStorage("showCounterparty") private var showCounterparty = true
     @AppStorage("showStamps") private var showStamps = true
     @State private var protocolOrder: [ProtocolType] = []
+    @Environment(\.appColorScheme) private var appColorScheme
     
     // MARK: - Body
     
@@ -45,6 +46,7 @@ struct MainTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .tint(appColorScheme.primary)
         .environment(\.showSettingsBinding, $showSettings)
         .sheet(isPresented: $showSettings) {
             SettingsView()
