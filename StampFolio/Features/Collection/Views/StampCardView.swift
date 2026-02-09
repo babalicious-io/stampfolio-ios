@@ -245,7 +245,7 @@ struct StampCardView: View {
         Button {
             onInfoTap()
         } label: {
-            Text(displayStamp.formattedQuantity)
+            Text(displayStamp.formattedBalanceWithSupply)
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.primary)
@@ -257,7 +257,7 @@ struct StampCardView: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Editions: \(displayStamp.formattedQuantity)")
+        .accessibilityLabel("Balance: \(displayStamp.formattedBalanceWithSupply)")
         .accessibilityHint("Opens stamp metadata popup")
     }
     

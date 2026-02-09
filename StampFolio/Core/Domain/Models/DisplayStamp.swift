@@ -35,6 +35,38 @@ struct DisplayStamp: Identifiable {
         }
     }
     
+    /// Formatted balance with total supply (e.g., "2/69")
+    var formattedBalanceWithSupply: String {
+        let userBalance = balance ?? 0.0
+        let totalSupply = Double(stamp.supply)
+        
+        if divisible == 1 {
+            // Convert from satoshi-like units (100,000,000 = 1)
+            let actualBalance = userBalance / 100_000_000.0
+            let actualSupply = totalSupply / 100_000_000.0
+            
+            // Format numbers, removing unnecessary decimals
+            let balanceStr = formatNumber(actualBalance)
+            let supplyStr = formatNumber(actualSupply)
+            
+            return "\(balanceStr)/\(supplyStr)"
+        } else {
+            // Non-divisible stamps - show as integers
+            return "\(Int(userBalance))/\(Int(totalSupply))"
+        }
+    }
+    
+    // MARK: - Private Helpers
+    
+    /// Formats a number, removing trailing decimals if it's a whole number
+    private func formatNumber(_ value: Double) -> String {
+        if value.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", value)
+        } else {
+            return String(format: "%g", value)
+        }
+    }
+    
     /// Create from StampBalance
     init(from stampBalance: StampBalance) {
         self.stamp = Stamp(
