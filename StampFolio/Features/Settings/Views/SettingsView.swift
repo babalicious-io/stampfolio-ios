@@ -104,6 +104,8 @@ struct SettingsView: View {
             }
             .environment(\.editMode, $protocolEditMode)
             .listSectionSpacing(16)
+            .scrollContentBackground(.hidden)
+            .background(Color.black)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
