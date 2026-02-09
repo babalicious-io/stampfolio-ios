@@ -122,7 +122,7 @@ struct StampCardView: View {
                             Spacer()
                             walletIcon
                         }
-                        .padding(12)
+                        .padding(8)
                     }
                     
                     Spacer()
@@ -136,7 +136,7 @@ struct StampCardView: View {
                         // Edition balance - bottom right
                         stampEditions
                     }
-                    .padding(12)
+                    .padding(8)
                 }
             }
         }
