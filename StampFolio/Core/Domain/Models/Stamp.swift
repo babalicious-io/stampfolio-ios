@@ -158,6 +158,36 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         return mimetype.hasPrefix("video/")
     }
     
+    /// Whether the stamp content is JavaScript
+    var isJavaScript: Bool {
+        guard let mimetype = stampMimetype?.lowercased() else { return false }
+        return mimetype == "application/javascript" || mimetype == "text/javascript" || mimetype == "application/x-javascript"
+    }
+    
+    /// Whether the stamp content is CSS
+    var isCSS: Bool {
+        stampMimetype?.lowercased() == "text/css"
+    }
+    
+    /// Whether the stamp content is GZIP compressed
+    var isGZIP: Bool {
+        guard let mimetype = stampMimetype?.lowercased() else { return false }
+        return mimetype == "application/gzip" || mimetype == "application/x-gzip"
+    }
+    
+    /// Whether the stamp is a library file (JS, CSS, GZIP)
+    var isLibrary: Bool {
+        isJavaScript || isCSS || isGZIP
+    }
+    
+    /// Library file type label for display
+    var libraryLabel: String? {
+        if isJavaScript { return "JS" }
+        if isCSS { return "CSS" }
+        if isGZIP { return "GZIP" }
+        return nil
+    }
+    
     /// Whether the stamp is divisible (converts int to bool)
     var isDivisible: Bool {
         divisible == 1
