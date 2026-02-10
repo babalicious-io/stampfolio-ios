@@ -256,7 +256,7 @@ struct SettingsView: View {
             
             Spacer()
             
-            HStack(spacing: 24) {
+            HStack(spacing: 20) {
                 ForEach(AppColorScheme.allCases) { scheme in
                     Button {
                         withAnimation(.easeInOut(duration: 0.2)) {
