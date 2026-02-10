@@ -195,7 +195,7 @@ in AddWalletView  -> Wallet to SwiftData  ->   hits Stampchain API    ->   prefe
                               (.never expiry)    StampContentCache
 ```
 
-Fetching is triggered **immediately** when the wallet is added (in `AddWalletView`), not deferred to when `CollectionView` appears. The sheet dismisses only after the fetch completes.
+Fetching is triggered **immediately** when the wallet is added (in `AddWalletView`). The sheet dismisses only after the fetch completes.
 
 ### Displaying a Stamp (Cache-First)
 
@@ -257,7 +257,7 @@ StampContentCache.read(url)
 
 ## Manual Refresh
 
-Pull-to-refresh is intentionally removed from the collection view. Instead, per-wallet refresh is available via a left swipe action in Settings:
+Per-wallet refresh is available via a left swipe action in Settings:
 
 ```
 Settings > Wallet row > Swipe right > "Refresh"
@@ -290,7 +290,7 @@ Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMem
 
 | Setting | Key | Default | Effect |
 |---------|-----|---------|--------|
-| Animated Preview Images | `performancePreview` | `true` | When off, GIFs render as static downsampled thumbnails in grids/lists |
+| Animated Images | `performancePreview` | `true` | When off, GIFs render as static downsampled thumbnails in grids/lists |
 
 Located in Settings > Performance.
 
