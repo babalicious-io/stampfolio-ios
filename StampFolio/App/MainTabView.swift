@@ -6,7 +6,47 @@
 //
 
 import SwiftUI
+import UIKit
 import Combine
+
+// MARK: - Tab Bar Stacked Layout
+
+/// Forces UITabBar to use stacked layout (icon above text) on iPad
+/// by setting compact horizontal size class on the UITabBar view only.
+/// This does NOT propagate to content views — only affects tab bar rendering.
+/// Uses iOS 17+ `traitOverrides` API (WWDC23: "Unleash the UIKit trait system").
+private struct TabBarStackedLayout: UIViewRepresentable {
+    
+    func makeUIView(context: Context) -> UIView {
+        let finder = TabBarFinderView()
+        finder.isHidden = true
+        finder.isUserInteractionEnabled = false
+        return finder
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {}
+    
+    /// UIView subclass that walks the responder chain to find the UITabBar
+    /// once inserted into the view hierarchy.
+    private class TabBarFinderView: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            guard window != nil else { return }
+            
+            // Walk responder chain to find UITabBarController
+            var responder: UIResponder? = self
+            while let next = responder?.next {
+                if let tabBarController = next as? UITabBarController {
+                    // Set compact size class on UITabBar view only (not content views).
+                    // Forces stacked layout (icon above text) matching iPhone.
+                    tabBarController.tabBar.traitOverrides.horizontalSizeClass = .compact
+                    break
+                }
+                responder = next
+            }
+        }
+    }
+}
 
 // MARK: - Environment Key
 
@@ -45,6 +85,7 @@ struct MainTabView: View {
                 SearchView()
             }
         }
+        .background(TabBarStackedLayout())
         .tabBarMinimizeBehavior(.onScrollDown)
         .tint(appColorScheme.primary)
         .environment(\.showSettingsBinding, $showSettings)
@@ -68,14 +109,8 @@ struct MainTabView: View {
     @TabContentBuilder<Never>
     private var orderedProtocolTabs: some TabContent<Never> {
         ForEach(protocolOrder.filter { shouldShowProtocol($0) }) { protocolType in
-            Tab {
+            Tab(protocolType.rawValue, systemImage: protocolType.icon) {
                 viewForProtocol(protocolType)
-            } label: {
-                VStack(spacing: 2) {
-                    Image(systemName: protocolType.icon)
-                        .font(.system(size: 20))
-                    Text(protocolType.rawValue)
-                }
             }
         }
     }
