@@ -31,6 +31,7 @@ struct StampPixelView: View {
                     loadingView
                 }
                 .cacheOriginalImage()
+                .diskCacheExpiration(.never)
                 .onFailure { error in
                     print("GIF load failed for \(stamp.id): \(error.localizedDescription)")
                     onFailure()
@@ -47,6 +48,7 @@ struct StampPixelView: View {
                 .retry(maxCount: 3, interval: .seconds(1))
                 .fade(duration: 0.3)
                 .cacheOriginalImage()
+                .diskCacheExpiration(.never)
                 .onFailure { error in
                     print("Image load failed for \(stamp.id): \(error.localizedDescription)")
                     print("URL: \(stamp.stampUrl)")

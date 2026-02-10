@@ -14,6 +14,7 @@ struct SettingsView: View {
     // MARK: - Environment
     
     @Environment(SettingsViewModel.self) private var viewModel
+    @Environment(CollectionViewModel.self) private var collectionViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
@@ -69,11 +70,20 @@ struct SettingsView: View {
                             WalletRow(wallet: wallet)
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
+                                        Task {
+                                            await collectionViewModel.fetchStampMetadata(for: wallet, allWallets: wallets, forceRefresh: true)
+                                        }
+                                    } label: {
+                                        Label("Refresh", systemImage: "arrow.clockwise")
+                                    }
+                                    .tint(appColorScheme.primary)
+                                    
+                                    Button {
                                         editingWallet = wallet
                                     } label: {
                                         Label("Edit", systemImage: "pencil")
                                     }
-                                    .tint(appColorScheme.primary)
+                                    .tint(.gray)
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
@@ -398,5 +408,6 @@ struct WalletRow: View {
 #Preview {
     SettingsView()
         .environment(SettingsViewModel())
+        .environment(CollectionViewModel())
         .modelContainer(for: Wallet.self, inMemory: true)
 }

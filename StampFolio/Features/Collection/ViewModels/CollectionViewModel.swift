@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 import Observation
+import Kingfisher
 
 /// Sort categories for toggle behavior
 enum SortCategory {
@@ -169,9 +170,13 @@ final class CollectionViewModel {
         return result
     }
     
+    /// Image prefetch progress (completed, total)
+    private(set) var fetchStampsProgress: (completed: Int, total: Int)?
+    
     // MARK: - Private Properties
     
     private let apiClient = StampchainAPIClient()
+    private var imagePrefetcher: ImagePrefetcher?
     
     // MARK: - Initialization
     
@@ -179,10 +184,12 @@ final class CollectionViewModel {
     
     // MARK: - Public Methods
     
-    /// Fetch stamps for all wallets
-    /// - Parameter wallets: Array of wallet addresses to fetch stamps for
+    /// Fetch stamp metadata for all wallets, then prefetch images
+    /// - Parameters:
+    ///   - wallets: Array of wallet addresses to fetch stamps for
+    ///   - forceRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStamps(for wallets: [Wallet]) async {
+    func fetchStampsMetadata(for wallets: [Wallet], forceRefresh: Bool = false) async {
         guard !wallets.isEmpty else {
             stamps = []
             return
@@ -199,7 +206,7 @@ final class CollectionViewModel {
             for wallet in wallets {
                 group.addTask {
                     do {
-                        let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address)
+                        let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceRefresh: forceRefresh)
                         // Convert StampBalance to DisplayStamp
                         let displayStamps = walletBalances.map { DisplayStamp(from: $0) }
                         return .success(displayStamps)
@@ -247,15 +254,131 @@ final class CollectionViewModel {
         }
         
         isLoading = false
+        
+        // Prefetch all stamp images in background
+        if !stamps.isEmpty {
+            fetchStampsImages()
+        }
     }
     
-    /// Refresh stamps (pull-to-refresh)
-    /// - Parameter wallets: Array of wallet addresses to refresh
+    /// Fetch metadata for a single stamp (used by per-wallet refresh)
+    /// - Parameters:
+    ///   - wallet: The wallet to fetch stamps for
+    ///   - allWallets: All wallets for dedup and sorting context
+    ///   - forceRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func refreshStamps(for wallets: [Wallet]) async {
+    func fetchStampMetadata(for wallet: Wallet, allWallets: [Wallet], forceRefresh: Bool = false) async {
         isRefreshing = true
-        await fetchStamps(for: wallets)
+        errorMessage = nil
+        
+        do {
+            let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceRefresh: forceRefresh)
+            let newDisplayStamps = walletBalances.map { DisplayStamp(from: $0) }
+            
+            // Remove existing stamps from this wallet, then add fresh ones
+            var updatedStamps = stamps.filter { $0.walletAddress != wallet.address }
+            updatedStamps.append(contentsOf: newDisplayStamps)
+            
+            // Deduplicate
+            var seen = Set<Int>()
+            let uniqueStamps = updatedStamps.filter { stamp in
+                if seen.contains(stamp.id) { return false }
+                seen.insert(stamp.id)
+                return true
+            }
+            
+            stamps = sortedStamps(uniqueStamps, by: currentSortOption, wallets: allWallets)
+            
+            print("✅ Refreshed wallet \(wallet.displayName): \(newDisplayStamps.count) stamps")
+            
+            // Prefetch images for the refreshed stamps
+            if !newDisplayStamps.isEmpty {
+                fetchStampsImages()
+            }
+        } catch {
+            print("❌ Refresh error for \(wallet.displayName): \(error.localizedDescription)")
+            errorMessage = "Failed to refresh \(wallet.displayName): \(error.localizedDescription)"
+        }
+        
         isRefreshing = false
+    }
+    
+    /// Prefetch all stamp images in background
+    /// Pixel stamps use Kingfisher ImagePrefetcher, vector/text use URLSession
+    func fetchStampsImages() {
+        // Cancel any existing prefetch
+        imagePrefetcher?.stop()
+        
+        // Separate URLs by stamp type
+        var pixelURLs: [URL] = []
+        var vectorTextURLs: [URL] = []
+        
+        for displayStamp in stamps {
+            let stamp = displayStamp.stamp
+            guard let url = stamp.imageURL else { continue }
+            
+            if stamp.isHTML || stamp.isSVG || stamp.isText {
+                vectorTextURLs.append(url)
+            } else if stamp.isLibrary || stamp.isAudio || stamp.isVideo {
+                // Skip library/audio/video - these are placeholders or not preloadable
+                continue
+            } else {
+                // Pixel images (jpg, png, webp, gif)
+                pixelURLs.append(url)
+            }
+        }
+        
+        let totalCount = pixelURLs.count + vectorTextURLs.count
+        guard totalCount > 0 else { return }
+        
+        print("📦 Prefetching \(pixelURLs.count) pixel + \(vectorTextURLs.count) vector/text stamp images")
+        
+        fetchStampsProgress = (completed: 0, total: totalCount)
+        var completedCount = 0
+        
+        // Prefetch pixel stamps with Kingfisher
+        if !pixelURLs.isEmpty {
+            let prefetcher = ImagePrefetcher(
+                urls: pixelURLs,
+                options: [
+                    .cacheOriginalImage,
+                    .diskCacheExpiration(.never)
+                ],
+                progressBlock: { [weak self] skippedResources, failedResources, completedResources in
+                    let pixelCompleted = skippedResources.count + failedResources.count + completedResources.count
+                    Task { @MainActor in
+                        completedCount = pixelCompleted
+                        self?.fetchStampsProgress = (completed: completedCount, total: totalCount)
+                    }
+                },
+                completionHandler: { [weak self] skippedResources, failedResources, completedResources in
+                    print("✅ Pixel prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
+                    Task { @MainActor in
+                        self?.fetchStampsProgress = nil
+                    }
+                }
+            )
+            imagePrefetcher = prefetcher
+            prefetcher.start()
+        }
+        
+        // Prefetch vector/text stamps via URLSession (populates default URLCache)
+        if !vectorTextURLs.isEmpty {
+            Task.detached(priority: .utility) {
+                await withTaskGroup(of: Void.self) { group in
+                    for url in vectorTextURLs {
+                        group.addTask {
+                            do {
+                                let _ = try await URLSession.shared.data(from: url)
+                            } catch {
+                                print("⚠️ Vector/text prefetch failed for \(url): \(error.localizedDescription)")
+                            }
+                        }
+                    }
+                }
+                print("✅ Vector/text prefetch done: \(vectorTextURLs.count) stamps")
+            }
+        }
     }
     
     /// Clear all stamps and errors

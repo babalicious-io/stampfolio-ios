@@ -107,14 +107,13 @@ struct CollectionView: View {
                 }
         }
         .task {
-            await viewModel.fetchStamps(for: wallets)
-        }
-        .refreshable {
-            await viewModel.refreshStamps(for: wallets)
+            if viewModel.stamps.isEmpty {
+                await viewModel.fetchStampsMetadata(for: wallets)
+            }
         }
         .onChange(of: wallets.count) { _, _ in
             Task {
-                await viewModel.fetchStamps(for: wallets)
+                await viewModel.fetchStampsMetadata(for: wallets)
             }
         }
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
@@ -342,7 +341,7 @@ struct CollectionView: View {
         } actions: {
             Button("Try Again") {
                 Task {
-                    await viewModel.refreshStamps(for: wallets)
+                    await viewModel.fetchStampsMetadata(for: wallets, forceRefresh: true)
                 }
             }
             .buttonStyle(.borderedProminent)

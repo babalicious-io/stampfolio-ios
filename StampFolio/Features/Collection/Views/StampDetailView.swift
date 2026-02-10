@@ -118,6 +118,7 @@ struct StampDetailView: View {
                         .tint(appColorScheme.primary)
                 }
                 .cacheOriginalImage()
+                .diskCacheExpiration(.never)
                 .aspectRatio(contentMode: .fit)
                 .allowsHitTesting(false)
         } else {
@@ -128,6 +129,8 @@ struct StampDetailView: View {
                         .tint(appColorScheme.primary)
                 }
                 .retry(maxCount: 3)
+                .cacheOriginalImage()
+                .diskCacheExpiration(.never)
                 .resizable()
                 .interpolation(.none) // Prevents pixelation for small/pixel art stamps
                 .aspectRatio(contentMode: .fit)
