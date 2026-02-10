@@ -291,7 +291,7 @@ struct SettingsView: View {
     private var performancePreviewToggle: some View {
         Toggle(isOn: $performancePreview) {
             HStack(spacing: 14) {
-                Image(systemName: performancePreview ? "play.circle.fill" : "photo.circle.fill")
+                Image(systemName: performancePreview ? "play.square.fill" : "square.fill")
                     .foregroundStyle(appColorScheme.primary)
                 Text(performancePreview ? "Animated Images" : "Static Preview Images")
             }
