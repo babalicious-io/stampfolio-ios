@@ -61,9 +61,18 @@ struct StampTextView: View {
             return
         }
         
+        // Check disk cache first
+        if let cachedText = await StampContentCache.shared.read(for: url) {
+            content = cachedText
+            isLoading = false
+            return
+        }
+        
+        // Cache miss - fetch from network, cache, then display
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let text = String(data: data, encoding: .utf8) {
+                await StampContentCache.shared.write(text, for: url)
                 content = text
             } else {
                 onFailure()

@@ -311,14 +311,17 @@ final class CollectionViewModel {
         
         // Separate URLs by stamp type
         var pixelURLs: [URL] = []
-        var vectorTextURLs: [URL] = []
+        var vectorURLs: [URL] = []  // HTML/SVG - need viewport injection
+        var textURLs: [URL] = []    // Plain text - cache as-is
         
         for displayStamp in stamps {
             let stamp = displayStamp.stamp
             guard let url = stamp.imageURL else { continue }
             
-            if stamp.isHTML || stamp.isSVG || stamp.isText {
-                vectorTextURLs.append(url)
+            if stamp.isHTML || stamp.isSVG {
+                vectorURLs.append(url)
+            } else if stamp.isText {
+                textURLs.append(url)
             } else if stamp.isLibrary || stamp.isAudio || stamp.isVideo {
                 // Skip library/audio/video - these are placeholders or not preloadable
                 continue
@@ -328,10 +331,11 @@ final class CollectionViewModel {
             }
         }
         
-        let totalCount = pixelURLs.count + vectorTextURLs.count
+        let contentURLCount = vectorURLs.count + textURLs.count
+        let totalCount = pixelURLs.count + contentURLCount
         guard totalCount > 0 else { return }
         
-        print("📦 Prefetching \(pixelURLs.count) pixel + \(vectorTextURLs.count) vector/text stamp images")
+        print("📦 Prefetching \(pixelURLs.count) pixel + \(vectorURLs.count) vector + \(textURLs.count) text stamp images")
         
         fetchStampsProgress = (completed: 0, total: totalCount)
         var completedCount = 0
@@ -354,7 +358,9 @@ final class CollectionViewModel {
                 completionHandler: { [weak self] skippedResources, failedResources, completedResources in
                     print("✅ Pixel prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
                     Task { @MainActor in
-                        self?.fetchStampsProgress = nil
+                        if contentURLCount == 0 {
+                            self?.fetchStampsProgress = nil
+                        }
                     }
                 }
             )
@@ -362,21 +368,61 @@ final class CollectionViewModel {
             prefetcher.start()
         }
         
-        // Prefetch vector/text stamps via URLSession (populates default URLCache)
-        if !vectorTextURLs.isEmpty {
+        // Prefetch vector/text stamps into StampContentCache
+        if contentURLCount > 0 {
             Task.detached(priority: .utility) {
+                let cache = StampContentCache.shared
+                let viewportMeta = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">"
+                
                 await withTaskGroup(of: Void.self) { group in
-                    for url in vectorTextURLs {
+                    // Vector stamps (HTML/SVG) - fetch, inject viewport, cache
+                    for url in vectorURLs {
                         group.addTask {
+                            // Skip if already cached
+                            guard await !cache.contains(url) else { return }
+                            
                             do {
-                                let _ = try await URLSession.shared.data(from: url)
+                                let (data, _) = try await URLSession.shared.data(from: url)
+                                guard var htmlString = String(data: data, encoding: .utf8) else { return }
+                                
+                                // Inject viewport (same logic as StampVectorView)
+                                if !htmlString.contains("name=\"viewport\"") && !htmlString.contains("name='viewport'") {
+                                    if let headRange = htmlString.range(of: "<head>", options: .caseInsensitive) {
+                                        htmlString.insert(contentsOf: viewportMeta, at: headRange.upperBound)
+                                    } else if let htmlRange = htmlString.range(of: "<html", options: .caseInsensitive) {
+                                        if let closeRange = htmlString[htmlRange.upperBound...].range(of: ">") {
+                                            htmlString.insert(contentsOf: "<head>\(viewportMeta)</head>", at: closeRange.upperBound)
+                                        }
+                                    } else {
+                                        htmlString = viewportMeta + htmlString
+                                    }
+                                }
+                                
+                                await cache.write(htmlString, for: url)
                             } catch {
-                                print("⚠️ Vector/text prefetch failed for \(url): \(error.localizedDescription)")
+                                print("⚠️ Vector prefetch failed for \(url): \(error.localizedDescription)")
+                            }
+                        }
+                    }
+                    
+                    // Text stamps - fetch and cache as-is
+                    for url in textURLs {
+                        group.addTask {
+                            guard await !cache.contains(url) else { return }
+                            
+                            do {
+                                let (data, _) = try await URLSession.shared.data(from: url)
+                                if let text = String(data: data, encoding: .utf8) {
+                                    await cache.write(text, for: url)
+                                }
+                            } catch {
+                                print("⚠️ Text prefetch failed for \(url): \(error.localizedDescription)")
                             }
                         }
                     }
                 }
-                print("✅ Vector/text prefetch done: \(vectorTextURLs.count) stamps")
+                
+                print("✅ Vector/text prefetch done: \(vectorURLs.count) vector + \(textURLs.count) text stamps cached")
             }
         }
     }

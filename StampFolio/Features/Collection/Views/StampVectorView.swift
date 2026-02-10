@@ -70,6 +70,14 @@ struct StampVectorView: UIViewRepresentable {
             currentTask?.cancel()
             
             currentTask = Task {
+                // Check disk cache first (processed HTML with viewport already injected)
+                if let cachedHTML = await StampContentCache.shared.read(for: url) {
+                    guard !Task.isCancelled, currentURL == url else { return }
+                    webView.loadHTMLString(cachedHTML, baseURL: url)
+                    return
+                }
+                
+                // Cache miss - fetch from network, process, cache, then load
                 do {
                     let (data, _) = try await URLSession.shared.data(from: url)
                     
@@ -101,6 +109,9 @@ struct StampVectorView: UIViewRepresentable {
                             htmlString = viewportMeta + htmlString
                         }
                     }
+                    
+                    // Cache the processed HTML for next time
+                    await StampContentCache.shared.write(htmlString, for: url)
                     
                     // Final check before loading
                     guard !Task.isCancelled, currentURL == url else { return }
