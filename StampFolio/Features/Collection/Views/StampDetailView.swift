@@ -269,9 +269,13 @@ struct StampDetailView: View {
 
 // MARK: - Web Content View
 
-/// WebView wrapper for SVG and HTML content
+/// WebView wrapper for SVG and HTML content with StampContentCache support
 struct WebContentView: UIViewRepresentable {
     let url: URL?
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
     
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -289,8 +293,32 @@ struct WebContentView: UIViewRepresentable {
     
     func updateUIView(_ webView: WKWebView, context: Context) {
         guard let url = url else { return }
-        let request = URLRequest(url: url)
-        webView.load(request)
+        guard context.coordinator.currentURL != url else { return }
+        context.coordinator.currentURL = url
+        context.coordinator.loadContent(webView: webView, url: url)
+    }
+    
+    class Coordinator {
+        var currentURL: URL?
+        var currentTask: Task<Void, Never>?
+        
+        @MainActor
+        func loadContent(webView: WKWebView, url: URL) {
+            currentTask?.cancel()
+            
+            currentTask = Task {
+                // Check StampContentCache first (processed HTML with viewport)
+                if let cachedHTML = await StampContentCache.shared.read(for: url) {
+                    guard !Task.isCancelled, currentURL == url else { return }
+                    webView.loadHTMLString(cachedHTML, baseURL: url)
+                    return
+                }
+                
+                // Cache miss - load directly from network
+                guard !Task.isCancelled, currentURL == url else { return }
+                webView.load(URLRequest(url: url))
+            }
+        }
     }
 }
 
@@ -334,9 +362,18 @@ struct TextContentView: View {
             return
         }
         
+        // Check StampContentCache first
+        if let cachedText = await StampContentCache.shared.read(for: url) {
+            content = cachedText
+            isLoading = false
+            return
+        }
+        
+        // Cache miss - fetch from network, cache, then display
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let text = String(data: data, encoding: .utf8) {
+                await StampContentCache.shared.write(text, for: url)
                 content = text
             } else {
                 content = "Failed to decode"
