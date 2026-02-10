@@ -6,47 +6,7 @@
 //
 
 import SwiftUI
-import UIKit
 import Combine
-
-// MARK: - Tab Bar Stacked Layout
-
-/// Forces UITabBar to use stacked layout (icon above text) on iPad
-/// by setting compact horizontal size class on the UITabBar view only.
-/// This does NOT propagate to content views — only affects tab bar rendering.
-/// Uses iOS 17+ `traitOverrides` API (WWDC23: "Unleash the UIKit trait system").
-private struct TabBarStackedLayout: UIViewRepresentable {
-    
-    func makeUIView(context: Context) -> UIView {
-        let finder = TabBarFinderView()
-        finder.isHidden = true
-        finder.isUserInteractionEnabled = false
-        return finder
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {}
-    
-    /// UIView subclass that walks the responder chain to find the UITabBar
-    /// once inserted into the view hierarchy.
-    private class TabBarFinderView: UIView {
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            guard window != nil else { return }
-            
-            // Walk responder chain to find UITabBarController
-            var responder: UIResponder? = self
-            while let next = responder?.next {
-                if let tabBarController = next as? UITabBarController {
-                    // Set compact size class on UITabBar view only (not content views).
-                    // Forces stacked layout (icon above text) matching iPhone.
-                    tabBarController.tabBar.traitOverrides.horizontalSizeClass = .compact
-                    break
-                }
-                responder = next
-            }
-        }
-    }
-}
 
 // MARK: - Environment Key
 
@@ -75,6 +35,10 @@ struct MainTabView: View {
     @State private var protocolOrder: [ProtocolType] = []
     @Environment(\.appColorScheme) private var appColorScheme
     
+    /// Capture the real horizontal size class before overriding it on TabView.
+    /// This lets us restore it on content views so grid columns etc. still use .regular on iPad.
+    @Environment(\.horizontalSizeClass) private var actualSizeClass
+    
     // MARK: - Body
     
     var body: some View {
@@ -83,10 +47,14 @@ struct MainTabView: View {
             
             Tab(role: .search) {
                 SearchView()
+                    .environment(\.horizontalSizeClass, actualSizeClass)
             }
         }
-        .background(TabBarStackedLayout())
         .tabBarMinimizeBehavior(.onScrollDown)
+        // Force compact size class on TabView → stacked layout (icon above text) for tab bar.
+        // Combined with UseFloatingTabBar: false (in StampFolioApp.init), this gives
+        // the full-width bottom tab bar with stacked icons matching iPhone layout.
+        .environment(\.horizontalSizeClass, .compact)
         .tint(appColorScheme.primary)
         .environment(\.showSettingsBinding, $showSettings)
         .sheet(isPresented: $showSettings) {
@@ -120,10 +88,13 @@ struct MainTabView: View {
         switch protocolType {
         case .stamps:
             CollectionView()
+                .environment(\.horizontalSizeClass, actualSizeClass)
         case .ordinals:
             OrdinalsView()
+                .environment(\.horizontalSizeClass, actualSizeClass)
         case .counterparty:
             CounterpartyView()
+                .environment(\.horizontalSizeClass, actualSizeClass)
         }
     }
     
