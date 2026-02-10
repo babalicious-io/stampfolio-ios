@@ -80,7 +80,7 @@ struct AddWalletView: View {
                 
                 // Wallet Color Section
                 Section {
-                    HStack(spacing: 20) {
+                    HStack(spacing: 18) {
                         ForEach(WalletColor.allCases) { color in
                             Button {
                                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -94,7 +94,7 @@ struct AddWalletView: View {
                                     
                                     if selectedColor == color {
                                         Image(systemName: "checkmark")
-                                            .font(.system(size: 10))
+                                            .font(.system(size: 11))
                                             .fontWeight(.semibold)
                                             .foregroundStyle(isDarkMode ? .black : .white)
                                             .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)

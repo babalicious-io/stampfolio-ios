@@ -270,7 +270,7 @@ struct SettingsView: View {
                             
                             if currentScheme == scheme {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 10))
+                                    .font(.system(size: 11))
                                     .fontWeight(.semibold)
                                     .foregroundStyle(isDarkMode ? .black : .white)
                                     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
