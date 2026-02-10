@@ -50,11 +50,13 @@ struct AddWalletView: View {
                         } label: {
                             Image(systemName: "qrcode")
                                 .foregroundStyle(appColorScheme.primary)
+                                .font(.system(size: 18))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Scan QR code")
                         .accessibilityHint("Opens camera to scan a Bitcoin wallet QR code")
                     }
+                    .padding(.vertical, 4)
                 } header: {
                     Text("Wallet Address")
                 } footer: {
@@ -76,7 +78,6 @@ struct AddWalletView: View {
                     } header: {
                         Text("Address Preview")
                     }
-                    .padding(.vertical, 4)
                 }
                 
                 // Wallet Color Section
