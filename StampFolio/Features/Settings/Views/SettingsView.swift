@@ -27,6 +27,7 @@ struct SettingsView: View {
     @AppStorage("showCounterparty") private var showCounterparty = true
     @AppStorage("showStamps") private var showStamps = true
     @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
+    @AppStorage("performancePreview") private var performancePreview = true
     @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: Wallet?
     @State private var protocolEditMode: EditMode = .inactive
@@ -98,6 +99,15 @@ struct SettingsView: View {
                     addWalletButton
                 } header: {
                     Text("Wallets")
+                }
+                
+                // Performance Section
+                Section {
+                    animatedPreviewToggle
+                } header: {
+                    Text("Performance")
+                } footer: {
+                    Text("Save resources by displaying smaller static images in stamp grids and lists.")
                 }
                 
                 // Wallet Icons Section
@@ -274,6 +284,22 @@ struct SettingsView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+    
+    // MARK: - Animated Preview Toggle
+    
+    private var animatedPreviewToggle: some View {
+        Toggle(isOn: $performancePreview) {
+            HStack(spacing: 14) {
+                Image(systemName: performancePreview ? "play.circle.fill" : "photo.circle.fill")
+                    .foregroundStyle(appColorScheme.primary)
+                Text(performancePreview ? "Animated Preview Images" : "Static Preview Images")
+            }
+        }
+        .tint(appColorScheme.primary)
+        .accessibilityLabel(performancePreview ? "Animated preview images" : "Static preview images")
+        .accessibilityValue(performancePreview ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle between animated and static preview images")
     }
     
     // MARK: - Wallet Icon Toggle

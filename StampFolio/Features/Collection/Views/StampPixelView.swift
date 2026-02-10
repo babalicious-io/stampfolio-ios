@@ -21,22 +21,25 @@ struct StampPixelView: View {
     
     @Environment(\.appColorScheme) private var appColorScheme
     
-    // MARK: - Body
+    /// User preference: animated GIF previews or static downsampled thumbnails
+    @AppStorage("performancePreview") private var performancePreview = true
+    
+    // MARK: - Constants
     
     /// Downsampled thumbnail size for grid/row views (200pt).
     /// Kingfisher caches both this small decoded bitmap and the full-res original on disk.
     private static let thumbnailSize = CGSize(width: 200, height: 200)
     
+    // MARK: - Body
+    
     var body: some View {
-        if stamp.isGIF {
-            // Use KFAnimatedImage for GIFs - downsampled thumbnail + full-res cached on disk
+        if stamp.isGIF && performancePreview {
+            // Animated GIF - no downsampling to preserve animation frames
             KFAnimatedImage(stamp.imageURL)
                 .placeholder {
                     loadingView
                 }
                 .loadDiskFileSynchronously()
-                .setProcessor(DownsamplingImageProcessor(size: Self.thumbnailSize))
-                .scaleFactor(UIScreen.main.scale)
                 .cacheOriginalImage()
                 .diskCacheExpiration(.never)
                 .onFailure { error in
@@ -47,8 +50,8 @@ struct StampPixelView: View {
                 .frame(width: geometry.width, height: geometry.width)
                 .clipped()
         } else {
-            // Use KFImage for regular images (jpg, png, webp) + SRC-721/cursed stamps
-            // Downsampled 200px thumbnail for grid; full-res original also cached on disk
+            // Static images (jpg, png, webp) or GIFs with animated previews off
+            // Downsampled 200px thumbnail for grid/row; full-res original also cached on disk
             KFImage(stamp.imageURL)
                 .placeholder {
                     loadingView
