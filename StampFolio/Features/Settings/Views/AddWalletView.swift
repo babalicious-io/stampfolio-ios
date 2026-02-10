@@ -33,51 +33,6 @@ struct AddWalletView: View {
         
         NavigationStack {
             Form {
-                // Wallet Name Section
-                Section {
-                    TextField("Wallet Name (Optional)", text: $walletName)
-                        .textInputAutocapitalization(.words)
-                        .tint(appColorScheme.primary)
-                        .accessibilityLabel("Wallet name")
-                        .accessibilityHint("Enter a custom name for this wallet")
-                } header: {
-                    Text("Wallet Name")
-                }
-                
-                // Wallet Color Section
-                Section {
-                    HStack(spacing: 16) {
-                        ForEach(WalletColor.allCases) { color in
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    selectedColor = color
-                                }
-                            } label: {
-                                ZStack {
-                                    Circle()
-                                        .fill(color.color)
-                                        .frame(width: 40, height: 40)
-                                    
-                                    if selectedColor == color {
-                                        Image(systemName: "checkmark")
-                                            .font(.body)
-                                            .fontWeight(.semibold)
-                                            .foregroundStyle(.white)
-                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                    }
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("\(color.displayName) color")
-                            .accessibilityHint(selectedColor == color ? "Selected" : "Select this color")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                } header: {
-                    Text("Wallet Color")
-                }
-                
                 // Address Input Section
                 Section {
                     HStack {
@@ -120,6 +75,51 @@ struct AddWalletView: View {
                     } header: {
                         Text("Address Preview")
                     }
+                }
+                
+                // Wallet Color Section
+                Section {
+                    HStack(spacing: 16) {
+                        ForEach(WalletColor.allCases) { color in
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedColor = color
+                                }
+                            } label: {
+                                ZStack {
+                                    Circle()
+                                        .fill(color.color)
+                                        .frame(width: 40, height: 40)
+                                    
+                                    if selectedColor == color {
+                                        Image(systemName: "checkmark")
+                                            .font(.body)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(.white)
+                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(color.displayName) color")
+                            .accessibilityHint(selectedColor == color ? "Selected" : "Select this color")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                } header: {
+                    Text("Wallet Color")
+                }
+                
+                // Wallet Name Section
+                Section {
+                    TextField("Wallet Name (Optional)", text: $walletName)
+                        .textInputAutocapitalization(.words)
+                        .tint(appColorScheme.primary)
+                        .accessibilityLabel("Wallet name")
+                        .accessibilityHint("Enter a custom name for this wallet")
+                } header: {
+                    Text("Wallet Name")
                 }
             }
             .navigationTitle("Add Wallet")
