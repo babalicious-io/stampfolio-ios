@@ -40,16 +40,16 @@ struct SettingsView: View {
         
         NavigationStack {
             List {
-                // Theme Section
+                // Theme Appearance Section
                 Section {
-                    themeToggle
+                    themeDisplayToggle
                 } header: {
-                    Text("Appearance")
+                    Text("Theme Appearance")
                 }
                 
                 // Color Scheme Section
                 Section {
-                    colorSchemeRow
+                    colorSchemePicker
                 } header: {
                     Text("Color Scheme")
                 }
@@ -61,7 +61,7 @@ struct SettingsView: View {
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
-                    protocolSectionHeader
+                    contentDisplayToggle
                 }
                 
                 // Wallets Section
@@ -103,12 +103,12 @@ struct SettingsView: View {
                 
                 // Wallet Icons Section
                 Section {
-                    walletIconToggle
+                    walletDisplayToggle
                 }
                 
                 // Performance Section
                 Section {
-                    performancePreviewToggle
+                    previewDisplayToggle
                 } header: {
                     Text("Performance")
                 } footer: {
@@ -117,7 +117,7 @@ struct SettingsView: View {
                 
                 // About Section
                 Section {
-                    aboutRow
+                    aboutText
                 } header: {
                     Text("About")
                 }
@@ -153,9 +153,9 @@ struct SettingsView: View {
         .preferredColorScheme(isDarkMode ? .dark : .light)
     }
     
-    // MARK: - Theme Toggle
+    // MARK: - Theme Appearance Toggle
     
-    private var themeToggle: some View {
+    private var themeDisplayToggle: some View {
         Toggle(isOn: $isDarkMode) {
             HStack(spacing: isDarkMode ? 14 : 12) {
                 Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
@@ -172,7 +172,7 @@ struct SettingsView: View {
     
     // MARK: - Protocol Section Header
     
-    private var protocolSectionHeader: some View {
+    private var contentDisplayToggle: some View {
         HStack(spacing: 14) {
             Text("Content")
             Spacer()
@@ -248,7 +248,7 @@ struct SettingsView: View {
     
     // MARK: - Color Scheme Row
     
-    private var colorSchemeRow: some View {
+    private var colorSchemePicker: some View {
         let currentScheme = AppColorScheme(rawValue: colorSchemeRawValue) ?? .satoshiOrange
         
         return HStack(spacing: 14) {
@@ -290,7 +290,7 @@ struct SettingsView: View {
     
     // MARK: - Animated Preview Toggle
     
-    private var performancePreviewToggle: some View {
+    private var previewDisplayToggle: some View {
         Toggle(isOn: $performancePreview) {
             HStack(spacing: 14) {
                 Image(systemName: performancePreview ? "play.square.fill" : "square.fill")
@@ -307,7 +307,7 @@ struct SettingsView: View {
     
     // MARK: - Wallet Icon Toggle
     
-    private var walletIconToggle: some View {
+    private var walletDisplayToggle: some View {
         Toggle(isOn: $showWalletIcons) {
             HStack(spacing: 12) {
                 Image(systemName: "wallet.bifold.fill")
@@ -324,7 +324,7 @@ struct SettingsView: View {
     
     // MARK: - About Row
     
-    private var aboutRow: some View {
+    private var aboutText: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 14) {
                 Text("StampFolio")
