@@ -24,8 +24,8 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     /// URL to the stamp content/image
     let stampUrl: String
     
-    /// MIME type of the stamp content
-    let stampMimetype: String
+    /// MIME type of the stamp content (nullable in API)
+    let stampMimetype: String?
     
     /// Whether the stamp is divisible (0 = false, 1 = true)
     let divisible: Int
@@ -122,7 +122,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
         stamp = try container.decode(Int.self, forKey: .stamp)
         txHash = try container.decode(String.self, forKey: .txHash)
         stampUrl = try container.decode(String.self, forKey: .stampUrl)
-        stampMimetype = try container.decode(String.self, forKey: .stampMimetype)
+        stampMimetype = try container.decodeIfPresent(String.self, forKey: .stampMimetype)
         divisible = try container.decode(Int.self, forKey: .divisible)
         supply = try container.decodeIfPresent(Int.self, forKey: .supply)
         locked = try container.decodeIfPresent(Int.self, forKey: .locked)
