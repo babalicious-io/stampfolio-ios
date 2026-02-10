@@ -211,6 +211,7 @@ struct AddWalletView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .padding(.vertical, 0)
     }
     
     private func addressTypeIcon(for type: BitcoinAddressType) -> String {
