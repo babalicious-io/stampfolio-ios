@@ -203,7 +203,7 @@ struct AddWalletView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(addressType.rawValue)
                     .font(.caption)
-                    .foregroundStyle(.appColorScheme.primary)
+                    .foregroundStyle(appColorScheme.primary)
                 
                 Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 6, suffixLength: 6))
                     .font(.body)
