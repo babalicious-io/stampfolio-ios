@@ -69,17 +69,22 @@ struct StampMetadataPopup: View {
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
-                LabelValueText(
-                    label: "STAMP #",
-                    value: "\(stamp.stampId)",
-                    font: .title2
-                )
-                LabelValueText(
-                    label: "CPID ",
-                    value: stamp.counterpartyId,
-                    font: .title3,
-                    textSelection: true
-                )
+                // STAMP label (light) + stampId number (semibold)
+                (Text("STAMP ")
+                    .fontWeight(.light) +
+                 Text("#\(stamp.stampId)")
+                    .fontWeight(.semibold))
+                    .font(.title2)
+                    .foregroundStyle(.primary)
+                
+                // CPID label (light) + counterpartyId (semibold)
+                (Text("CPID ")
+                    .fontWeight(.light) +
+                 Text(stamp.counterpartyId)
+                    .fontWeight(.semibold))
+                    .font(.title3)
+                    .foregroundStyle(.primary)
+                    .textSelection(.enabled)
             }
             
             Spacer()
@@ -180,23 +185,6 @@ struct StampMetadataPopup: View {
         .tint(.secondary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
-    }
-}
-
-// MARK: - Label Value Text
-
-/// Label (light) + value (semibold) text for metadata display
-private struct LabelValueText: View {
-    let label: String
-    let value: String
-    var font: Font = .body
-    var textSelection: Bool = false
-
-    var body: some View {
-        (Text(label).fontWeight(.light) + Text(value).fontWeight(.semibold))
-            .font(font)
-            .foregroundStyle(.primary)
-            .textSelection(textSelection ? .enabled : .disabled)
     }
 }
 
