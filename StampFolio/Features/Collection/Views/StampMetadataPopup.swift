@@ -12,7 +12,10 @@ struct StampMetadataPopup: View {
     
     // MARK: - Properties
     
-    let stamp: Stamp
+    let displayStamp: DisplayStamp
+    
+    // Convenience accessor for the underlying stamp
+    private var stamp: Stamp { displayStamp.stamp }
     
     // MARK: - Environment
     
@@ -70,19 +73,15 @@ struct StampMetadataPopup: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
                 // STAMP label (light) + stampId number (semibold)
-                (Text("STAMP ")
-                    .fontWeight(.light) +
-                 Text("#\(stamp.stampId)")
-                    .fontWeight(.semibold))
+                Text("STAMP \(Text("#\(stamp.stampId)").fontWeight(.semibold))")
+                    .fontWeight(.light)
                     .font(.title2)
                     .foregroundStyle(.primary)
                 
                 // CPID label (light) + counterpartyId (semibold)
-                (Text("CPID ")
-                    .fontWeight(.light) +
-                 Text(stamp.counterpartyId)
-                    .fontWeight(.semibold))
-                    .font(.title3)
+                Text("CPID \(Text(stamp.counterpartyId).fontWeight(.semibold))")
+                    .fontWeight(.light)
+                    .font(.body)
                     .foregroundStyle(.primary)
                     .textSelection(.enabled)
             }
@@ -107,17 +106,20 @@ struct StampMetadataPopup: View {
     @ViewBuilder
     private var creatorAndMarketContent: some View {
         if let creatorName = stamp.creatorName {
-            MetadataRow(label: "Creator Name", value: creatorName)
+            MetadataRow(label: "Artist", value: creatorName)
         }
         
         MetadataRow(
-            label: "Creator Addy",
+            label: "Artist Addy",
             value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
             fullValue: stamp.creatorAddy,
             isMonospace: true
         )
         
         MetadataRow(label: "Editions", value: "\(stamp.supply)")
+        
+        // Show balance (user's balance vs total supply)
+        MetadataRow(label: "Balance", value: displayStamp.formattedBalanceWithSupply)
         
         if let marketData = stamp.marketData {
             if let floorPrice = marketData.formattedFloorPrice {
@@ -246,6 +248,6 @@ struct MetadataRow: View {
 // MARK: - Preview
 
 #Preview {
-    StampMetadataPopup(stamp: .sample)
+    StampMetadataPopup(displayStamp: DisplayStamp(from: .sample))
         .presentationDetents([.medium, .large])
 }

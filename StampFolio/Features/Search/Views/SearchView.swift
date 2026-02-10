@@ -52,7 +52,7 @@ struct SearchView: View {
             }
         }
         .sheet(item: $metadataStamp) { displayStamp in
-            StampMetadataPopup(stamp: displayStamp.stamp)
+            StampMetadataPopup(displayStamp: displayStamp)
                 .presentationDetents([.medium, .large])
         }
     }
