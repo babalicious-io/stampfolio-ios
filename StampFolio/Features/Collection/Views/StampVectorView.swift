@@ -8,18 +8,44 @@
 import SwiftUI
 import WebKit
 
-/// View for rendering vector-based stamp content using WKWebView
-struct StampVectorView: UIViewRepresentable {
-    
-    // MARK: - Properties
+/// SwiftUI wrapper that overlays a loading spinner on the WKWebView
+/// until the HTML content finishes rendering.
+struct StampVectorView: View {
     
     let url: URL?
     let onFailure: () -> Void
     
-    // MARK: - UIViewRepresentable
+    @State private var isLoading = true
+    @Environment(\.appColorScheme) private var appColorScheme
+    
+    var body: some View {
+        ZStack {
+            StampVectorWebView(
+                url: url,
+                isLoading: $isLoading,
+                onFailure: onFailure
+            )
+            
+            if isLoading {
+                Color(uiColor: .systemBackground)
+                ProgressView()
+                    .tint(appColorScheme.primary)
+            }
+        }
+    }
+}
+
+// MARK: - UIViewRepresentable
+
+/// Internal WKWebView representable with navigation delegate for load tracking.
+private struct StampVectorWebView: UIViewRepresentable {
+    
+    let url: URL?
+    @Binding var isLoading: Bool
+    let onFailure: () -> Void
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(onFailure: onFailure)
+        Coordinator(isLoading: $isLoading, onFailure: onFailure)
     }
     
     func makeUIView(context: Context) -> WKWebView {
@@ -33,6 +59,7 @@ struct StampVectorView: UIViewRepresentable {
         webView.scrollView.backgroundColor = backgroundColor
         webView.scrollView.isScrollEnabled = false
         webView.isUserInteractionEnabled = false // Disable interaction in grid
+        webView.navigationDelegate = context.coordinator
         
         return webView
     }
@@ -49,20 +76,41 @@ struct StampVectorView: UIViewRepresentable {
         guard context.coordinator.currentURL != url else { return }
         context.coordinator.currentURL = url
         
+        // Show spinner while loading new content
+        isLoading = true
+        
         // Fetch HTML, inject viewport, then load
         context.coordinator.loadWithViewport(webView: webView, url: url)
     }
     
     // MARK: - Coordinator
     
-    class Coordinator {
+    class Coordinator: NSObject, WKNavigationDelegate {
         var currentURL: URL?
         var currentTask: Task<Void, Never>?
+        @Binding var isLoading: Bool
         let onFailure: () -> Void
         
-        init(onFailure: @escaping () -> Void) {
+        init(isLoading: Binding<Bool>, onFailure: @escaping () -> Void) {
+            self._isLoading = isLoading
             self.onFailure = onFailure
         }
+        
+        // MARK: - WKNavigationDelegate
+        
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            isLoading = false
+        }
+        
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            isLoading = false
+        }
+        
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            isLoading = false
+        }
+        
+        // MARK: - Content Loading
         
         @MainActor
         func loadWithViewport(webView: WKWebView, url: URL) {
