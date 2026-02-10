@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Kingfisher
 
 /// Main entry point for the StampFolio application.
 /// A portfolio viewer for Bitcoin Stamps on iPad and iPhone.
@@ -60,6 +61,9 @@ struct StampFolioApp: App {
                 .preferredColorScheme(isDarkMode ? .dark : .light)
                 .onAppear {
                     networkMonitor.start()
+                    
+                    // Cap Kingfisher memory cache at 100 MB (disk cache unlimited)
+                    ImageCache.default.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
                 }
         }
         .modelContainer(sharedModelContainer)
