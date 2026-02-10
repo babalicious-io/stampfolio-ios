@@ -80,7 +80,7 @@ struct AddWalletView: View {
                 
                 // Wallet Color Section
                 Section {
-                    HStack(spacing: 24) {
+                    HStack(spacing: 20) {
                         ForEach(WalletColor.allCases) { color in
                             Button {
                                 withAnimation(.easeInOut(duration: 0.2)) {
