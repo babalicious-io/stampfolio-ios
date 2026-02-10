@@ -56,7 +56,7 @@ struct AddWalletView: View {
                         .accessibilityLabel("Scan QR code")
                         .accessibilityHint("Opens camera to scan a Bitcoin wallet QR code")
                     }
-                    .padding(.vertical, 0)
+                    .padding(.vertical, 2)
                 } header: {
                     Text("Wallet Address")
                 } footer: {
