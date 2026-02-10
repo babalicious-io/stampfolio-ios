@@ -204,7 +204,7 @@ struct SettingsView: View {
                     .tint(appColorScheme.primary)
             }
         }
-        .frame(minHeight: 26)
+        .frame(minHeight: 22)
         .onChange(of: toggleState(for: protocolType)) { _, _ in
             enforceProtocolSelection()
         }
@@ -283,7 +283,6 @@ struct SettingsView: View {
                 }
             }
         }
-        .padding(.vertical, 2)
     }
     
     // MARK: - Animated Preview Toggle
