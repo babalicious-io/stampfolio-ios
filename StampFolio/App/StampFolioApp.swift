@@ -14,6 +14,15 @@ import Kingfisher
 @main
 struct StampFolioApp: App {
     
+    // MARK: - Initialization
+    
+    init() {
+        // Force traditional bottom tab bar on iPad instead of top segmented control.
+        // Restores icon + text layout with Liquid Glass on iPadOS 26.
+        // Ref: https://bendodson.com/weblog/2026/01/22/traditional-tab-bar-on-ipados-26/
+        UserDefaults.standard.register(defaults: ["UseFloatingTabBar": false])
+    }
+    
     // MARK: - State
     
     /// App-level Observable objects declared here to avoid re-initialization
