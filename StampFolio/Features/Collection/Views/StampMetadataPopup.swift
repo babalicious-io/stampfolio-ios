@@ -51,7 +51,7 @@ struct StampMetadataPopup: View {
                 }
             }
             .listSectionSpacing(16)
-            .navigationTitle("Stamp Details")
+            .navigationTitle("Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -75,9 +75,8 @@ struct StampMetadataPopup: View {
                     .foregroundStyle(.primary)
                 
                 Text(stamp.formattedCounterpartyId)
-                    .font(.footnote)
-                    .fontDesign(.monospaced)
-                    .foregroundStyle(.secondary)
+                    .font(.title3)
+                    .foregroundStyle(.primary)
                     .textSelection(.enabled)
             }
             
@@ -101,11 +100,11 @@ struct StampMetadataPopup: View {
     @ViewBuilder
     private var creatorAndMarketContent: some View {
         if let creatorName = stamp.creatorName {
-            MetadataRow(label: "Creator", value: creatorName)
+            MetadataRow(label: "Creator Name", value: creatorName)
         }
         
         MetadataRow(
-            label: "Address",
+            label: "Creator Addy",
             value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
             fullValue: stamp.creatorAddy,
             isMonospace: true
