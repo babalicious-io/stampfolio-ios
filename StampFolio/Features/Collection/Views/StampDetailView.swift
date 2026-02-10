@@ -111,23 +111,25 @@ struct StampDetailView: View {
             // WebView for SVG/HTML content
             WebContentView(url: currentStamp.imageURL)
         } else if currentStamp.isGIF {
-            // KFAnimatedImage for animated GIFs
+            // KFAnimatedImage for animated GIFs - full resolution (no downsampling)
             KFAnimatedImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
                         .tint(appColorScheme.primary)
                 }
+                .loadDiskFileSynchronously()
                 .cacheOriginalImage()
                 .diskCacheExpiration(.never)
                 .aspectRatio(contentMode: .fit)
                 .allowsHitTesting(false)
         } else {
-            // KFImage for static images (jpg, png, webp) + SRC-721/cursed stamps
+            // KFImage for static images (jpg, png, webp) - full resolution (no downsampling)
             KFImage(currentStamp.imageURL)
                 .placeholder {
                     ProgressView()
                         .tint(appColorScheme.primary)
                 }
+                .loadDiskFileSynchronously()
                 .retry(maxCount: 3)
                 .cacheOriginalImage()
                 .diskCacheExpiration(.never)

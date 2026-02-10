@@ -113,7 +113,7 @@ struct AddWalletView: View {
                 
                 // Wallet Name Section
                 Section {
-                    TextField("Wallet Name (Optional)", text: $walletName)
+                    TextField("Name (Optional)", text: $walletName)
                         .textInputAutocapitalization(.words)
                         .tint(appColorScheme.primary)
                         .accessibilityLabel("Wallet name")
