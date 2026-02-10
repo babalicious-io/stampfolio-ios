@@ -164,7 +164,7 @@ struct SettingsView: View {
             }
         }
         .tint(appColorScheme.primary)
-        .padding(.vertical, 6)
+        .padding(.vertical, 4)
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
@@ -241,6 +241,7 @@ struct SettingsView: View {
                     .foregroundStyle(appColorScheme.primary)
             }
         }
+        .padding(.vertical, 4)
         .accessibilityLabel("Add wallet")
         .accessibilityHint("Opens a form to add a new Bitcoin wallet")
     }
@@ -298,6 +299,7 @@ struct SettingsView: View {
             }
         }
         .tint(appColorScheme.primary)
+        .padding(.vertical, 4)
         .accessibilityLabel(performancePreview ? "Animated images" : "Static preview images")
         .accessibilityValue(performancePreview ? "On" : "Off")
         .accessibilityHint("Double tap to toggle between animated and static preview images")
@@ -314,6 +316,7 @@ struct SettingsView: View {
             }
         }
         .tint(appColorScheme.primary)
+        .padding(.vertical, 4)
         .accessibilityLabel(showWalletIcons ? "Display wallet icon toggle" : "Hide wallet icon toggle")
         .accessibilityValue(showWalletIcons ? "On" : "Off")
         .accessibilityHint(showWalletIcons ? "Double tap to toggle wallet icon display on stamp cards" : "Double tap to toggle wallet icon hide on stamp cards")

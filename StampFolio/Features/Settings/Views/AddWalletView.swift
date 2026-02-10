@@ -101,6 +101,7 @@ struct AddWalletView: View {
                                     }
                                 }
                             }
+                            .frame(maxWidth: .infinity)
                             .buttonStyle(.plain)
                             .accessibilityLabel("\(color.displayName) color")
                             .accessibilityHint(selectedColor == color ? "Selected" : "Select this color")
