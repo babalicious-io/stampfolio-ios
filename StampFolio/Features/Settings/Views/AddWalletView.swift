@@ -199,12 +199,12 @@ struct AddWalletView: View {
             Image(systemName: addressTypeIcon(for: addressType))
                 .foregroundStyle(appColorScheme.primary)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(addressType.rawValue)
-                    .font(.body)
+                    .font(.caption)
                 
                 Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 6, suffixLength: 6))
-                    .font(.caption)
+                    .font(.body)
                     .foregroundStyle(.secondary)
             }
         }
