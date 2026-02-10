@@ -112,7 +112,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Performance")
                 } footer: {
-                    Text("Display smaller static images in stamp grids and lists to save resources.")
+                    Text("Display small static preview images instead of animated GIFs in stamp grids and lists to save resources.")
                 }
                 
                 // About Section
@@ -295,12 +295,12 @@ struct SettingsView: View {
             HStack(spacing: 14) {
                 Image(systemName: performancePreview ? "play.square.fill" : "square.fill")
                     .foregroundStyle(appColorScheme.primary)
-                Text(performancePreview ? "Animated GIFs" : "Static Preview Images")
+                Text(performancePreview ? "Animated GIF" : "Static Preview Image")
             }
         }
         .tint(appColorScheme.primary)
         .padding(.vertical, 4)
-        .accessibilityLabel(performancePreview ? "Animated images" : "Static preview images")
+        .accessibilityLabel(performancePreview ? "Animated image" : "Static preview image")
         .accessibilityValue(performancePreview ? "On" : "Off")
         .accessibilityHint("Double tap to toggle between animated and static preview images")
     }

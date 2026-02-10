@@ -223,6 +223,7 @@ struct CollectionView: View {
                         .font(.system(size: 18))
                         .foregroundStyle(viewModel.hasActiveFilters ? appColorScheme.primary : Color.primary)
                 }
+                .menuActionDismissBehavior(.disabled)
                 .accessibilityLabel("Filter stamps")
                 .accessibilityHint("Filter stamps by type, format, or edition count")
                 
