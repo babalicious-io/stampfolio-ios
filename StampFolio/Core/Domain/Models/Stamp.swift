@@ -202,7 +202,7 @@ extension Stamp {
     
     /// Sample stamp for previews and testing
     static let sample = Stamp(
-        stampType: "STAMP",
+        stampType: "CLASSIC",
         stampId: 1384303,
         counterpartyId: "A888354448084788958",
         creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
@@ -223,7 +223,7 @@ extension Stamp {
     static let samples: [Stamp] = [
         sample,
         Stamp(
-            stampType: "STAMP",
+            stampType: "CLASSIC",
             stampId: 1384302,
             counterpartyId: "A888354448084788957",
             creatorAddy: "bc1qabc123def456",
@@ -240,7 +240,7 @@ extension Stamp {
             stampUrl: "https://stampchain.io/stamps/1384302.gif"
         ),
         Stamp(
-            stampType: "STAMP",
+            stampType: "CLASSIC",
             stampId: 74705,
             counterpartyId: "A888354448084788999",
             creatorAddy: "bc1qtest",

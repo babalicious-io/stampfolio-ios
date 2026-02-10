@@ -70,7 +70,7 @@ struct DisplayStamp: Identifiable {
     /// Create from StampBalance
     init(from stampBalance: StampBalance) {
         self.stamp = Stamp(
-            stampType: "STAMP",
+            stampType: stampBalance.ident ?? "CLASSIC",
             stampId: stampBalance.stamp,
             counterpartyId: stampBalance.cpid,
             creatorAddy: stampBalance.creatorAddy,
