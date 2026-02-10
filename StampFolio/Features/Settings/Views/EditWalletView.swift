@@ -21,10 +21,18 @@ struct EditWalletView: View {
     
     let wallet: Wallet
     
+    // MARK: - Initialization
+    
+    init(wallet: Wallet) {
+        self.wallet = wallet
+        _walletName = State(initialValue: wallet.label ?? "")
+        _selectedColor = State(initialValue: wallet.walletColor)
+    }
+    
     // MARK: - State
     
-    @State private var walletName: String = ""
-    @State private var selectedColor: WalletColor = .gray
+    @State private var walletName: String
+    @State private var selectedColor: WalletColor
     @FocusState private var isNameFocused: Bool
     
     // MARK: - Body
@@ -128,8 +136,6 @@ struct EditWalletView: View {
                 }
             }
             .onAppear {
-                walletName = wallet.label ?? ""
-                selectedColor = wallet.walletColor
                 isNameFocused = false
             }
         }
