@@ -89,13 +89,13 @@ struct AddWalletView: View {
                                 ZStack {
                                     Circle()
                                         .fill(color.color)
-                                        .frame(width: 24, height: 24)
+                                        .frame(width: 32, height: 32)
                                     
                                     if selectedColor == color {
                                         Image(systemName: "checkmark")
-                                            .font(.system(size: 11))
+                                            .font(.system(size: 10))
                                             .fontWeight(.semibold)
-                                            .foregroundStyle(.white)
+                                            .foregroundStyle(isDarkMode ? .black : .white)
                                             .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                                     }
                                 }
@@ -106,7 +106,6 @@ struct AddWalletView: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(16)
                 } header: {
                     Text("Wallet Color")
                 }
