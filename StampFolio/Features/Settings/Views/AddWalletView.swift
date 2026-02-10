@@ -195,10 +195,11 @@ struct AddWalletView: View {
     private var addressTypePreview: some View {
         let addressType = BitcoinAddressType.detect(from: viewModel.walletAddressInput)
         
-        return HStack(spacing: 24) {
+        return HStack(spacing: 16) {
             Image(systemName: addressTypeIcon(for: addressType))
                 .foregroundStyle(appColorScheme.primary)
                 .font(.system(size: 24))
+                .fontWeight(.light)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(addressType.rawValue)
@@ -206,7 +207,7 @@ struct AddWalletView: View {
                     .foregroundStyle(appColorScheme.primary)
                 
                 Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 6, suffixLength: 6))
-                    .font(.body)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
