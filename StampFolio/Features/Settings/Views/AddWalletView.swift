@@ -14,9 +14,11 @@ struct AddWalletView: View {
     // MARK: - Environment
     
     @Environment(SettingsViewModel.self) private var viewModel
+    @Environment(CollectionViewModel.self) private var collectionViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appColorScheme) private var appColorScheme
+    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
     
     // MARK: - State
     
@@ -149,6 +151,9 @@ struct AddWalletView: View {
                             )
                             // Check if wallet was successfully added (input cleared, no validation error)
                             if viewModel.walletAddressInput.isEmpty && viewModel.validationError == nil {
+                                // Immediately fetch stamps metadata + images for all wallets
+                                await collectionViewModel.fetchStampsMetadata(for: wallets)
+                                
                                 // Reset wallet name and color if successfully added
                                 walletName = ""
                                 selectedColor = .gray
@@ -243,5 +248,6 @@ struct AddWalletView: View {
 #Preview {
     AddWalletView()
         .environment(SettingsViewModel())
+        .environment(CollectionViewModel())
         .modelContainer(for: Wallet.self, inMemory: true)
 }

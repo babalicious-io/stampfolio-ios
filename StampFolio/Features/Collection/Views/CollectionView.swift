@@ -111,9 +111,12 @@ struct CollectionView: View {
                 await viewModel.fetchStampsMetadata(for: wallets)
             }
         }
-        .onChange(of: wallets.count) { _, _ in
-            Task {
-                await viewModel.fetchStampsMetadata(for: wallets)
+        .onChange(of: wallets.count) { oldCount, newCount in
+            // Only re-fetch on wallet deletion; additions are handled at the point of add wallet
+            if newCount < oldCount {
+                Task {
+                    await viewModel.fetchStampsMetadata(for: wallets)
+                }
             }
         }
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
