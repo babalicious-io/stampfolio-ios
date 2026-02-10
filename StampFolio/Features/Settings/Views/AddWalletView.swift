@@ -50,7 +50,7 @@ struct AddWalletView: View {
                         } label: {
                             Image(systemName: "qrcode")
                                 .foregroundStyle(appColorScheme.primary)
-                                .font(.system(size: 18))
+                                .font(.system(size: 22))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Scan QR code")
