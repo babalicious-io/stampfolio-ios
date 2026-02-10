@@ -108,7 +108,7 @@ struct SettingsView: View {
                 
                 // Performance Section
                 Section {
-                    animatedPreviewToggle
+                    performancePreviewToggle
                 } header: {
                     Text("Performance")
                 } footer: {
@@ -288,16 +288,16 @@ struct SettingsView: View {
     
     // MARK: - Animated Preview Toggle
     
-    private var animatedPreviewToggle: some View {
+    private var performancePreviewToggle: some View {
         Toggle(isOn: $performancePreview) {
             HStack(spacing: 14) {
                 Image(systemName: performancePreview ? "play.circle.fill" : "photo.circle.fill")
                     .foregroundStyle(appColorScheme.primary)
-                Text(performancePreview ? "Animated Preview Images" : "Static Preview Images")
+                Text(performancePreview ? "Animated Images" : "Static Preview Images")
             }
         }
         .tint(appColorScheme.primary)
-        .accessibilityLabel(performancePreview ? "Animated preview images" : "Static preview images")
+        .accessibilityLabel(performancePreview ? "Animated images" : "Static preview images")
         .accessibilityValue(performancePreview ? "On" : "Off")
         .accessibilityHint("Double tap to toggle between animated and static preview images")
     }
