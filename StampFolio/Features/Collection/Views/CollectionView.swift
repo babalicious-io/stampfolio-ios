@@ -196,47 +196,47 @@ struct CollectionView: View {
                     }
                     
                     Section("FILE TYPE") {
-                        Toggle("JPG", isOn: Binding(
+                        Toggle("Jpg", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("jpg") },
                             set: { _ in viewModel.toggleFileFormatFilter("jpg") }
                         ))
                         
-                        Toggle("PNG", isOn: Binding(
+                        Toggle("Png", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("png") },
                             set: { _ in viewModel.toggleFileFormatFilter("png") }
                         ))
                         
-                        Toggle("GIF", isOn: Binding(
+                        Toggle("Gif", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("gif") },
                             set: { _ in viewModel.toggleFileFormatFilter("gif") }
                         ))
                         
-                        Toggle("WEBP", isOn: Binding(
+                        Toggle("WebP", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("webp") },
                             set: { _ in viewModel.toggleFileFormatFilter("webp") }
                         ))
                         
-                        Toggle("AVIF", isOn: Binding(
+                        Toggle("Avif", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("avif") },
                             set: { _ in viewModel.toggleFileFormatFilter("avif") }
                         ))
                         
-                        Toggle("SVG", isOn: Binding(
+                        Toggle("Svg", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("svg") },
                             set: { _ in viewModel.toggleFileFormatFilter("svg") }
                         ))
                         
-                        Toggle("HTML", isOn: Binding(
+                        Toggle("Html", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("html") },
                             set: { _ in viewModel.toggleFileFormatFilter("html") }
                         ))
                         
-                        Toggle("TEXT", isOn: Binding(
+                        Toggle("Text", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("text") },
                             set: { _ in viewModel.toggleFileFormatFilter("text") }
                         ))
                         
-                        Toggle("MP3", isOn: Binding(
+                        Toggle("Mp3", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("mp3") },
                             set: { _ in viewModel.toggleFileFormatFilter("mp3") }
                         ))
