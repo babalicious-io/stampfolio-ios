@@ -69,15 +69,17 @@ struct StampMetadataPopup: View {
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(stamp.formattedStampId)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.primary)
-                
-                Text(stamp.formattedCounterpartyId)
-                    .font(.title3)
-                    .foregroundStyle(.primary)
-                    .textSelection(.enabled)
+                LabelValueText(
+                    label: "STAMP #",
+                    value: "\(stamp.stampId)",
+                    font: .title2
+                )
+                LabelValueText(
+                    label: "CPID ",
+                    value: stamp.counterpartyId,
+                    font: .title3,
+                    textSelection: true
+                )
             }
             
             Spacer()
@@ -178,6 +180,23 @@ struct StampMetadataPopup: View {
         .tint(.secondary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
+    }
+}
+
+// MARK: - Label Value Text
+
+/// Label (light) + value (semibold) text for metadata display
+private struct LabelValueText: View {
+    let label: String
+    let value: String
+    var font: Font = .body
+    var textSelection: Bool = false
+
+    var body: some View {
+        (Text(label).fontWeight(.light) + Text(value).fontWeight(.semibold))
+            .font(font)
+            .foregroundStyle(.primary)
+            .textSelection(textSelection ? .enabled : .disabled)
     }
 }
 
