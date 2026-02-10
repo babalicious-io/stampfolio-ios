@@ -97,24 +97,28 @@ enum BitcoinAddressType: String, CaseIterable {
 
 import SwiftUI
 
-/// Predefined wallet colors using native SwiftUI colors
+/// Predefined wallet colors using native SwiftUI colors (order: red → orange → yellow → green → teal → blue → purple → gray)
 enum WalletColor: String, CaseIterable, Identifiable, Equatable {
-    case purple
-    case orange
     case red
+    case orange
+    case yellow
     case green
+    case teal
     case blue
+    case purple
     case gray
     
     var id: Self { self }
     
     var color: Color {
         switch self {
-        case .purple: return .purple
-        case .orange: return .orange
         case .red: return .red
+        case .orange: return .orange
+        case .yellow: return .yellow
         case .green: return .green
+        case .teal: return .teal
         case .blue: return .blue
+        case .purple: return .purple
         case .gray: return .gray
         }
     }
