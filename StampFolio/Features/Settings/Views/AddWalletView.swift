@@ -22,6 +22,7 @@ struct AddWalletView: View {
     
     // MARK: - State
     
+    @AppStorage("isDarkMode") private var isDarkMode = true
     @State private var walletName: String = ""
     @State private var selectedColor: WalletColor = .gray
     @FocusState private var isAddressFocused: Bool
