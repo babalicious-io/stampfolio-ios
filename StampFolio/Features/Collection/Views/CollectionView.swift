@@ -421,7 +421,8 @@ struct CollectionView: View {
                             },
                             onLongPress: {
                                 selectedStamp = displayStamp
-                            }
+                            },
+                            viewMode: viewMode
                         )
                     }
                 }

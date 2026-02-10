@@ -16,6 +16,7 @@ struct StampCardView: View {
     let displayStamp: DisplayStamp
     let onTap: () -> Void
     let onLongPress: () -> Void
+    let viewMode: ViewMode
     
     // Convenience accessor
     private var stamp: Stamp { displayStamp.stamp }
@@ -83,28 +84,31 @@ struct StampCardView: View {
                 }
                 
                 // Overlay: Wallet icon (top right), Stamp number (bottom left) and Edition balance (bottom right)
-                VStack {
-                    // Wallet icon - top right
-                    if showWalletIcons, displayStamp.walletAddress != nil {
-                        HStack {
-                            Spacer()
-                            walletIcon
+                // Hidden in dense grid mode for cleaner appearance
+                if viewMode != .denseGrid {
+                    VStack {
+                        // Wallet icon - top right
+                        if showWalletIcons, displayStamp.walletAddress != nil {
+                            HStack {
+                                Spacer()
+                                walletIcon
+                            }
+                            .padding(8)
                         }
-                        .padding(8)
-                    }
-                    
-                    Spacer()
-                    
-                    HStack(alignment: .bottom) {
-                        // Stamp number - bottom left
-                        stampNumber
                         
                         Spacer()
                         
-                        // Edition balance - bottom right
-                        stampEditions
+                        HStack(alignment: .bottom) {
+                            // Stamp number - bottom left
+                            stampNumber
+                            
+                            Spacer()
+                            
+                            // Edition balance - bottom right
+                            stampEditions
+                        }
+                        .padding(8)
                     }
-                    .padding(8)
                 }
             }
         }
@@ -197,13 +201,15 @@ struct StampCardView: View {
         StampCardView(
             displayStamp: DisplayStamp(from: Stamp.sample),
             onTap: {},
-            onLongPress: {}
+            onLongPress: {},
+            viewMode: .normalGrid
         )
         
         StampCardView(
             displayStamp: DisplayStamp(from: Stamp.samples[1]),
             onTap: {},
-            onLongPress: {}
+            onLongPress: {},
+            viewMode: .normalGrid
         )
     }
     .padding()
