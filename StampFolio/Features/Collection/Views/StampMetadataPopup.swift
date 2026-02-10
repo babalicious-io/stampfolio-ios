@@ -73,7 +73,7 @@ struct StampMetadataPopup: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
                 // STAMP label (light) + stampId number (semibold)
-                Text("STAMP # \(Text("\(stamp.stampId)").fontWeight(.bold))")
+                Text("STAMP #\(Text("\(stamp.stampId)").fontWeight(.bold))")
                     .fontWeight(.light)
                     .font(.title2)
                     .foregroundStyle(.primary)
@@ -110,7 +110,7 @@ struct StampMetadataPopup: View {
         }
         
         MetadataRow(
-            label: "Artist Addy",
+            label: "Addy",
             value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
             fullValue: stamp.creatorAddy
         )
@@ -201,14 +201,14 @@ struct MetadataRow: View {
     var body: some View {
         HStack(alignment: .top) {
             Text(label)
-                .font(.body)
+                .font(.headline)
                 .fontWeight(.light)
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .frame(width: 100, alignment: .leading)
             
             Text(value)
-                .font(.body)
+                .font(.subheadline)
                 .fontWeight(.bold)
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
