@@ -180,6 +180,7 @@ struct SettingsView: View {
             } label: {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
+                    .fontWeight(.bold)
                     .textCase(.uppercase)
                     .foregroundStyle(protocolEditMode.isEditing ? appColorScheme.primary : appColorScheme.primary.opacity(0.8))
             }
@@ -204,7 +205,7 @@ struct SettingsView: View {
                     .tint(appColorScheme.primary)
             }
         }
-        .frame(minHeight: 22)
+        .frame(minHeight: 28)
         .onChange(of: toggleState(for: protocolType)) { _, _ in
             enforceProtocolSelection()
         }
