@@ -112,7 +112,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Performance")
                 } footer: {
-                    Text("Save resources by displaying smaller static images in stamp grids and lists.")
+                    Text("Display smaller static images in stamp grids and lists to save resources.")
                 }
                 
                 // About Section
@@ -164,6 +164,7 @@ struct SettingsView: View {
             }
         }
         .tint(appColorScheme.primary)
+        .padding(.vertical, 6)
         .accessibilityLabel(isDarkMode ? "Dark mode toggle" : "Light mode toggle")
         .accessibilityValue(isDarkMode ? "On" : "Off")
         .accessibilityHint("Double tap to toggle theme")
@@ -293,7 +294,7 @@ struct SettingsView: View {
             HStack(spacing: 14) {
                 Image(systemName: performancePreview ? "play.square.fill" : "square.fill")
                     .foregroundStyle(appColorScheme.primary)
-                Text(performancePreview ? "Animated Images" : "Static Preview Images")
+                Text(performancePreview ? "Animated GIFs" : "Static Preview Images")
             }
         }
         .tint(appColorScheme.primary)
