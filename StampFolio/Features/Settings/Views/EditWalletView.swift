@@ -62,7 +62,7 @@ struct EditWalletView: View {
                                 ZStack {
                                     Circle()
                                         .fill(color.color)
-                                        .frame(width: 28, height: 28)
+                                        .frame(width: 32, height: 32)
                                     
                                     if selectedColor == color {
                                         Image(systemName: "checkmark")
