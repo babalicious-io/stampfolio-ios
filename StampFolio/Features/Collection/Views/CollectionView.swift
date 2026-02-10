@@ -295,7 +295,7 @@ struct CollectionView: View {
             } label: {
                 Image(systemName: "gearshape")
                     .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Settings")

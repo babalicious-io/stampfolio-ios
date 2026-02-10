@@ -48,9 +48,9 @@ struct CounterpartyView: View {
             Button {
                 showSettings.wrappedValue = true
             } label: {
-                Image(systemName: "gearshape.fill")
+                Image(systemName: "gearshape")
                     .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Settings")
