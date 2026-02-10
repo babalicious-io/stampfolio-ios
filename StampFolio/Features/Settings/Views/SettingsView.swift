@@ -256,7 +256,7 @@ struct SettingsView: View {
             
             Spacer()
             
-            HStack(spacing: 12) {
+            HStack(spacing: 16) {
                 ForEach(AppColorScheme.allCases) { scheme in
                     Button {
                         withAnimation(.easeInOut(duration: 0.2)) {
@@ -266,13 +266,13 @@ struct SettingsView: View {
                         ZStack {
                             Circle()
                                 .fill(scheme.gradient)
-                                .frame(width: 32, height: 32)
+                                .frame(width: 28, height: 28)
                             
                             if currentScheme == scheme {
                                 Image(systemName: "checkmark")
                                     .font(.caption)
                                     .fontWeight(.semibold)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(.primary)
                                     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                             }
                         }
