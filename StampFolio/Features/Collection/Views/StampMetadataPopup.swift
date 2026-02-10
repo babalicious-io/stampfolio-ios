@@ -201,14 +201,14 @@ struct MetadataRow: View {
     var body: some View {
         HStack(alignment: .top) {
             Text(label)
-                .font(.headline)
+                .font(.callout)
                 .fontWeight(.light)
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .frame(width: 100, alignment: .leading)
             
             Text(value)
-                .font(.subheadline)
+                .font(.callout)
                 .fontWeight(.bold)
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
