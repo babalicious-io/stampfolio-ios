@@ -73,13 +73,13 @@ struct StampMetadataPopup: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
                 // STAMP label (light) + stampId number (semibold)
-                Text("STAMP \(Text("#\(stamp.stampId)").fontWeight(.semibold))")
+                Text("STAMP # \(Text("\(stamp.stampId)").fontWeight(.bold))")
                     .fontWeight(.light)
                     .font(.title2)
                     .foregroundStyle(.primary)
                 
                 // CPID label (light) + counterpartyId (semibold)
-                Text("CPID \(Text(stamp.counterpartyId).fontWeight(.semibold))")
+                Text("CPID \(Text(stamp.counterpartyId).fontWeight(.bold))")
                     .fontWeight(.light)
                     .font(.body)
                     .foregroundStyle(.primary)
@@ -112,8 +112,7 @@ struct StampMetadataPopup: View {
         MetadataRow(
             label: "Artist Addy",
             value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
-            fullValue: stamp.creatorAddy,
-            isMonospace: true
+            fullValue: stamp.creatorAddy
         )
         
         MetadataRow(label: "Editions", value: "\(stamp.supply)")
@@ -162,8 +161,7 @@ struct StampMetadataPopup: View {
         MetadataRow(
             label: "Tx Hash",
             value: stamp.txHash.prefix(8) + "..." + stamp.txHash.suffix(8),
-            fullValue: stamp.txHash,
-            isMonospace: true
+            fullValue: stamp.txHash
         )
     }
     
@@ -197,21 +195,21 @@ struct MetadataRow: View {
     let label: String
     let value: String
     var fullValue: String?
-    var isMonospace: Bool = false
     
     @State private var showCopied = false
     
     var body: some View {
         HStack(alignment: .top) {
             Text(label)
-                .font(.caption)
-                .fontWeight(.semibold)
+                .font(.body)
+                .fontWeight(.light)
                 .foregroundStyle(.secondary)
+                .textCase(.uppercase)
                 .frame(width: 100, alignment: .leading)
             
             Text(value)
-                .font(isMonospace ? .footnote : .caption)
-                .fontDesign(isMonospace ? .monospaced : .default)
+                .font(.body)
+                .fontWeight(.bold)
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
             
