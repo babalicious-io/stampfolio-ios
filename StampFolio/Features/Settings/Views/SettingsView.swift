@@ -101,6 +101,11 @@ struct SettingsView: View {
                     Text("Wallets")
                 }
                 
+                // Wallet Icons Section
+                Section {
+                    walletIconToggle
+                }
+                
                 // Performance Section
                 Section {
                     animatedPreviewToggle
@@ -108,11 +113,6 @@ struct SettingsView: View {
                     Text("Performance")
                 } footer: {
                     Text("Save resources by displaying smaller static images in stamp grids and lists.")
-                }
-                
-                // Wallet Icons Section
-                Section {
-                    walletIconToggle
                 }
                 
                 // About Section
