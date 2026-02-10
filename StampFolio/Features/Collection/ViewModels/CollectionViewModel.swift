@@ -76,7 +76,7 @@ final class CollectionViewModel {
     /// Filter state: Active ident filters (e.g., "STAMP", "POSH")
     var activeIdentFilters: Set<String> = []
     
-    /// Filter state: Active file format filters ("pixel" or "vector")
+    /// Filter state: Active file format filters (e.g., "jpg", "png", "gif", "webp", "avif", "svg", "html", "text", "mp3")
     var activeFileFormatFilters: Set<String> = []
     
     /// Filter state: Active edition filters ("single" or "multiple")
@@ -137,21 +137,27 @@ final class CollectionViewModel {
             }
         }
         
-        // Apply file format filters
+        // Apply file format filters (individual MIME type matching)
         if !activeFileFormatFilters.isEmpty {
+            // Map MIME types to filter keys
+            let mimeToFormat: [String: String] = [
+                "image/jpeg": "jpg",
+                "image/jpg": "jpg",
+                "image/png": "png",
+                "image/gif": "gif",
+                "image/webp": "webp",
+                "image/avif": "avif",
+                "image/svg+xml": "svg",
+                "text/html": "html",
+                "text/plain": "text",
+                "audio/mpeg": "mp3",
+                "audio/mp3": "mp3",
+            ]
+            
             result = result.filter { displayStamp in
                 guard let mimetype = displayStamp.stamp.stampMimetype?.lowercased() else { return false }
-                
-                for format in activeFileFormatFilters {
-                    if format == "pixel" {
-                        let pixelFormats = ["image/jpeg", "image/jpg", "image/gif", "image/png", "image/webp", "image/avif", "image/bmp"]
-                        if pixelFormats.contains(mimetype) { return true }
-                    } else if format == "vector" {
-                        let vectorFormats = ["text/plain", "image/svg+xml", "text/html"]
-                        if vectorFormats.contains(mimetype) { return true }
-                    }
-                }
-                return false
+                guard let format = mimeToFormat[mimetype] else { return false }
+                return activeFileFormatFilters.contains(format)
             }
         }
         
@@ -475,8 +481,8 @@ final class CollectionViewModel {
         }
     }
     
-    /// Toggle a file format filter ("pixel" or "vector")
-    /// - Parameter format: The format type to toggle
+    /// Toggle a file format filter (e.g., "jpg", "png", "gif", "webp", "avif", "svg", "html", "text", "mp3")
+    /// - Parameter format: The format key to toggle
     func toggleFileFormatFilter(_ format: String) {
         if activeFileFormatFilters.contains(format) {
             activeFileFormatFilters.remove(format)
