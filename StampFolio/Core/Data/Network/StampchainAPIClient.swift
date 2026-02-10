@@ -64,18 +64,18 @@ actor StampchainAPIClient {
     /// Fetch stamps owned by a wallet address
     /// - Parameters:
     ///   - address: Bitcoin wallet address
-    ///   - forceRefresh: When true, bypasses cache and fetches from network
+    ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     /// - Returns: Array of stamp balances owned by the wallet
-    func fetchStampsByWallet(_ address: String, forceRefresh: Bool = false) async throws -> [StampBalance] {
+    func fetchStampsByWallet(_ address: String, forceStampsRefresh: Bool = false) async throws -> [StampBalance] {
         let endpoint = "\(baseURL)/stamps/balance/\(address)"
         
         guard let url = URL(string: endpoint) else {
             throw NetworkError.invalidURL
         }
         
-        print("🌐 Fetching stamps from: \(endpoint)\(forceRefresh ? " (force refresh)" : "")")
+        print("🌐 Fetching stamps from: \(endpoint)\(forceStampsRefresh ? " (force refresh)" : "")")
         
-        let (data, _) = try await performRequest(url, forceRefresh: forceRefresh)
+        let (data, _) = try await performRequest(url, forceStampsRefresh: forceStampsRefresh)
         
         print("✅ Received \(data.count) bytes")
         
@@ -155,11 +155,11 @@ actor StampchainAPIClient {
     
     // MARK: - Private Methods
     
-    private func performRequest(_ url: URL, forceRefresh: Bool = false) async throws -> (Data, URLResponse) {
+    private func performRequest(_ url: URL, forceStampsRefresh: Bool = false) async throws -> (Data, URLResponse) {
         var request = URLRequest(url: url)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
-        if forceRefresh {
+        if forceStampsRefresh {
             request.cachePolicy = .reloadIgnoringLocalCacheData
         }
         

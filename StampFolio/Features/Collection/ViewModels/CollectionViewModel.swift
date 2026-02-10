@@ -187,9 +187,9 @@ final class CollectionViewModel {
     /// Fetch stamp metadata for all wallets, then prefetch images
     /// - Parameters:
     ///   - wallets: Array of wallet addresses to fetch stamps for
-    ///   - forceRefresh: When true, bypasses cache and fetches from network
+    ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStampsMetadata(for wallets: [Wallet], forceRefresh: Bool = false) async {
+    func fetchStampsMetadata(for wallets: [Wallet], forceStampsRefresh: Bool = false) async {
         guard !wallets.isEmpty else {
             stamps = []
             return
@@ -206,7 +206,7 @@ final class CollectionViewModel {
             for wallet in wallets {
                 group.addTask {
                     do {
-                        let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceRefresh: forceRefresh)
+                        let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
                         // Convert StampBalance to DisplayStamp
                         let displayStamps = walletBalances.map { DisplayStamp(from: $0) }
                         return .success(displayStamps)
@@ -265,14 +265,14 @@ final class CollectionViewModel {
     /// - Parameters:
     ///   - wallet: The wallet to fetch stamps for
     ///   - allWallets: All wallets for dedup and sorting context
-    ///   - forceRefresh: When true, bypasses cache and fetches from network
+    ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStampMetadata(for wallet: Wallet, allWallets: [Wallet], forceRefresh: Bool = false) async {
+    func fetchStampMetadata(for wallet: Wallet, allWallets: [Wallet], forceStampsRefresh: Bool = false) async {
         isRefreshing = true
         errorMessage = nil
         
         do {
-            let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceRefresh: forceRefresh)
+            let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
             let newDisplayStamps = walletBalances.map { DisplayStamp(from: $0) }
             
             // Remove existing stamps from this wallet, then add fresh ones

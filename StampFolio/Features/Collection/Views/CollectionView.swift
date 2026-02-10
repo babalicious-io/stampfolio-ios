@@ -341,7 +341,7 @@ struct CollectionView: View {
         } actions: {
             Button("Try Again") {
                 Task {
-                    await viewModel.fetchStampsMetadata(for: wallets, forceRefresh: true)
+                    await viewModel.fetchStampsMetadata(for: wallets, forceStampsRefresh: true)
                 }
             }
             .buttonStyle(.borderedProminent)
