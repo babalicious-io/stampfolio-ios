@@ -27,7 +27,6 @@ struct StampVectorView: View {
             )
             
             if isLoading {
-                Color(uiColor: .systemBackground)
                 ProgressView()
                     .tint(appColorScheme.primary)
             }
