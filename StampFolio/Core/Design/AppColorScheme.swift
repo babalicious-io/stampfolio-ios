@@ -37,15 +37,6 @@ enum AppColorScheme: String, CaseIterable, Identifiable, Codable {
     var secondary: Color {
         primary.opacity(0.7)
     }
-    
-    /// Gradient from bottom-left (primary) to top-right (secondary)
-    var gradient: LinearGradient {
-        LinearGradient(
-            colors: [primary, secondary],
-            startPoint: .bottomLeading,
-            endPoint: .topTrailing
-        )
-    }
 }
 
 // MARK: - Environment Key

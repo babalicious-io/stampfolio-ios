@@ -173,14 +173,14 @@ struct SettingsView: View {
     
     private var protocolSectionHeader: some View {
         HStack(spacing: 14) {
-            Text("Protocols")
+            Text("Content")
             Spacer()
             Button {
                 protocolEditMode = protocolEditMode.isEditing ? .inactive : .active
             } label: {
                 Text(protocolEditMode.isEditing ? "Done" : "Reorder")
                     .font(.caption)
-                    .fontWeight(.bold)
+                    .fontWeight(.semibold)
                     .textCase(.uppercase)
                     .foregroundStyle(protocolEditMode.isEditing ? appColorScheme.primary : appColorScheme.primary.opacity(0.8))
             }
@@ -266,8 +266,8 @@ struct SettingsView: View {
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(scheme.gradient)
-                                .frame(width: 24, height: 24)
+                                .fill(scheme.primary)
+                                .frame(width: 32, height: 32)
                             
                             if currentScheme == scheme {
                                 Image(systemName: "checkmark")
