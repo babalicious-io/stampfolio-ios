@@ -68,8 +68,14 @@ struct MainTabView: View {
     @TabContentBuilder<Never>
     private var orderedProtocolTabs: some TabContent<Never> {
         ForEach(protocolOrder.filter { shouldShowProtocol($0) }) { protocolType in
-            Tab(protocolType.rawValue, systemImage: protocolType.icon) {
+            Tab {
                 viewForProtocol(protocolType)
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: protocolType.icon)
+                        .font(.system(size: 20))
+                    Text(protocolType.rawValue)
+                }
             }
         }
     }
