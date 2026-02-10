@@ -76,6 +76,7 @@ struct AddWalletView: View {
                     } header: {
                         Text("Address Preview")
                     }
+                    .padding(.vertical, 4)
                 }
                 
                 // Wallet Color Section
@@ -122,6 +123,7 @@ struct AddWalletView: View {
                 } header: {
                     Text("Wallet Name")
                 }
+                .padding(.vertical, 4)
             }
             .navigationTitle("Add Wallet")
             .navigationBarTitleDisplayMode(.inline)

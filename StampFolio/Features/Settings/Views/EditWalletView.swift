@@ -51,6 +51,7 @@ struct EditWalletView: View {
                 } header: {
                     Text("Wallet Name")
                 } 
+                .padding(.vertical, 4)
                 
                 Section {
                     HStack(spacing: 18) {
