@@ -133,6 +133,7 @@ struct CollectionView: View {
         .sheet(item: $metadataStamp) { displayStamp in
             StampMetadataPopup(displayStamp: displayStamp)
                 .presentationDetents([.medium, .large])
+                .environment(viewModel)
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()

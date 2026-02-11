@@ -17,6 +17,11 @@ struct StampMetadataPopup: View {
     // Convenience accessor for the underlying stamp
     private var stamp: StampData { displayStamp.stamp }
     
+    // Get current stamp from viewModel (updates when market data fetched)
+    private var currentDisplayStamp: StampDataDisplay? {
+        viewModel.stamps.first(where: { $0.id == displayStamp.id })
+    }
+    
     // MARK: - Environment
     
     @Environment(\.dismiss) private var dismiss
@@ -125,8 +130,8 @@ struct StampMetadataPopup: View {
         // Show balance (user's balance vs total supply)
         MetadataRow(label: "Balance", value: displayStamp.formattedBalanceWithSupply)
         
-        // Show market data (fetched on-demand)
-        if let marketData = displayStamp.marketData {
+        // Show market data (fetched on-demand) - use currentDisplayStamp for updates
+        if let current = currentDisplayStamp, let marketData = current.marketData {
             if let floorPrice = marketData.formattedFloorPrice {
                 MetadataRow(label: "Floor Price", value: floorPrice)
             }
@@ -136,7 +141,7 @@ struct StampMetadataPopup: View {
             if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
             }
-        } else if displayStamp.isLoadingMarketData {
+        } else if let current = currentDisplayStamp, current.isLoadingMarketData {
             // Show loading state
             HStack {
                 Text("Market Data")
