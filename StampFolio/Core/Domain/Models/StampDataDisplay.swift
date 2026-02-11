@@ -93,7 +93,7 @@ struct StampDataDisplay: Identifiable {
             fileType: walletBalance.fileType,
             fileSize: nil,
             divisible: walletBalance.isDivisible,
-            locked: walletBalance.locked == 1,
+            locked: walletBalance.locked.map { $0 == 1 },
             keyburn: nil,
             blockTime: nil,
             blockIndex: nil,
