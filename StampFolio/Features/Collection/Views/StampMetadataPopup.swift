@@ -130,13 +130,16 @@ struct StampMetadataPopup: View {
         // Show balance (user's balance vs total supply)
         MetadataRow(label: "Balance", value: displayStamp.formattedBalanceWithSupply)
         
-        // Show market data (fetched on-demand) - use currentDisplayStamp for updates
+        // Holders: always show (at least one holder); updates when market data loads
+        MetadataRow(
+            label: "Holders",
+            value: currentDisplayStamp.marketData?.formattedHolderCount ?? "1 holder"
+        )
+        
+        // Market data (fetched on-demand) - use currentDisplayStamp for updates
         if let marketData = currentDisplayStamp.marketData {
             if let floorPrice = marketData.formattedFloorPrice {
                 MetadataRow(label: "Floor Price", value: floorPrice)
-            }
-            if let holders = marketData.formattedHolderCount {
-                MetadataRow(label: "Holders", value: holders)
             }
             if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
