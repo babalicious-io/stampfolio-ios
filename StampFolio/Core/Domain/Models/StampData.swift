@@ -269,15 +269,6 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
         return nil
     }
     
-    /// Whether the stamp is divisible (converts int to bool)
-    var isDivisible: Bool {
-        divisible == 1
-    }
-    
-    /// Whether the stamp is locked (converts int to bool)
-    var isLocked: Bool {
-        locked == 1
-    }
 }
 
 // MARK: - Sample Data
