@@ -112,16 +112,16 @@ struct StampMetadataPopup: View {
             
             // Creator name and addy (light label + bold value, subheadline primary)
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     if let creatorName = stamp.creatorName {
-                        Text("Artist \(Text(creatorName).fontWeight(.bold))")
+                        Text("ARTIST \(Text(creatorName).fontWeight(.bold))")
                             .fontWeight(.light)
-                            .font(.subheadline)
+                            .font(.title2)
                             .foregroundStyle(.primary)
                     }
                     Text("Addy \(Text(stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6)).fontWeight(.bold))")
                         .fontWeight(.light)
-                        .font(.subheadline)
+                        .font(.title3)
                         .foregroundStyle(.primary)
                         .textSelection(.enabled)
                 }
