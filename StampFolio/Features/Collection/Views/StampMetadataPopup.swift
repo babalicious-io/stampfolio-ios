@@ -13,13 +13,14 @@ struct StampMetadataPopup: View {
     // MARK: - Properties
     
     let displayStamp: StampDataDisplay
+    let viewModel: CollectionViewModel
     
     // Convenience accessor for the underlying stamp
     private var stamp: StampData { displayStamp.stamp }
     
     // Get current stamp from viewModel (updates when market data fetched)
-    private var currentDisplayStamp: StampDataDisplay? {
-        viewModel.stamps.first(where: { $0.id == displayStamp.id })
+    private var currentDisplayStamp: StampDataDisplay {
+        viewModel.stamps.first(where: { $0.id == displayStamp.id }) ?? displayStamp
     }
     
     // MARK: - Environment
@@ -27,7 +28,6 @@ struct StampMetadataPopup: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.appColorScheme) private var appColorScheme
-    @Environment(CollectionViewModel.self) private var viewModel
     
     // MARK: - Body
     
@@ -131,7 +131,7 @@ struct StampMetadataPopup: View {
         MetadataRow(label: "Balance", value: displayStamp.formattedBalanceWithSupply)
         
         // Show market data (fetched on-demand) - use currentDisplayStamp for updates
-        if let current = currentDisplayStamp, let marketData = current.marketData {
+        if let marketData = currentDisplayStamp.marketData {
             if let floorPrice = marketData.formattedFloorPrice {
                 MetadataRow(label: "Floor Price", value: floorPrice)
             }
@@ -141,7 +141,7 @@ struct StampMetadataPopup: View {
             if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
             }
-        } else if let current = currentDisplayStamp, current.isLoadingMarketData {
+        } else if currentDisplayStamp.isLoadingMarketData {
             // Show loading state
             HStack {
                 Text("Market Data")
@@ -272,6 +272,6 @@ struct MetadataRow: View {
 // MARK: - Preview
 
 #Preview {
-    StampMetadataPopup(displayStamp: StampDataDisplay(from: StampData.sample))
+    StampMetadataPopup(displayStamp: StampDataDisplay(from: StampData.sample), viewModel: CollectionViewModel())
         .presentationDetents([.medium, .large])
 }
