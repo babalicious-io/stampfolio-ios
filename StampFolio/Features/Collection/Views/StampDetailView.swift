@@ -16,7 +16,7 @@ struct StampDetailView: View {
     
     // MARK: - Properties
     
-    let stamps: [Stamp]
+    let stamps: [StampData]
     let initialIndex: Int
     
     // MARK: - Environment
@@ -36,7 +36,7 @@ struct StampDetailView: View {
     
     // MARK: - Computed Properties
     
-    private var currentStamp: Stamp {
+    private var currentStamp: StampData {
         stamps[currentIndex]
     }
     
@@ -44,7 +44,7 @@ struct StampDetailView: View {
     
     // MARK: - Initialization
     
-    init(stamps: [Stamp], initialIndex: Int) {
+    init(stamps: [StampData], initialIndex: Int) {
         self.stamps = stamps
         self.initialIndex = initialIndex
         _currentIndex = State(initialValue: initialIndex)
@@ -493,5 +493,5 @@ struct VideoContentView: View {
 // MARK: - Preview
 
 #Preview {
-    StampDetailView(stamps: [.sample], initialIndex: 0)
+    StampDetailView(stamps: [StampData.sample], initialIndex: 0)
 }

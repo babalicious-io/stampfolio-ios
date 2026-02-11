@@ -13,7 +13,7 @@ struct StampPixelView: View {
     
     // MARK: - Properties
     
-    let stamp: Stamp
+    let stamp: StampData
     let geometry: CGSize
     let onFailure: () -> Void
     
