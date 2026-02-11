@@ -22,6 +22,7 @@ struct StampMetadataPopup: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.appColorScheme) private var appColorScheme
+    @Environment(CollectionViewModel.self) private var viewModel
     
     // MARK: - Body
     
@@ -65,6 +66,10 @@ struct StampMetadataPopup: View {
             }
         }
         .tint(.primary)
+        .task {
+            // Fetch market data when popup opens (if not already cached)
+            await viewModel.fetchMarketDataIfNeeded(for: displayStamp)
+        }
     }
     
     // MARK: - Section 1: Stamp Identification
@@ -120,7 +125,8 @@ struct StampMetadataPopup: View {
         // Show balance (user's balance vs total supply)
         MetadataRow(label: "Balance", value: displayStamp.formattedBalanceWithSupply)
         
-        if let marketData = stamp.marketData {
+        // Show market data (fetched on-demand)
+        if let marketData = displayStamp.marketData {
             if let floorPrice = marketData.formattedFloorPrice {
                 MetadataRow(label: "Floor Price", value: floorPrice)
             }
@@ -129,6 +135,21 @@ struct StampMetadataPopup: View {
             }
             if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
+            }
+        } else if displayStamp.isLoadingMarketData {
+            // Show loading state
+            HStack {
+                Text("Market Data")
+                    .font(.callout)
+                    .fontWeight(.light)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .frame(width: 100, alignment: .leading)
+                
+                ProgressView()
+                    .controlSize(.small)
+                
+                Spacer()
             }
         }
     }
