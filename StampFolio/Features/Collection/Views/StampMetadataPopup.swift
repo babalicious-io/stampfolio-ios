@@ -84,13 +84,13 @@ struct StampMetadataPopup: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
                     // STAMP label (light) + stampId number (semibold)
-                    Text("STAMP #\(Text("\(stamp.stampId)").fontWeight(.bold))")
+                    Text("STAMP  #\(Text("\(stamp.stampId)").fontWeight(.bold))")
                         .fontWeight(.light)
                         .font(.title2)
                         .foregroundStyle(.primary)
                     
                     // CPID label (light) + counterpartyId (semibold)
-                    Text("CPID \(Text(stamp.counterpartyId).fontWeight(.bold))")
+                    Text("CPID  \(Text(stamp.counterpartyId).fontWeight(.bold))")
                         .fontWeight(.light)
                         .font(.headline)
                         .foregroundStyle(.secondary)
@@ -114,12 +114,12 @@ struct StampMetadataPopup: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
                     if let creatorName = stamp.creatorName {
-                        Text("ARTIST \(Text(creatorName).fontWeight(.bold))")
+                        Text("ARTIST  \(Text(creatorName).fontWeight(.bold))")
                             .fontWeight(.light)
-                            .font(.title2)
+                            .font(.title3)
                             .foregroundStyle(.primary)
                     }
-                    Text("Addy \(Text(stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6)).fontWeight(.bold))")
+                    Text("ADDY  \(Text(stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6)).fontWeight(.bold))")
                         .fontWeight(.light)
                         .font(.title3)
                         .foregroundStyle(.primary)
