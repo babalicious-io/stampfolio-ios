@@ -22,7 +22,7 @@ struct StampMarketData: Codable, Hashable, Sendable {
     let volume24hBTC: Decimal?
     
     /// Data quality score (0-100)
-    let dataQualityScore: Int
+    let dataQualityScore: Double
     
     /// Number of active dispensers/listings
     let openDispensersCount: Int?
@@ -54,7 +54,7 @@ struct StampMarketData: Codable, Hashable, Sendable {
         floorPriceBTC = try container.decodeIfPresent(Decimal.self, forKey: .floorPriceBTC)
         holderCount = try container.decodeIfPresent(Int.self, forKey: .holderCount)
         volume24hBTC = try container.decodeIfPresent(Decimal.self, forKey: .volume24hBTC)
-        dataQualityScore = try container.decode(Int.self, forKey: .dataQualityScore)
+        dataQualityScore = try container.decode(Double.self, forKey: .dataQualityScore)
         
         // Decode nested dispensers.open_count
         if let dispensers = try container.decodeIfPresent(Dispensers.self, forKey: .dispensers) {
@@ -86,7 +86,7 @@ struct StampMarketData: Codable, Hashable, Sendable {
         floorPriceBTC: Decimal?,
         holderCount: Int?,
         volume24hBTC: Decimal?,
-        dataQualityScore: Int,
+        dataQualityScore: Double,
         openDispensersCount: Int?
     ) {
         self.floorPriceBTC = floorPriceBTC
@@ -135,7 +135,7 @@ extension StampMarketData {
         floorPriceBTC: Decimal(string: "0.00001234"),
         holderCount: 42,
         volume24hBTC: Decimal(string: "0.001"),
-        dataQualityScore: 85,
+        dataQualityScore: 8.5,
         openDispensersCount: 3
     )
 }
