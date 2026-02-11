@@ -27,6 +27,16 @@ struct StampMarketData: Codable, Hashable, Sendable {
     /// Number of active dispensers/listings
     let openDispensersCount: Int?
     
+    // MARK: - Nested Dispensers Structure
+    
+    private struct Dispensers: Codable {
+        let openCount: Int?
+        
+        enum CodingKeys: String, CodingKey {
+            case openCount = "open_count"
+        }
+    }
+    
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
@@ -34,7 +44,40 @@ struct StampMarketData: Codable, Hashable, Sendable {
         case holderCount = "holder_count"
         case volume24hBTC = "volume_24h_btc"
         case dataQualityScore = "data_quality_score"
-        case openDispensersCount = "open_dispensers_count"
+        case dispensers
+    }
+    
+    // MARK: - Custom Decoding
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        floorPriceBTC = try container.decodeIfPresent(Decimal.self, forKey: .floorPriceBTC)
+        holderCount = try container.decodeIfPresent(Int.self, forKey: .holderCount)
+        volume24hBTC = try container.decodeIfPresent(Decimal.self, forKey: .volume24hBTC)
+        dataQualityScore = try container.decode(Int.self, forKey: .dataQualityScore)
+        
+        // Decode nested dispensers.open_count
+        if let dispensers = try container.decodeIfPresent(Dispensers.self, forKey: .dispensers) {
+            openDispensersCount = dispensers.openCount
+        } else {
+            openDispensersCount = nil
+        }
+    }
+    
+    // MARK: - Memberwise Initializer
+    
+    init(
+        floorPriceBTC: Decimal?,
+        holderCount: Int?,
+        volume24hBTC: Decimal?,
+        dataQualityScore: Int,
+        openDispensersCount: Int?
+    ) {
+        self.floorPriceBTC = floorPriceBTC
+        self.holderCount = holderCount
+        self.volume24hBTC = volume24hBTC
+        self.dataQualityScore = dataQualityScore
+        self.openDispensersCount = openDispensersCount
     }
     
     // MARK: - Computed Properties
