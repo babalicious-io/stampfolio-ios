@@ -112,7 +112,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Performance")
                 } footer: {
-                    Text("Display small static preview images instead of animated GIFs in stamp grids and lists to save resources.")
+                    Text("Display small static preview images instead of animated GIFs in grids and lists to save resources.")
                 }
                 
                 // About Section
@@ -312,7 +312,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 Image(systemName: "wallet.bifold.fill")
                     .foregroundStyle(appColorScheme.primary)
-                Text(showWalletIcons ? "Display Wallet Icon" : "Hide Wallet Icon")    
+                Text(showWalletIcons ? "Show Wallet Icon" : "Hide Wallet Icon")    
             }
         }
         .tint(appColorScheme.primary)
