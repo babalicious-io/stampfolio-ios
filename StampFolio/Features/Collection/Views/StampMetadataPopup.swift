@@ -15,13 +15,13 @@ struct StampMetadataPopup: View {
     let displayStamp: StampDataDisplay
     let viewModel: CollectionViewModel
     
-    // Convenience accessor for the underlying stamp
-    private var stamp: StampData { displayStamp.stamp }
-    
     // Get current stamp from viewModel (updates when market data fetched)
     private var currentDisplayStamp: StampDataDisplay {
         viewModel.stamps.first(where: { $0.id == displayStamp.id }) ?? displayStamp
     }
+    
+    // Convenience accessor for the underlying stamp (always use current data)
+    private var stamp: StampData { currentDisplayStamp.stamp }
     
     // MARK: - Environment
     
