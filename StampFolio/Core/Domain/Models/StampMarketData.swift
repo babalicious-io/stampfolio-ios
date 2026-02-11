@@ -64,6 +64,22 @@ struct StampMarketData: Codable, Hashable, Sendable {
         }
     }
     
+    // MARK: - Custom Encoding
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(floorPriceBTC, forKey: .floorPriceBTC)
+        try container.encodeIfPresent(holderCount, forKey: .holderCount)
+        try container.encodeIfPresent(volume24hBTC, forKey: .volume24hBTC)
+        try container.encode(dataQualityScore, forKey: .dataQualityScore)
+        
+        // Encode as nested dispensers structure
+        if let count = openDispensersCount {
+            let dispensers = Dispensers(openCount: count)
+            try container.encode(dispensers, forKey: .dispensers)
+        }
+    }
+    
     // MARK: - Memberwise Initializer
     
     init(
