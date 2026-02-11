@@ -163,12 +163,16 @@ struct StampMetadataPopup: View {
     
     @ViewBuilder
     private var fileInformationContent: some View {
-        if let mimetype = stamp.fileType {
-            MetadataRow(label: "File Type", value: mimetype)
-        }
-        if let formattedSize = stamp.formattedFileSize {
-            MetadataRow(label: "File Size", value: formattedSize)
-        }
+        // File Type: always show (from balance); "N/A" when nil/empty
+        MetadataRow(
+            label: "File Type",
+            value: stamp.fileType.map { $0.isEmpty ? "N/A" : $0 } ?? "N/A"
+        )
+        // File Size: always show; "N/A" when null/0, else formatted value (updates when stamp-by-id fetch completes)
+        MetadataRow(
+            label: "File Size",
+            value: (stamp.fileSize.map { $0 > 0 } == true) ? (stamp.formattedFileSize ?? "N/A") : "N/A"
+        )
     }
     
     // MARK: - Section 4: Blockchain Information
