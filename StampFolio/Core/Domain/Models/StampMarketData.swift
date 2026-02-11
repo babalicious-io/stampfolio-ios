@@ -18,12 +18,6 @@ struct StampMarketData: Codable, Hashable, Sendable {
     /// Number of unique holders
     let holderCount: Int?
     
-    /// 24-hour trading volume in BTC
-    let volume24hBTC: Decimal?
-    
-    /// Data quality score (0-100)
-    let dataQualityScore: Double
-    
     /// Number of active dispensers/listings
     let openDispensersCount: Int?
     
@@ -42,8 +36,6 @@ struct StampMarketData: Codable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case floorPriceBTC = "floor_price_btc"
         case holderCount = "holder_count"
-        case volume24hBTC = "volume_24h_btc"
-        case dataQualityScore = "data_quality_score"
         case dispensers
     }
     
@@ -53,8 +45,6 @@ struct StampMarketData: Codable, Hashable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         floorPriceBTC = try container.decodeIfPresent(Decimal.self, forKey: .floorPriceBTC)
         holderCount = try container.decodeIfPresent(Int.self, forKey: .holderCount)
-        volume24hBTC = try container.decodeIfPresent(Decimal.self, forKey: .volume24hBTC)
-        dataQualityScore = try container.decode(Double.self, forKey: .dataQualityScore)
         
         // Decode nested dispensers.open_count
         if let dispensers = try container.decodeIfPresent(Dispensers.self, forKey: .dispensers) {
@@ -70,8 +60,6 @@ struct StampMarketData: Codable, Hashable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(floorPriceBTC, forKey: .floorPriceBTC)
         try container.encodeIfPresent(holderCount, forKey: .holderCount)
-        try container.encodeIfPresent(volume24hBTC, forKey: .volume24hBTC)
-        try container.encode(dataQualityScore, forKey: .dataQualityScore)
         
         // Encode as nested dispensers structure
         if let count = openDispensersCount {
@@ -85,14 +73,10 @@ struct StampMarketData: Codable, Hashable, Sendable {
     init(
         floorPriceBTC: Decimal?,
         holderCount: Int?,
-        volume24hBTC: Decimal?,
-        dataQualityScore: Double,
         openDispensersCount: Int?
     ) {
         self.floorPriceBTC = floorPriceBTC
         self.holderCount = holderCount
-        self.volume24hBTC = volume24hBTC
-        self.dataQualityScore = dataQualityScore
         self.openDispensersCount = openDispensersCount
     }
     
@@ -134,8 +118,6 @@ extension StampMarketData {
     static let sample = StampMarketData(
         floorPriceBTC: Decimal(string: "0.00001234"),
         holderCount: 42,
-        volume24hBTC: Decimal(string: "0.001"),
-        dataQualityScore: 8.5,
         openDispensersCount: 3
     )
 }
