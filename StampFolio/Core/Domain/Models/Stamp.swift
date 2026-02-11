@@ -15,14 +15,14 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     /// Stamp type - set based on which API endpoint returned it
     let stampType: String
     
-    /// Stamp identifier from ident field ("STAMP", "SRC-721", etc.)
-    let stampIdent: String?
+    /// Asset identifier from ident field ("STAMP", "SRC-721", etc.)
+    let assetId: String?
 
     /// Stamp number (e.g., 1384303 or -11)
-    let sid: Int
+    let stampId: Int
     
     /// Counterparty ID (e.g., "A888354448084788958")
-    let cpid: String
+    let counterpartyId: String
     
     /// Creator's Bitcoin address
     let creatorAddy: String
@@ -34,7 +34,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     let editionSupply: Int
     
     /// MIME type of the stamp content (e.g., "image/png", "image/gif")
-    let filetype: String?
+    let fileType: String?
 
     /// Size of the stamp file in bytes
     let fileSize: Int?
@@ -63,13 +63,13 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
-        case stampIdent = "ident"
-        case sid = "stamp"
-        case cpid = "cpid"
+        case assetId = "ident"
+        case stampId = "stamp"
+        case counterpartyId = "cpid"
         case creatorAddy = "creator"
         case creatorName = "creator_name"
         case editionSupply = "supply"
-        case filetype = "stamp_mimetype"
+        case fileType = "stamp_mimetype"
         case fileSize = "file_size_bytes"
         case divisible
         case blockTime = "block_time"
@@ -85,13 +85,13 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     /// Memberwise initializer (required since we have custom decoder)
     init(
         stampType: String,
-        stampIdent: String?,
-        sid: Int,
-        cpid: String,
+        assetId: String?,
+        stampId: Int,
+        counterpartyId: String,
         creatorAddy: String,
         creatorName: String?,
         editionSupply: Int,
-        filetype: String?,
+        fileType: String?,
         fileSize: Int?,
         divisible: Int,
         blockTime: Date?,
@@ -102,13 +102,13 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         stampUrl: String
     ) {
         self.stampType = stampType
-        self.stampIdent = stampIdent
-        self.sid = sid
-        self.cpid = cpid
+        self.assetId = assetId
+        self.stampId = stampId
+        self.counterpartyId = counterpartyId
         self.creatorAddy = creatorAddy
         self.creatorName = creatorName
         self.editionSupply = editionSupply
-        self.filetype = filetype
+        self.fileType = fileType
         self.fileSize = fileSize
         self.divisible = divisible
         self.blockTime = blockTime
@@ -126,13 +126,13 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         // stampType will be set manually after decoding, default to "classic"
         self.stampType = "classic"
         
-        self.stampIdent = try container.decodeIfPresent(String.self, forKey: .stampIdent)
-        self.sid = try container.decode(Int.self, forKey: .sid)
-        self.cpid = try container.decode(String.self, forKey: .cpid)
+        self.assetId = try container.decodeIfPresent(String.self, forKey: .assetId)
+        self.stampId = try container.decode(Int.self, forKey: .stampId)
+        self.counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
         self.creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
         self.creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
         self.editionSupply = try container.decode(Int.self, forKey: .editionSupply)
-        self.filetype = try container.decodeIfPresent(String.self, forKey: .filetype)
+        self.fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
         self.fileSize = try container.decodeIfPresent(Int.self, forKey: .fileSize)
         self.divisible = try container.decode(Int.self, forKey: .divisible)
         self.blockTime = try container.decodeIfPresent(Date.self, forKey: .blockTime)
@@ -145,12 +145,12 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Computed Properties
     
-    /// Identifiable conformance - uses sid
-    var id: Int { sid }
+    /// Identifiable conformance - uses stampId
+    var id: Int { stampId }
     
     /// URL to the stamp detail page on Stampchain.io
     var stampchainURL: URL {
-        URL(string: "https://stampchain.io/stamp/\(sid)")!
+        URL(string: "https://stampchain.io/stamp/\(stampId)")!
     }
 
     /// URL for loading the stamp image
@@ -170,12 +170,12 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
 
     /// Formatted stamp ID (number)
     var formattedStampId: String {
-        "STAMP #\(sid)"
+        "STAMP #\(stampId)"
     }
 
     /// Formatted counterparty ID
     var formattedCounterpartyId: String {
-        "CPID \(cpid)"
+        "CPID \(counterpartyId)"
     }
     
     /// Formatted file size
@@ -189,56 +189,56 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     
     /// Whether the stamp content is an image (jpg, png, webp, bmp, avif)
     var isImage: Bool {
-        guard let mimetype = filetype?.lowercased() else { return true }
+        guard let mimetype = fileType?.lowercased() else { return true }
         return mimetype.hasPrefix("image/")
     }
     
     /// Whether the stamp content is (animated) GIF
     var isGIF: Bool {
-        filetype?.lowercased() == "image/gif"
+        fileType?.lowercased() == "image/gif"
     }
     
     /// Whether the stamp content is SVG
     var isSVG: Bool {
-        filetype?.lowercased() == "image/svg+xml"
+        fileType?.lowercased() == "image/svg+xml"
     }
     
     /// Whether the stamp content is HTML
     var isHTML: Bool {
-        filetype?.lowercased() == "text/html"
+        fileType?.lowercased() == "text/html"
     }
     
     /// Whether the stamp content is plain text
     var isText: Bool {
-        filetype?.lowercased() == "text/plain"
+        fileType?.lowercased() == "text/plain"
     }
     
     /// Whether the stamp content is audio
     var isAudio: Bool {
-        guard let mimetype = filetype?.lowercased() else { return false }
+        guard let mimetype = fileType?.lowercased() else { return false }
         return mimetype.hasPrefix("audio/")
     }
     
     /// Whether the stamp content is video
     var isVideo: Bool {
-        guard let mimetype = filetype?.lowercased() else { return false }
+        guard let mimetype = fileType?.lowercased() else { return false }
         return mimetype.hasPrefix("video/")
     }
     
     /// Whether the stamp content is JavaScript
     var isJavaScript: Bool {
-        guard let mimetype = filetype?.lowercased() else { return false }
+        guard let mimetype = fileType?.lowercased() else { return false }
         return mimetype == "application/javascript" || mimetype == "text/javascript" || mimetype == "application/x-javascript"
     }
     
     /// Whether the stamp content is CSS
     var isCSS: Bool {
-        filetype?.lowercased() == "text/css"
+        fileType?.lowercased() == "text/css"
     }
     
     /// Whether the stamp content is GZIP compressed
     var isGZIP: Bool {
-        guard let mimetype = filetype?.lowercased() else { return false }
+        guard let mimetype = fileType?.lowercased() else { return false }
         return mimetype == "application/gzip" || mimetype == "application/x-gzip"
     }
     
@@ -268,13 +268,13 @@ extension Stamp {
     /// Sample stamp for previews and testing
     static let sample = Stamp(
         stampType: "classic",
-        stampIdent: "STAMP",
-        sid: 1384303,
-        cpid: "A888354448084788958",
+        assetId: "STAMP",
+        stampId: 1384303,
+        counterpartyId: "A888354448084788958",
         creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
         creatorName: "babalicious",
         editionSupply: 1,
-        filetype: "image/png",
+        fileType: "image/png",
         fileSize: 198,
         divisible: 0,
         blockTime: Date(),
@@ -290,13 +290,13 @@ extension Stamp {
         sample,
         Stamp(
             stampType: "cursed",
-            stampIdent: "STAMP",
-            sid: -11,
-            cpid: "A2256256256256256256",
+            assetId: "STAMP",
+            stampId: -11,
+            counterpartyId: "A2256256256256256256",
             creatorAddy: "1GPon5BBwZJBSvGbj3b973TQ1XMXgDbPwt",
             creatorName: "netidx",
             editionSupply: 256,
-            filetype: "text/plain",
+            fileType: "text/plain",
             fileSize: nil,
             divisible: 0,
             blockTime: Date().addingTimeInterval(-86400),
@@ -308,13 +308,13 @@ extension Stamp {
         ),
         Stamp(
             stampType: "posh",
-            stampIdent: "STAMP",
-            sid: -398,
-            cpid: "USDSTAMP",
+            assetId: "STAMP",
+            stampId: -398,
+            counterpartyId: "USDSTAMP",
             creatorAddy: "bc1qtest",
             creatorName: "posh_creator",
             editionSupply: 1,
-            filetype: "image/png",
+            fileType: "image/png",
             fileSize: 500,
             divisible: 0,
             blockTime: Date().addingTimeInterval(-172800),

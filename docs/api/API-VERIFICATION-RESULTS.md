@@ -100,14 +100,21 @@ GET /address/{address}/stamps         # ❌ Wrong format
 **Conclusion:** 
 - Cursed = ALL negative stamps (both numeric and named CPIDs)
 - POSH = Negative stamps with ONLY named CPIDs (subset of cursed)
+- Using both `?type=cursed` and `?type=posh` filters will return duplicate stamps
+
+**StampFolio Solution:**
+- Fetch all stamps in one call without type filters
+- Compute type locally: `stamp > 0` → classic, `stamp < 0` + numeric CPID → cursed, `stamp < 0` + named CPID → posh
+- This eliminates duplicates and provides single source of truth
 
 ## Key Findings
 
 1. **The API does NOT return a `type` field** in stamp objects - only supports `?type=` for filtering
 2. **POSH is a subset of CURSED** - all POSH stamps are cursed, but not all cursed stamps are POSH
-3. **SRC-20 and SRC-101** may not use the stamps endpoint at all (separate protocol)
-4. **Collection endpoint doesn't exist** in v2 API
-5. **Both cursed and posh return the same stamps** in recent results - distinction may be historical
+3. **Using type filters creates duplicates** - calling `?type=cursed` and `?type=posh` returns overlapping results
+4. **Type must be computed client-side** - based on stamp number (positive/negative) and CPID pattern (numeric vs named)
+5. **SRC-20 and SRC-101** use separate endpoints - not queryable via the stamps `ident` field
+6. **Collection endpoint doesn't exist** in v2 API
 
 ## Testing Methodology
 

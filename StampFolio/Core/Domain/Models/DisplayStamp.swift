@@ -71,13 +71,13 @@ struct DisplayStamp: Identifiable {
     init(from stampBalance: StampBalance) {
         self.stamp = Stamp(
             stampType: stampBalance.stampType ?? "classic",
-            stampIdent: stampBalance.ident,
-            sid: stampBalance.stamp,
-            cpid: stampBalance.cpid,
+            assetId: stampBalance.ident,
+            stampId: stampBalance.stamp,
+            counterpartyId: stampBalance.cpid,
             creatorAddy: stampBalance.creatorAddy,
             creatorName: stampBalance.creatorName,
             editionSupply: stampBalance.supply ?? Int(stampBalance.balance),
-            filetype: stampBalance.stampMimetype,
+            fileType: stampBalance.stampMimetype,
             fileSize: nil,
             divisible: stampBalance.divisible,
             blockTime: nil,

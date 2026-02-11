@@ -162,6 +162,52 @@ GET /stamps/balance/1GPon5BBwZJBSvGbj3b973TQ1XMXgDbPwt
 
 This is the endpoint used by StampFolio to fetch user's stamp collection.
 
+**Query Parameters (optional):**
+- `type` (string): Filter by stamp type (`classic`, `cursed`, `posh`)
+
+**Note:** While the API supports `?type=` filtering, using it can result in duplicate stamps since POSH is a subset of cursed. See StampFolio Implementation section below for the recommended approach.
+
+## StampFolio Implementation
+
+StampFolio uses a simplified approach to stamp type classification that avoids duplicates and provides a single source of truth:
+
+### Implementation Strategy
+
+1. **Single API Call**: Fetches all stamps from `/stamps/balance/{address}` without type filters
+   ```swift
+   GET /stamps/balance/{address}  // No ?type= parameter
+   ```
+
+2. **Local Type Computation**: Determines type client-side based on stamp characteristics:
+   ```swift
+   if stamp > 0:
+       type = "classic"
+   else if stamp < 0 && cpid starts with "A" + only numbers:
+       type = "cursed"
+   else if stamp < 0 && cpid is named:
+       type = "posh"
+   ```
+
+3. **Why This Approach?**
+   - **Avoids Duplicates**: Using `?type=cursed` and `?type=posh` filters returns overlapping results (POSH is subset of cursed)
+   - **Single Source of Truth**: Each stamp gets exactly one type assignment
+   - **Simpler**: One API call instead of three separate filtered calls
+   - **Efficient**: No need to deduplicate results or decide which type "wins"
+
+### Type Classification Rules
+
+| Stamp Number | CPID Pattern | Example CPID | Assigned Type |
+|-------------|--------------|--------------|---------------|
+| Positive (>0) | Any | `A888354448084788958` | `classic` |
+| Negative (<0) | `A` + numbers only | `A2256256256256256256` | `cursed` |
+| Negative (<0) | Named (vanity) | `USDSTAMP`, `PEPE` | `posh` |
+
+### Code Location
+
+- **API Client**: `StampchainAPIClient.swift` - `fetchStampsByWallet()` method
+- **Type Assignment Logic**: Computed after decoding API response
+- **Filtering**: `CollectionViewModel.swift` - filters by assigned `stampType` property
+
 ## Database Schema Reference
 
 Complete database schema: https://raw.githubusercontent.com/stampchain-io/btc_stamps/refs/heads/dev/indexer/table_schema.sql

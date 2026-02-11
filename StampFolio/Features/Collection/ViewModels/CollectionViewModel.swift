@@ -105,7 +105,7 @@ final class CollectionViewModel {
                 }
                 
                 // Search by CPID
-                if stamp.cpid.localizedCaseInsensitiveContains(searchText) {
+                if stamp.counterpartyId.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
                 
@@ -155,7 +155,7 @@ final class CollectionViewModel {
             ]
             
             result = result.filter { displayStamp in
-                guard let mimetype = displayStamp.stamp.filetype?.lowercased() else { return false }
+                guard let mimetype = displayStamp.stamp.fileType?.lowercased() else { return false }
                 guard let format = mimeToFormat[mimetype] else { return false }
                 return activeFileFormatFilters.contains(format)
             }

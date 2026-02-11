@@ -72,14 +72,14 @@ struct StampMetadataPopup: View {
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
-                // STAMP label (light) + sid number (semibold)
-                Text("STAMP #\(Text("\(stamp.sid)").fontWeight(.bold))")
+                // STAMP label (light) + stampId number (semibold)
+                Text("STAMP #\(Text("\(stamp.stampId)").fontWeight(.bold))")
                     .fontWeight(.light)
                     .font(.title2)
                     .foregroundStyle(.primary)
                 
-                // CPID label (light) + cpid (semibold)
-                Text("CPID \(Text(stamp.cpid).fontWeight(.bold))")
+                // CPID label (light) + counterpartyId (semibold)
+                Text("CPID \(Text(stamp.counterpartyId).fontWeight(.bold))")
                     .fontWeight(.light)
                     .font(.body)
                     .foregroundStyle(.primary)
@@ -137,7 +137,7 @@ struct StampMetadataPopup: View {
     
     @ViewBuilder
     private var fileInformationContent: some View {
-        if let mimetype = stamp.filetype {
+        if let mimetype = stamp.fileType {
             MetadataRow(label: "File Type", value: mimetype)
         }
         if let formattedSize = stamp.formattedFileSize {
