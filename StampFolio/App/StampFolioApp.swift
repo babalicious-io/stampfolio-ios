@@ -42,7 +42,7 @@ struct StampFolioApp: App {
     /// Model container for SwiftData persistence
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Wallet.self
+            WalletConfig.self
         ])
         let modelConfiguration = ModelConfiguration(
             schema: schema,

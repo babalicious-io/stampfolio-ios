@@ -16,14 +16,14 @@ struct SearchView: View {
     @Environment(CollectionViewModel.self) private var viewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.appColorScheme) private var appColorScheme
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
     // MARK: - State
     
     @FocusState private var isSearchFieldFocused: Bool
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @State private var selectedStamp: DisplayStamp?
-    @State private var metadataStamp: DisplayStamp?
+    @State private var selectedStamp: StampDataDisplay?
+    @State private var metadataStamp: StampDataDisplay?
     
     // MARK: - Body
     
@@ -123,5 +123,5 @@ struct SearchView: View {
 #Preview {
     SearchView()
         .environment(CollectionViewModel())
-        .modelContainer(for: Wallet.self, inMemory: true)
+        .modelContainer(for: WalletConfig.self, inMemory: true)
 }

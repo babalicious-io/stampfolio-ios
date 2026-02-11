@@ -50,7 +50,7 @@ final class CollectionViewModel {
     // MARK: - Properties
     
     /// All stamps from all wallets with display information
-    private(set) var stamps: [DisplayStamp] = []
+    private(set) var stamps: [StampDataDisplay] = []
     
     /// Loading state
     private(set) var isLoading: Bool = false
@@ -59,10 +59,10 @@ final class CollectionViewModel {
     private(set) var errorMessage: String?
     
     /// Currently selected stamp for detail view
-    var selectedStamp: DisplayStamp?
+    var selectedStamp: StampDataDisplay?
     
     /// Stamp for metadata popup
-    var metadataStamp: DisplayStamp?
+    var metadataStamp: StampDataDisplay?
     
     /// Whether refresh is in progress
     private(set) var isRefreshing: Bool = false
@@ -90,7 +90,7 @@ final class CollectionViewModel {
     }
     
     /// Filtered stamps based on search text and filters
-    var filteredStamps: [DisplayStamp] {
+    var filteredStamps: [StampDataDisplay] {
         var result = stamps
         
         // Apply search filter
@@ -195,7 +195,7 @@ final class CollectionViewModel {
     ///   - wallets: Array of wallet addresses to fetch stamps for
     ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStampsMetadata(for wallets: [Wallet], forceStampsRefresh: Bool = false) async {
+    func fetchStampsMetadata(for wallets: [WalletConfig], forceStampsRefresh: Bool = false) async {
         guard !wallets.isEmpty else {
             stamps = []
             return
@@ -204,17 +204,17 @@ final class CollectionViewModel {
         isLoading = stamps.isEmpty
         errorMessage = nil
         
-        var allStamps: [DisplayStamp] = []
+        var allStamps: [StampDataDisplay] = []
         var fetchErrors: [String] = []
         
         // Fetch stamps for each wallet concurrently
-        await withTaskGroup(of: Result<[DisplayStamp], Error>.self) { group in
+        await withTaskGroup(of: Result<[StampDataDisplay], Error>.self) { group in
             for wallet in wallets {
                 group.addTask {
                     do {
                         let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
-                        // Convert StampBalance to DisplayStamp
-                        let displayStamps = walletBalances.map { DisplayStamp(from: $0) }
+                        // Convert WalletBalanceData to StampDataDisplay
+                        let displayStamps = walletBalances.map { StampDataDisplay(from: $0) }
                         return .success(displayStamps)
                     } catch {
                         return .failure(error)
@@ -273,13 +273,13 @@ final class CollectionViewModel {
     ///   - allWallets: All wallets for dedup and sorting context
     ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStampMetadata(for wallet: Wallet, allWallets: [Wallet], forceStampsRefresh: Bool = false) async {
+    func fetchStampMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceStampsRefresh: Bool = false) async {
         isRefreshing = true
         errorMessage = nil
         
         do {
             let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
-            let newDisplayStamps = walletBalances.map { DisplayStamp(from: $0) }
+            let newDisplayStamps = walletBalances.map { StampDataDisplay(from: $0) }
             
             // Remove existing stamps from this wallet, then add fresh ones
             var updatedStamps = stamps.filter { $0.walletAddress != wallet.address }
@@ -445,14 +445,14 @@ final class CollectionViewModel {
     /// - Parameters:
     ///   - option: The sort option to apply
     ///   - wallets: Array of wallets for mapping wallet addresses to display names
-    func sortStamps(by option: SortOption, wallets: [Wallet]) {
+    func sortStamps(by option: SortOption, wallets: [WalletConfig]) {
         currentSortOption = option
         stamps = sortedStamps(stamps, by: option, wallets: wallets)
     }
     
-    /// Toggle sort for a specific category (Stamp, Artist, Balance, Wallet)
+    /// Toggle sort for a specific category (Stamp, Artist, Balance, WalletConfig)
     /// - Parameter wallets: Array of wallets for mapping wallet addresses to display names
-    func toggleSort(for category: SortCategory, wallets: [Wallet]) {
+    func toggleSort(for category: SortCategory, wallets: [WalletConfig]) {
         let newOption: SortOption
         
         switch category {
@@ -507,7 +507,7 @@ final class CollectionViewModel {
     ///   - option: The sort option to apply
     ///   - wallets: Array of wallets for mapping wallet addresses to display names
     /// - Returns: Sorted array of stamps
-    private func sortedStamps(_ stamps: [DisplayStamp], by option: SortOption, wallets: [Wallet]) -> [DisplayStamp] {
+    private func sortedStamps(_ stamps: [StampDataDisplay], by option: SortOption, wallets: [WalletConfig]) -> [StampDataDisplay] {
         switch option {
         case .stampAscending:
             return stamps.sorted { $0.id < $1.id }
@@ -556,7 +556,7 @@ final class CollectionViewModel {
     ///   - address: The wallet address
     ///   - wallets: Array of wallets to search
     /// - Returns: Display name or address
-    private func walletDisplayName(for address: String?, in wallets: [Wallet]) -> String {
+    private func walletDisplayName(for address: String?, in wallets: [WalletConfig]) -> String {
         guard let address = address else { return "" }
         
         if let wallet = wallets.first(where: { $0.address == address }) {

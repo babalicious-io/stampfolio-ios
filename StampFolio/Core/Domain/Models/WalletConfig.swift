@@ -10,7 +10,7 @@ import SwiftData
 
 /// Represents a Bitcoin wallet address stored locally
 @Model
-final class Wallet {
+final class WalletConfig {
     
     // MARK: - Properties
     

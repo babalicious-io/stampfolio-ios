@@ -8,7 +8,7 @@
 import Foundation
 
 /// Market data for a stamp (floor price, holder count, etc.)
-struct MarketData: Codable, Hashable, Sendable {
+struct StampMarketData: Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
@@ -69,10 +69,10 @@ struct MarketData: Codable, Hashable, Sendable {
 
 // MARK: - Sample Data
 
-extension MarketData {
+extension StampMarketData {
     
     /// Sample market data for previews
-    static let sample = MarketData(
+    static let sample = StampMarketData(
         floorPriceBTC: Decimal(string: "0.00001234"),
         holderCount: 42,
         volume24hBTC: Decimal(string: "0.001"),

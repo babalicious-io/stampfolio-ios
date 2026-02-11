@@ -8,18 +8,18 @@
 import Foundation
 
 /// Represents a stamp balance from the balance endpoint
-struct StampBalance: Identifiable, Codable, Hashable, Sendable {
+struct WalletBalanceData: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
     /// Stamp type - set based on which API endpoint returned it ("classic", "cursed", "posh")
     var stampType: String?
     
-    /// Stamp identifier type ("STAMP", "SRC-721", "SRC-101", etc.)
-    let ident: String?
+    /// Asset identifier type ("STAMP", "SRC-721", "SRC-101", etc.)
+    let assetId: String?
     
     /// Unique stamp number (primary identifier)
-    let stamp: Int
+    let stampId: Int
     
     /// Transaction hash
     let txHash: String
@@ -28,13 +28,13 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     let stampUrl: String
     
     /// MIME type of the stamp content (nullable in API)
-    let stampMimetype: String?
+    let fileType: String?
     
     /// Whether the stamp is divisible (0 = false, 1 = true)
     let divisible: Int
     
     /// Total supply/editions
-    let supply: Int?
+    let editionSupply: Int?
     
     /// Whether the stamp is locked
     let locked: Int?
@@ -52,7 +52,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     let address: String
     
     /// Counterparty ID
-    let cpid: String
+    let counterpartyId: String
     
     /// Quantity not bound to specific UTXOs (can be number or string in API)
     private let _unboundedQuantity: BalanceValue
@@ -62,7 +62,7 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Computed Properties
     
-    var id: Int { stamp }
+    var id: Int { stampId }
     
     /// Balance as Double
     var balance: Double {
@@ -99,19 +99,19 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
-        case ident
-        case stamp
+        case assetId = "ident"
+        case stampId = "stamp"
         case txHash = "tx_hash"
         case stampUrl = "stamp_url"
-        case stampMimetype = "stamp_mimetype"
+        case fileType = "stamp_mimetype"
         case divisible
-        case supply
+        case editionSupply = "supply"
         case locked
         case creatorAddy = "creator"
         case creatorName = "creator_name"
         case _balance = "balance"
         case address
-        case cpid
+        case counterpartyId = "cpid"
         case _unboundedQuantity = "unbound_quantity"
         case utxos
     }
@@ -124,18 +124,18 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
         // stampType will be set manually after decoding by API client
         self.stampType = nil
         
-        ident = try container.decodeIfPresent(String.self, forKey: .ident)
-        stamp = try container.decode(Int.self, forKey: .stamp)
+        assetId = try container.decodeIfPresent(String.self, forKey: .assetId)
+        stampId = try container.decode(Int.self, forKey: .stampId)
         txHash = try container.decode(String.self, forKey: .txHash)
         stampUrl = try container.decode(String.self, forKey: .stampUrl)
-        stampMimetype = try container.decodeIfPresent(String.self, forKey: .stampMimetype)
+        fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
         divisible = try container.decode(Int.self, forKey: .divisible)
-        supply = try container.decodeIfPresent(Int.self, forKey: .supply)
+        editionSupply = try container.decodeIfPresent(Int.self, forKey: .editionSupply)
         locked = try container.decodeIfPresent(Int.self, forKey: .locked)
         creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
         creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
         address = try container.decode(String.self, forKey: .address)
-        cpid = try container.decode(String.self, forKey: .cpid)
+        counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
         utxos = try container.decode([StampUTXO].self, forKey: .utxos)
         
         // Decode balance (can be number or string)

@@ -8,8 +8,8 @@
 import Foundation
 
 /// Wrapper for displaying stamps with their balance information
-struct DisplayStamp: Identifiable {
-    let stamp: Stamp
+struct StampDataDisplay: Identifiable {
+    let stamp: StampData
     let balance: Double?
     let divisible: Int
     let walletAddress: String?
@@ -67,33 +67,33 @@ struct DisplayStamp: Identifiable {
         }
     }
     
-    /// Create from StampBalance
-    init(from stampBalance: StampBalance) {
-        self.stamp = Stamp(
-            stampType: stampBalance.stampType ?? "classic",
-            assetId: stampBalance.ident,
-            stampId: stampBalance.stamp,
-            counterpartyId: stampBalance.cpid,
-            creatorAddy: stampBalance.creatorAddy,
-            creatorName: stampBalance.creatorName,
-            editionSupply: stampBalance.supply ?? Int(stampBalance.balance),
-            fileType: stampBalance.stampMimetype,
+    /// Create from WalletBalanceData
+    init(from walletBalance: WalletBalanceData) {
+        self.stamp = StampData(
+            stampType: walletBalance.stampType ?? "classic",
+            assetId: walletBalance.assetId,
+            stampId: walletBalance.stampId,
+            counterpartyId: walletBalance.counterpartyId,
+            creatorAddy: walletBalance.creatorAddy,
+            creatorName: walletBalance.creatorName,
+            editionSupply: walletBalance.editionSupply ?? Int(walletBalance.balance),
+            fileType: walletBalance.fileType,
             fileSize: nil,
-            divisible: stampBalance.divisible,
+            divisible: walletBalance.divisible,
             blockTime: nil,
             blockIndex: nil,
-            txHash: stampBalance.txHash,
+            txHash: walletBalance.txHash,
             fileHash: nil,
             marketData: nil,
-            stampUrl: stampBalance.stampUrl
+            stampUrl: walletBalance.stampUrl
         )
-        self.balance = stampBalance.balance
-        self.divisible = stampBalance.divisible
-        self.walletAddress = stampBalance.address
+        self.balance = walletBalance.balance
+        self.divisible = walletBalance.divisible
+        self.walletAddress = walletBalance.address
     }
     
-    /// Create from Stamp (no balance info)
-    init(from stamp: Stamp) {
+    /// Create from StampData (no balance info)
+    init(from stamp: StampData) {
         self.stamp = stamp
         self.balance = nil
         self.divisible = stamp.divisible

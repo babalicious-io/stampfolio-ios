@@ -27,15 +27,15 @@ struct CollectionView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.appColorScheme) private var appColorScheme
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
     @State private var showAddWallet = false
-    @State private var selectedStamp: DisplayStamp?
-    @State private var metadataStamp: DisplayStamp?
+    @State private var selectedStamp: StampDataDisplay?
+    @State private var metadataStamp: StampDataDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -495,5 +495,5 @@ struct CollectionView: View {
     CollectionView()
         .environment(CollectionViewModel())
         .environment(NetworkMonitor())
-        .modelContainer(for: Wallet.self, inMemory: true)
+        .modelContainer(for: WalletConfig.self, inMemory: true)
 }

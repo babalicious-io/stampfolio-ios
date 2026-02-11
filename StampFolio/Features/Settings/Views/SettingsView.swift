@@ -17,7 +17,7 @@ struct SettingsView: View {
     @Environment(CollectionViewModel.self) private var collectionViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
     // MARK: - State
     
@@ -29,7 +29,7 @@ struct SettingsView: View {
     @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
     @AppStorage("performancePreview") private var performancePreview = true
     @State private var protocolOrder: [ProtocolType] = []
-    @State private var editingWallet: Wallet?
+    @State private var editingWallet: WalletConfig?
     @State private var protocolEditMode: EditMode = .inactive
     @Environment(\.appColorScheme) private var appColorScheme
     
@@ -355,7 +355,7 @@ struct SettingsView: View {
     
     // MARK: - Actions
     
-    private func deleteWallet(_ wallet: Wallet) {
+    private func deleteWallet(_ wallet: WalletConfig) {
         viewModel.deleteWallet(wallet, context: modelContext)
     }
     
@@ -390,7 +390,7 @@ struct SettingsView: View {
 // MARK: - Wallet Row
 
 struct WalletRow: View {
-    let wallet: Wallet
+    let wallet: WalletConfig
     
     @Environment(\.appColorScheme) private var appColorScheme
     
@@ -439,5 +439,5 @@ struct WalletRow: View {
     SettingsView()
         .environment(SettingsViewModel())
         .environment(CollectionViewModel())
-        .modelContainer(for: Wallet.self, inMemory: true)
+        .modelContainer(for: WalletConfig.self, inMemory: true)
 }

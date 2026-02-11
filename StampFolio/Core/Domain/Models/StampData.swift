@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a Bitcoin Stamp from the Stampchain.io API
-struct Stamp: Identifiable, Codable, Hashable, Sendable {
+struct StampData: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
@@ -55,7 +55,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
     let fileHash: String?
     
     /// Market data (floor price, holder count, etc.)
-    let marketData: MarketData?
+    let marketData: StampMarketData?
 
     /// URL to the stamp content/image
     let stampUrl: String
@@ -98,7 +98,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         blockIndex: Int?,
         txHash: String,
         fileHash: String?,
-        marketData: MarketData?,
+        marketData: StampMarketData?,
         stampUrl: String
     ) {
         self.stampType = stampType
@@ -139,7 +139,7 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
         self.blockIndex = try container.decodeIfPresent(Int.self, forKey: .blockIndex)
         self.txHash = try container.decode(String.self, forKey: .txHash)
         self.fileHash = try container.decodeIfPresent(String.self, forKey: .fileHash)
-        self.marketData = try container.decodeIfPresent(MarketData.self, forKey: .marketData)
+        self.marketData = try container.decodeIfPresent(StampMarketData.self, forKey: .marketData)
         self.stampUrl = try container.decode(String.self, forKey: .stampUrl)
     }
     
@@ -263,10 +263,10 @@ struct Stamp: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - Sample Data
 
-extension Stamp {
+extension StampData {
     
     /// Sample stamp for previews and testing
-    static let sample = Stamp(
+    static let sample = StampData(
         stampType: "classic",
         assetId: "STAMP",
         stampId: 1384303,
@@ -281,14 +281,14 @@ extension Stamp {
         blockIndex: 933837,
         txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
         fileHash: "sha256hash",
-        marketData: MarketData.sample,
+        marketData: StampMarketData.sample,
         stampUrl: "https://stampchain.io/stamps/e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca.png"
     )
     
     /// Array of sample stamps for previews
-    static let samples: [Stamp] = [
+    static let samples: [StampData] = [
         sample,
-        Stamp(
+        StampData(
             stampType: "cursed",
             assetId: "STAMP",
             stampId: -11,
@@ -306,7 +306,7 @@ extension Stamp {
             marketData: nil,
             stampUrl: "https://stampchain.io/stamps/test.txt"
         ),
-        Stamp(
+        StampData(
             stampType: "posh",
             assetId: "STAMP",
             stampId: -398,

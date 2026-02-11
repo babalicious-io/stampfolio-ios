@@ -66,7 +66,7 @@ actor StampchainAPIClient {
     ///   - address: Bitcoin wallet address
     ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     /// - Returns: Array of stamp balances owned by the wallet
-    func fetchStampsByWallet(_ address: String, forceStampsRefresh: Bool = false) async throws -> [StampBalance] {
+    func fetchStampsByWallet(_ address: String, forceStampsRefresh: Bool = false) async throws -> [WalletBalanceData] {
         let endpoint = "\(baseURL)/stamps/balance/\(address)"
         
         guard let url = URL(string: endpoint) else {
@@ -84,8 +84,8 @@ actor StampchainAPIClient {
         
         // Set stampType based on stampId and counterpartyId
         for i in stamps.indices {
-            let stampId = stamps[i].stamp
-            let counterpartyId = stamps[i].cpid
+            let stampId = stamps[i].stampId
+            let counterpartyId = stamps[i].counterpartyId
             
             if stampId > 0 {
                 // Positive stamps are classic
@@ -113,8 +113,8 @@ actor StampchainAPIClient {
     
     /// Fetch details for a specific stamp
     /// - Parameter stampNumber: The stamp number/ID
-    /// - Returns: Stamp details
-    func fetchStampDetails(_ stampNumber: Int) async throws -> Stamp {
+    /// - Returns: StampData details
+    func fetchStampDetails(_ stampNumber: Int) async throws -> StampData {
         let endpoint = "\(baseURL)/stamps/\(stampNumber)"
         
         guard let url = URL(string: endpoint) else {
@@ -190,17 +190,17 @@ actor StampchainAPIClient {
 
 /// Response wrapper for wallet balance endpoint
 private struct WalletBalanceResponse: Decodable {
-    let data: [StampBalance]
+    let data: [WalletBalanceData]
 }
 
 /// Response wrapper for stamp detail endpoint
 private struct StampDetailResponse: Decodable {
-    let data: Stamp
+    let data: StampData
 }
 
 /// Response wrapper for stamps list endpoint
 private struct StampsListResponse: Decodable {
-    let data: [Stamp]
+    let data: [StampData]
     let lastBlock: Int?
     
     enum CodingKeys: String, CodingKey {

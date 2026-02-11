@@ -14,7 +14,7 @@ struct CounterpartyView: View {
     // MARK: - Environment
     
     @Environment(\.showSettingsBinding) private var showSettings
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
     // MARK: - State
     
@@ -63,5 +63,5 @@ struct CounterpartyView: View {
 
 #Preview {
     CounterpartyView()
-        .modelContainer(for: Wallet.self, inMemory: true)
+        .modelContainer(for: WalletConfig.self, inMemory: true)
 }

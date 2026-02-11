@@ -124,5 +124,5 @@ struct MainTabView: View {
         .environment(CollectionViewModel())
         .environment(SettingsViewModel())
         .environment(NetworkMonitor())
-        .modelContainer(for: Wallet.self, inMemory: true)
+        .modelContainer(for: WalletConfig.self, inMemory: true)
 }

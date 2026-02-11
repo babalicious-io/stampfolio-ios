@@ -64,7 +64,7 @@ final class SettingsViewModel {
         }
         
         // Check if wallet already exists
-        let descriptor = FetchDescriptor<Wallet>(
+        let descriptor = FetchDescriptor<WalletConfig>(
             predicate: #Predicate { $0.address == trimmedAddress }
         )
         
@@ -93,7 +93,7 @@ final class SettingsViewModel {
             }
             
             // Create and save wallet
-            let wallet = Wallet(address: trimmedAddress, label: label, colorName: colorName)
+            let wallet = WalletConfig(address: trimmedAddress, label: label, colorName: colorName)
             context.insert(wallet)
             try context.save()
             
@@ -103,7 +103,7 @@ final class SettingsViewModel {
             
         } catch {
             // If API validation fails, still add the wallet
-            let wallet = Wallet(address: trimmedAddress, label: label, colorName: colorName)
+            let wallet = WalletConfig(address: trimmedAddress, label: label, colorName: colorName)
             context.insert(wallet)
             
             do {
@@ -142,7 +142,7 @@ final class SettingsViewModel {
     /// - Parameters:
     ///   - wallet: The wallet to delete
     ///   - context: SwiftData model context
-    func deleteWallet(_ wallet: Wallet, context: ModelContext) {
+    func deleteWallet(_ wallet: WalletConfig, context: ModelContext) {
         context.delete(wallet)
         
         do {

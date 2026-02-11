@@ -24,5 +24,5 @@ struct ContentView: View {
         .environment(SettingsViewModel())
         .environment(CollectionViewModel())
         .environment(NetworkMonitor())
-        .modelContainer(for: Wallet.self, inMemory: true)
+        .modelContainer(for: WalletConfig.self, inMemory: true)
 }

@@ -18,7 +18,7 @@ struct AddWalletView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appColorScheme) private var appColorScheme
-    @Query(sort: \Wallet.addedDate, order: .reverse) private var wallets: [Wallet]
+    @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
     // MARK: - State
     
@@ -257,5 +257,5 @@ struct AddWalletView: View {
     AddWalletView()
         .environment(SettingsViewModel())
         .environment(CollectionViewModel())
-        .modelContainer(for: Wallet.self, inMemory: true)
+        .modelContainer(for: WalletConfig.self, inMemory: true)
 }

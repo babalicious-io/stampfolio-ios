@@ -12,7 +12,7 @@ struct StampMetadataPopup: View {
     
     // MARK: - Properties
     
-    let displayStamp: DisplayStamp
+    let displayStamp: StampDataDisplay
     
     // Convenience accessor for the underlying stamp
     private var stamp: Stamp { displayStamp.stamp }
@@ -246,6 +246,6 @@ struct MetadataRow: View {
 // MARK: - Preview
 
 #Preview {
-    StampMetadataPopup(displayStamp: DisplayStamp(from: .sample))
+    StampMetadataPopup(displayStamp: StampDataDisplay(from: StampData.sample))
         .presentationDetents([.medium, .large])
 }

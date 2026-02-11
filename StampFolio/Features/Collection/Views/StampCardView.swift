@@ -13,7 +13,7 @@ struct StampCardView: View {
     
     // MARK: - Properties
     
-    let displayStamp: DisplayStamp
+    let displayStamp: StampDataDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     let viewMode: ViewMode
@@ -25,7 +25,7 @@ struct StampCardView: View {
     
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.appColorScheme) private var appColorScheme
-    @Query(sort: \Wallet.addedDate) private var wallets: [Wallet]
+    @Query(sort: \WalletConfig.addedDate) private var wallets: [WalletConfig]
     
     // MARK: - State
     
@@ -199,14 +199,14 @@ struct StampCardView: View {
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
         StampCardView(
-            displayStamp: DisplayStamp(from: Stamp.sample),
+            displayStamp: StampDataDisplay(from: StampData.sample),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid
         )
         
         StampCardView(
-            displayStamp: DisplayStamp(from: Stamp.samples[1]),
+            displayStamp: StampDataDisplay(from: StampData.samples[1]),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid

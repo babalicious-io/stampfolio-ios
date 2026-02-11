@@ -19,11 +19,11 @@ struct EditWalletView: View {
     
     // MARK: - Properties
     
-    let wallet: Wallet
+    let wallet: WalletConfig
     
     // MARK: - Initialization
     
-    init(wallet: Wallet) {
+    init(wallet: WalletConfig) {
         self.wallet = wallet
         _walletName = State(initialValue: wallet.label ?? "")
         _selectedColor = State(initialValue: wallet.walletColor)
@@ -166,8 +166,8 @@ struct EditWalletView: View {
 
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Wallet.self, configurations: config)
-    let wallet = Wallet(address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", label: "My Wallet")
+    let container = try! ModelContainer(for: WalletConfig.self, configurations: config)
+    let wallet = WalletConfig(address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", label: "My Wallet")
     container.mainContext.insert(wallet)
     
     return EditWalletView(wallet: wallet)

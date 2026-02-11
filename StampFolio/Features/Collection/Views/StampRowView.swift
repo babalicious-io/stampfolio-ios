@@ -13,7 +13,7 @@ struct StampRowView: View {
     
     // MARK: - Properties
     
-    let displayStamp: DisplayStamp
+    let displayStamp: StampDataDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     
@@ -24,7 +24,7 @@ struct StampRowView: View {
     
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.appColorScheme) private var appColorScheme
-    @Query(sort: \Wallet.addedDate) private var wallets: [Wallet]
+    @Query(sort: \WalletConfig.addedDate) private var wallets: [WalletConfig]
     
     // MARK: - State
     
@@ -171,13 +171,13 @@ struct StampRowView: View {
 #Preview {
     VStack(spacing: 12) {
         StampRowView(
-            displayStamp: DisplayStamp(from: Stamp.sample),
+            displayStamp: StampDataDisplay(from: StampData.sample),
             onTap: {},
             onLongPress: {}
         )
         
         StampRowView(
-            displayStamp: DisplayStamp(from: Stamp.samples[1]),
+            displayStamp: StampDataDisplay(from: StampData.samples[1]),
             onTap: {},
             onLongPress: {}
         )
