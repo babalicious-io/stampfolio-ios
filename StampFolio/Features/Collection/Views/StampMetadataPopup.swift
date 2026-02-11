@@ -80,53 +80,33 @@ struct StampMetadataPopup: View {
     // MARK: - Section 1: Stamp Identification
     
     private var stampIdentificationSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    // STAMP label (light) + stampId number (semibold)
-                    Text("STAMP  #\(Text("\(stamp.stampId)").fontWeight(.bold))")
-                        .fontWeight(.light)
-                        .font(.title2)
-                        .foregroundStyle(.primary)
-                    
-                    // CPID label (light) + counterpartyId (semibold)
-                    Text("CPID  \(Text(stamp.counterpartyId).fontWeight(.bold))")
-                        .fontWeight(.light)
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
-                
-                Spacer()
-                
-                // Stamp type badge
-                Text(stamp.stampType)
-                    .font(.caption)
-                    .fontWeight(.semibold)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 8) {
+                // STAMP label (light) + stampId number (semibold)
+                Text("STAMP #\(Text("\(stamp.stampId)").fontWeight(.bold))")
+                    .fontWeight(.light)
+                    .font(.title2)
                     .foregroundStyle(.primary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(appColorScheme.primary.opacity(0.8))
-                    .clipShape(Capsule())
+                
+                // CPID label (light) + counterpartyId (semibold)
+                Text("CPID \(Text(stamp.counterpartyId).fontWeight(.bold))")
+                    .fontWeight(.light)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+                    .textSelection(.enabled)
             }
             
-            // Creator name and addy (light label + bold value, subheadline primary)
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let creatorName = stamp.creatorName {
-                        Text("ARTIST  \(Text(creatorName).fontWeight(.bold))")
-                            .fontWeight(.light)
-                            .font(.title3)
-                            .foregroundStyle(.primary)
-                    }
-                    Text("ADDY  \(Text(stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6)).fontWeight(.bold))")
-                        .fontWeight(.light)
-                        .font(.title3)
-                        .foregroundStyle(.primary)
-                        .textSelection(.enabled)
-                }
-                Spacer(minLength: 0)
-            }
+            Spacer()
+            
+            // Stamp type badge
+            Text(stamp.stampType)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(appColorScheme.primary.opacity(0.8))
+                .clipShape(Capsule())
         }
         .padding(.vertical, 4)
     }
@@ -135,6 +115,16 @@ struct StampMetadataPopup: View {
     
     @ViewBuilder
     private var creatorAndMarketContent: some View {
+        if let creatorName = stamp.creatorName {
+            MetadataRow(label: "Artist", value: creatorName)
+        }
+        
+        MetadataRow(
+            label: "Addy",
+            value: stamp.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
+            fullValue: stamp.creatorAddy
+        )
+        
         MetadataRow(label: "Editions", value: "\(stamp.editionsSupply)")
         
         // Show balance (user's balance vs total supply)
