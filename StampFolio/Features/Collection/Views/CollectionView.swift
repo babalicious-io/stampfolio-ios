@@ -448,6 +448,13 @@ struct CollectionView: View {
                                 selectedStamp = displayStamp
                             }
                         )
+                        .onAppear {
+                            // Fetch market data when row appears in list view
+                            // Applies to: iPhone (landscape) + iPad (all orientations)
+                            Task {
+                                await viewModel.fetchMarketDataIfNeeded(for: displayStamp)
+                            }
+                        }
                     }
                 }
                 .padding()

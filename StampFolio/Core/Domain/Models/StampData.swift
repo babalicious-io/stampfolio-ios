@@ -31,7 +31,7 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
     let creatorName: String?
 
     /// Total supply/editions
-    let editionSupply: Int
+    let editionsSupply: Int
     
     /// MIME type of the stamp content (e.g., "image/png", "image/gif")
     let fileType: String?
@@ -41,6 +41,12 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
     
     /// Whether the stamp is divisible (0 = false, 1 = true)
     let divisible: Int
+    
+    /// Whether the stamp is locked (0 = false, 1 = true)
+    let locked: Int?
+    
+    /// Keyburn amount (optional)
+    let keyburn: Int?
     
     /// Block timestamp when stamp was created (optional - not in balance endpoint)
     let blockTime: Date?
@@ -68,10 +74,12 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
         case counterpartyId = "cpid"
         case creatorAddy = "creator"
         case creatorName = "creator_name"
-        case editionSupply = "supply"
+        case editionsSupply = "supply"
         case fileType = "stamp_mimetype"
         case fileSize = "file_size_bytes"
         case divisible
+        case locked
+        case keyburn
         case blockTime = "block_time"
         case blockIndex = "block_index"
         case txHash = "tx_hash"
@@ -90,10 +98,12 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
         counterpartyId: String,
         creatorAddy: String,
         creatorName: String?,
-        editionSupply: Int,
+        editionsSupply: Int,
         fileType: String?,
         fileSize: Int?,
         divisible: Int,
+        locked: Int?,
+        keyburn: Int?,
         blockTime: Date?,
         blockIndex: Int?,
         txHash: String,
@@ -107,10 +117,12 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
         self.counterpartyId = counterpartyId
         self.creatorAddy = creatorAddy
         self.creatorName = creatorName
-        self.editionSupply = editionSupply
+        self.editionsSupply = editionsSupply
         self.fileType = fileType
         self.fileSize = fileSize
         self.divisible = divisible
+        self.locked = locked
+        self.keyburn = keyburn
         self.blockTime = blockTime
         self.blockIndex = blockIndex
         self.txHash = txHash
@@ -131,10 +143,12 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
         self.counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
         self.creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
         self.creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
-        self.editionSupply = try container.decode(Int.self, forKey: .editionSupply)
+        self.editionsSupply = try container.decode(Int.self, forKey: .editionsSupply)
         self.fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
         self.fileSize = try container.decodeIfPresent(Int.self, forKey: .fileSize)
         self.divisible = try container.decode(Int.self, forKey: .divisible)
+        self.locked = try container.decodeIfPresent(Int.self, forKey: .locked)
+        self.keyburn = try container.decodeIfPresent(Int.self, forKey: .keyburn)
         self.blockTime = try container.decodeIfPresent(Date.self, forKey: .blockTime)
         self.blockIndex = try container.decodeIfPresent(Int.self, forKey: .blockIndex)
         self.txHash = try container.decode(String.self, forKey: .txHash)
@@ -259,6 +273,11 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
     var isDivisible: Bool {
         divisible == 1
     }
+    
+    /// Whether the stamp is locked (converts int to bool)
+    var isLocked: Bool {
+        locked == 1
+    }
 }
 
 // MARK: - Sample Data
@@ -273,10 +292,12 @@ extension StampData {
         counterpartyId: "A888354448084788958",
         creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
         creatorName: "babalicious",
-        editionSupply: 1,
+        editionsSupply: 1,
         fileType: "image/png",
         fileSize: 198,
         divisible: 0,
+        locked: 1,
+        keyburn: nil,
         blockTime: Date(),
         blockIndex: 933837,
         txHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
@@ -295,10 +316,12 @@ extension StampData {
             counterpartyId: "A2256256256256256256",
             creatorAddy: "1GPon5BBwZJBSvGbj3b973TQ1XMXgDbPwt",
             creatorName: "netidx",
-            editionSupply: 256,
+            editionsSupply: 256,
             fileType: "text/plain",
             fileSize: nil,
             divisible: 0,
+            locked: 1,
+            keyburn: nil,
             blockTime: Date().addingTimeInterval(-86400),
             blockIndex: 782488,
             txHash: "9c76027eaa60e976e8b0c2cf5e25f2b5c3a8d3c01f88d6c5e3a8c0f2e6b4d1a3",
@@ -313,10 +336,12 @@ extension StampData {
             counterpartyId: "USDSTAMP",
             creatorAddy: "bc1qtest",
             creatorName: "posh_creator",
-            editionSupply: 1,
+            editionsSupply: 1,
             fileType: "image/png",
             fileSize: 500,
             divisible: 0,
+            locked: 0,
+            keyburn: nil,
             blockTime: Date().addingTimeInterval(-172800),
             blockIndex: 933835,
             txHash: "test123",

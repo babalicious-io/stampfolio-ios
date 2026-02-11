@@ -115,7 +115,7 @@ struct StampMetadataPopup: View {
             fullValue: stamp.creatorAddy
         )
         
-        MetadataRow(label: "Editions", value: "\(stamp.editionSupply)")
+        MetadataRow(label: "Editions", value: "\(stamp.editionsSupply)")
         
         // Show balance (user's balance vs total supply)
         MetadataRow(label: "Balance", value: displayStamp.formattedBalanceWithSupply)

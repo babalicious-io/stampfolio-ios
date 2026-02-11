@@ -37,6 +37,9 @@ struct StampFolioApp: App {
     /// Color scheme preference stored in UserDefaults
     @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
     
+    /// Scene phase for monitoring app lifecycle
+    @Environment(\.scenePhase) private var scenePhase
+    
     // MARK: - SwiftData
     
     /// Model container for SwiftData persistence
@@ -73,6 +76,13 @@ struct StampFolioApp: App {
                     
                     // Cap Kingfisher memory cache at 100 MB (disk cache unlimited)
                     ImageCache.default.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
+                }
+                .onChange(of: scenePhase) { oldPhase, newPhase in
+                    // Clear market data cache when app enters background or terminates
+                    // Ensures fresh data on next app launch
+                    if newPhase == .background || newPhase == .inactive {
+                        collectionViewModel.clearMarketDataCache()
+                    }
                 }
         }
         .modelContainer(sharedModelContainer)

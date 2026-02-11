@@ -356,7 +356,7 @@ struct SettingsView: View {
     // MARK: - Actions
     
     private func deleteWallet(_ wallet: WalletConfig) {
-        viewModel.deleteWallet(wallet, context: modelContext)
+        viewModel.deleteWallet(wallet, context: modelContext, collectionViewModel: collectionViewModel)
     }
     
     private func enforceProtocolSelection() {

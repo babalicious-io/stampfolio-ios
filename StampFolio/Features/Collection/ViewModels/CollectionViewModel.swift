@@ -82,6 +82,9 @@ final class CollectionViewModel {
     /// Filter state: Active edition filters ("single" or "multiple")
     var activeEditionFilters: Set<String> = []
     
+    /// Market data cache (memory-only, cleared on app close/wallet delete)
+    private var marketDataCache: [Int: StampMarketData] = [:]
+    
     // MARK: - Computed Properties
     
     /// Check if any filters are active
@@ -164,7 +167,7 @@ final class CollectionViewModel {
         // Apply edition filters
         if !activeEditionFilters.isEmpty {
             result = result.filter { displayStamp in
-                let supply = displayStamp.stamp.editionSupply
+                let supply = displayStamp.stamp.editionsSupply
                 for edition in activeEditionFilters {
                     if edition == "single" && supply == 1 { return true }
                     if edition == "multiple" && supply > 1 { return true }
@@ -579,5 +582,103 @@ final class CollectionViewModel {
     /// Check if we should show error state
     var showError: Bool {
         !isLoading && errorMessage != nil
+    }
+    
+    // MARK: - Market Data Fetching
+    
+    /// Fetch market data for a single stamp if not already cached
+    func fetchMarketDataIfNeeded(for stampDisplay: StampDataDisplay) async {
+        let stampId = stampDisplay.stamp.stampId
+        
+        // Skip if already cached or currently loading
+        guard marketDataCache[stampId] == nil,
+              !stampDisplay.isLoadingMarketData else {
+            return
+        }
+        
+        // Mark as loading
+        if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+            stamps[index].isLoadingMarketData = true
+        }
+        
+        // Fetch individual stamp data
+        do {
+            let stampData = try await apiClient.fetchStamp(stampId)
+            let marketData = stampData.marketData
+            
+            // Update cache
+            if let marketData = marketData {
+                marketDataCache[stampId] = marketData
+            }
+            
+            // Update display stamp
+            if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+                stamps[index].marketData = marketData
+                stamps[index].isLoadingMarketData = false
+            }
+        } catch {
+            print("❌ Failed to fetch market data for stamp \(stampId): \(error.localizedDescription)")
+            
+            // Mark as not loading on error
+            if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+                stamps[index].isLoadingMarketData = false
+            }
+        }
+    }
+    
+    /// Fetch market data for multiple stamps concurrently
+    func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDataDisplay]) async {
+        // Filter stamps that need market data
+        let stampsToFetch = visibleStamps.filter { 
+            marketDataCache[$0.stamp.stampId] == nil && !$0.isLoadingMarketData
+        }
+        
+        guard !stampsToFetch.isEmpty else { return }
+        
+        // Mark all as loading
+        for stampDisplay in stampsToFetch {
+            if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+                stamps[index].isLoadingMarketData = true
+            }
+        }
+        
+        // Fetch concurrently
+        await withTaskGroup(of: (Int, StampMarketData?).self) { group in
+            for stampDisplay in stampsToFetch {
+                group.addTask {
+                    do {
+                        let stampData = try await self.apiClient.fetchStamp(stampDisplay.stamp.stampId)
+                        return (stampDisplay.stamp.stampId, stampData.marketData)
+                    } catch {
+                        print("❌ Failed to fetch market data for stamp \(stampDisplay.stamp.stampId): \(error.localizedDescription)")
+                        return (stampDisplay.stamp.stampId, nil)
+                    }
+                }
+            }
+            
+            for await (stampId, marketData) in group {
+                if let marketData = marketData {
+                    // Update cache
+                    marketDataCache[stampId] = marketData
+                }
+                
+                // Update display stamps
+                if let index = stamps.firstIndex(where: { $0.stamp.stampId == stampId }) {
+                    stamps[index].marketData = marketData
+                    stamps[index].isLoadingMarketData = false
+                }
+            }
+        }
+    }
+    
+    /// Clear market data cache (call on app close or wallet deletion)
+    func clearMarketDataCache() {
+        marketDataCache.removeAll()
+        
+        // Clear market data from display stamps
+        for index in stamps.indices {
+            stamps[index].marketData = nil
+            stamps[index].isLoadingMarketData = false
+        }
     }
 }

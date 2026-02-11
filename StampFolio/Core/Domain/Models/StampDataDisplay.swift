@@ -14,11 +14,24 @@ struct StampDataDisplay: Identifiable {
     let divisible: Int
     let walletAddress: String?
     
+    // Market data (fetched on-demand)
+    var marketData: StampMarketData?
+    var isLoadingMarketData: Bool = false
+    
     var id: Int { stamp.id }
+    
+    // Computed properties for UI
+    var holderCount: Int? {
+        marketData?.holderCount
+    }
+    
+    var floorPrice: Decimal? {
+        marketData?.floorPriceBTC
+    }
     
     /// Formatted quantity for display
     var formattedQuantity: String {
-        let quantity = balance ?? Double(stamp.editionSupply)
+        let quantity = balance ?? Double(stamp.editionsSupply)
         
         // If divisible, convert from satoshi-like units (100,000,000 = 1)
         if divisible == 1 {
@@ -38,7 +51,7 @@ struct StampDataDisplay: Identifiable {
     /// Formatted balance with total supply (e.g., "2/69")
     var formattedBalanceWithSupply: String {
         let userBalance = balance ?? 0.0
-        let totalSupply = Double(stamp.editionSupply)
+        let totalSupply = Double(stamp.editionsSupply)
         
         if divisible == 1 {
             // Convert from satoshi-like units (100,000,000 = 1)
@@ -76,10 +89,12 @@ struct StampDataDisplay: Identifiable {
             counterpartyId: walletBalance.counterpartyId,
             creatorAddy: walletBalance.creatorAddy,
             creatorName: walletBalance.creatorName,
-            editionSupply: walletBalance.editionSupply ?? Int(walletBalance.balance),
+            editionsSupply: walletBalance.editionsSupply ?? Int(walletBalance.balance),
             fileType: walletBalance.fileType,
             fileSize: nil,
             divisible: walletBalance.divisible,
+            locked: walletBalance.locked,
+            keyburn: nil,
             blockTime: nil,
             blockIndex: nil,
             txHash: walletBalance.txHash,
@@ -89,7 +104,7 @@ struct StampDataDisplay: Identifiable {
         )
         self.balance = walletBalance.balance
         self.divisible = walletBalance.divisible
-        self.walletAddress = walletBalance.address
+        self.walletAddress = walletBalance.ownerAddy
     }
     
     /// Create from StampData (no balance info)

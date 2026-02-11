@@ -113,7 +113,7 @@ actor StampchainAPIClient {
     
     /// Fetch details for a specific stamp
     /// - Parameter stampNumber: The stamp number/ID
-    /// - Returns: StampData details
+    /// - Returns: StampData details (includes market data)
     func fetchStampDetails(_ stampNumber: Int) async throws -> StampData {
         let endpoint = "\(baseURL)/stamps/\(stampNumber)"
         
@@ -125,7 +125,14 @@ actor StampchainAPIClient {
         
         // Parse the response
         let apiResponse = try decoder.decode(StampDetailResponse.self, from: data)
-        return apiResponse.data
+        return apiResponse.data.stamp
+    }
+    
+    /// Public method to fetch stamp with market data (alias for fetchStampDetails)
+    /// - Parameter stampNumber: The stamp number/ID
+    /// - Returns: Stamp data with market data
+    func fetchStamp(_ stampNumber: Int) async throws -> StampData {
+        return try await fetchStampDetails(stampNumber)
     }
     
     /// Validate that a wallet has stamps
@@ -195,7 +202,18 @@ private struct WalletBalanceResponse: Decodable {
 
 /// Response wrapper for stamp detail endpoint
 private struct StampDetailResponse: Decodable {
-    let data: StampData
+    let lastBlock: Int
+    let data: StampDetailData
+    
+    enum CodingKeys: String, CodingKey {
+        case lastBlock = "last_block"
+        case data
+    }
+}
+
+/// Data wrapper for stamp detail (nested structure)
+private struct StampDetailData: Decodable {
+    let stamp: StampData
 }
 
 /// Response wrapper for stamps list endpoint

@@ -21,38 +21,38 @@ struct WalletBalanceData: Identifiable, Codable, Hashable, Sendable {
     /// Unique stamp number (primary identifier)
     let stampId: Int
     
+    /// Counterparty ID
+    let counterpartyId: String
+    
+    /// Creator's display name (if available)
+    let creatorName: String?
+    
+    /// Creator's Bitcoin address
+    let creatorAddy: String
+    
+    /// Total supply/editions
+    let editionsSupply: Int?
+    
+    /// Total balance owned by the address (can be number or string in API)
+    private let _editionsBalance: BalanceValue
+    
+    /// Whether the stamp is locked
+    let locked: Int?
+    
+    /// Whether the stamp is divisible (0 = false, 1 = true)
+    let divisible: Int
+    
+    /// MIME type of the stamp content (nullable in API)
+    let fileType: String?
+    
     /// Transaction hash
     let txHash: String
     
     /// URL to the stamp content/image
     let stampUrl: String
     
-    /// MIME type of the stamp content (nullable in API)
-    let fileType: String?
-    
-    /// Whether the stamp is divisible (0 = false, 1 = true)
-    let divisible: Int
-    
-    /// Total supply/editions
-    let editionSupply: Int?
-    
-    /// Whether the stamp is locked
-    let locked: Int?
-    
-    /// Creator's Bitcoin address
-    let creatorAddy: String
-    
-    /// Creator's display name (if available)
-    let creatorName: String?
-    
-    /// Total balance owned by the address (can be number or string in API)
-    private let _balance: BalanceValue
-    
     /// Address owning the stamps
-    let address: String
-    
-    /// Counterparty ID
-    let counterpartyId: String
+    let ownerAddy: String
     
     /// Quantity not bound to specific UTXOs (can be number or string in API)
     private let _unboundedQuantity: BalanceValue
@@ -66,7 +66,7 @@ struct WalletBalanceData: Identifiable, Codable, Hashable, Sendable {
     
     /// Balance as Double
     var balance: Double {
-        _balance.doubleValue
+        _editionsBalance.doubleValue
     }
     
     /// Unbounded quantity as Double
@@ -101,17 +101,17 @@ struct WalletBalanceData: Identifiable, Codable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case assetId = "ident"
         case stampId = "stamp"
+        case counterpartyId = "cpid"
+        case creatorName = "creator_name"
+        case creatorAddy = "creator"
+        case editionsSupply = "supply"
+        case _editionsBalance = "balance"
+        case locked
+        case divisible
+        case fileType = "stamp_mimetype"        
         case txHash = "tx_hash"
         case stampUrl = "stamp_url"
-        case fileType = "stamp_mimetype"
-        case divisible
-        case editionSupply = "supply"
-        case locked
-        case creatorAddy = "creator"
-        case creatorName = "creator_name"
-        case _balance = "balance"
-        case address
-        case counterpartyId = "cpid"
+        case ownerAddy = "address"
         case _unboundedQuantity = "unbound_quantity"
         case utxos
     }
@@ -126,21 +126,19 @@ struct WalletBalanceData: Identifiable, Codable, Hashable, Sendable {
         
         assetId = try container.decodeIfPresent(String.self, forKey: .assetId)
         stampId = try container.decode(Int.self, forKey: .stampId)
+        counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
+        creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
+        creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
+        editionsSupply = try container.decodeIfPresent(Int.self, forKey: .editionsSupply)
+        _editionsBalance = try container.decode(BalanceValue.self, forKey: ._editionsBalance)
+        locked = try container.decodeIfPresent(Int.self, forKey: .locked)
+        divisible = try container.decode(Int.self, forKey: .divisible)
+        fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
         txHash = try container.decode(String.self, forKey: .txHash)
         stampUrl = try container.decode(String.self, forKey: .stampUrl)
-        fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
-        divisible = try container.decode(Int.self, forKey: .divisible)
-        editionSupply = try container.decodeIfPresent(Int.self, forKey: .editionSupply)
-        locked = try container.decodeIfPresent(Int.self, forKey: .locked)
-        creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
-        creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
-        address = try container.decode(String.self, forKey: .address)
-        counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
-        utxos = try container.decode([StampUTXO].self, forKey: .utxos)
-        
-        // Decode balance (can be number or string)
-        _balance = try container.decode(BalanceValue.self, forKey: ._balance)
+        ownerAddy = try container.decode(String.self, forKey: .ownerAddy)
         _unboundedQuantity = try container.decode(BalanceValue.self, forKey: ._unboundedQuantity)
+        utxos = try container.decode([StampUTXO].self, forKey: .utxos)
     }
 }
 
