@@ -80,6 +80,23 @@ struct StampDataDisplay: Identifiable {
         }
     }
     
+    /// Memberwise initializer
+    init(
+        stamp: StampData,
+        balance: Double? = nil,
+        divisible: Bool,
+        walletAddress: String? = nil,
+        marketData: StampMarketData? = nil,
+        isLoadingMarketData: Bool = false
+    ) {
+        self.stamp = stamp
+        self.balance = balance
+        self.divisible = divisible
+        self.walletAddress = walletAddress
+        self.marketData = marketData
+        self.isLoadingMarketData = isLoadingMarketData
+    }
+    
     /// Create from WalletBalanceData
     init(from walletBalance: WalletBalanceData) {
         self.stamp = StampData(

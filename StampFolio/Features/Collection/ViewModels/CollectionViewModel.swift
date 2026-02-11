@@ -612,8 +612,15 @@ final class CollectionViewModel {
                 marketDataCache[stampId] = marketData
             }
             
-            // Update display stamp on main actor
+            // Update display stamp on main actor - replace entire StampDataDisplay with updated stamp
             if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+                let oldDisplay = stamps[index]
+                stamps[index] = StampDataDisplay(
+                    stamp: stampData,
+                    balance: oldDisplay.balance,
+                    divisible: stampData.divisible,
+                    walletAddress: oldDisplay.walletAddress
+                )
                 stamps[index].marketData = marketData
                 stamps[index].isLoadingMarketData = false
             }
@@ -659,12 +666,12 @@ final class CollectionViewModel {
         }
         
         // Fetch concurrently
-        await withTaskGroup(of: (Int, StampMarketData?).self) { group in
+        await withTaskGroup(of: (Int, StampData?).self) { group in
             for stampDisplay in stampsToFetch {
                 group.addTask {
                     do {
                         let stampData = try await self.apiClient.fetchStamp(stampDisplay.stamp.stampId)
-                        return (stampDisplay.stamp.stampId, stampData.marketData)
+                        return (stampDisplay.stamp.stampId, stampData)
                     } catch {
                         print("❌ Failed to fetch market data for stamp \(stampDisplay.stamp.stampId): \(error)")
                         if let decodingError = error as? DecodingError {
@@ -687,16 +694,30 @@ final class CollectionViewModel {
             }
             
             // Collect all results on main actor
-            for await (stampId, marketData) in group {
-                if let marketData = marketData {
+            for await (stampId, stampData) in group {
+                if let stampData = stampData {
                     // Update cache
-                    marketDataCache[stampId] = marketData
-                }
-                
-                // Update display stamps on main actor
-                if let index = stamps.firstIndex(where: { $0.stamp.stampId == stampId }) {
-                    stamps[index].marketData = marketData
-                    stamps[index].isLoadingMarketData = false
+                    if let marketData = stampData.marketData {
+                        marketDataCache[stampId] = marketData
+                    }
+                    
+                    // Update display stamps on main actor - replace entire StampDataDisplay with updated stamp
+                    if let index = stamps.firstIndex(where: { $0.stamp.stampId == stampId }) {
+                        let oldDisplay = stamps[index]
+                        stamps[index] = StampDataDisplay(
+                            stamp: stampData,
+                            balance: oldDisplay.balance,
+                            divisible: stampData.divisible,
+                            walletAddress: oldDisplay.walletAddress
+                        )
+                        stamps[index].marketData = stampData.marketData
+                        stamps[index].isLoadingMarketData = false
+                    }
+                } else {
+                    // Mark as not loading on error
+                    if let index = stamps.firstIndex(where: { $0.stamp.stampId == stampId }) {
+                        stamps[index].isLoadingMarketData = false
+                    }
                 }
             }
         }
