@@ -121,6 +121,9 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
+        // stampType will be set manually after decoding by API client
+        self.stampType = nil
+        
         ident = try container.decodeIfPresent(String.self, forKey: .ident)
         stamp = try container.decode(Int.self, forKey: .stamp)
         txHash = try container.decode(String.self, forKey: .txHash)
