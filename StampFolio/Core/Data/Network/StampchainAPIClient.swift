@@ -67,58 +67,48 @@ actor StampchainAPIClient {
     ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     /// - Returns: Array of stamp balances owned by the wallet
     func fetchStampsByWallet(_ address: String, forceStampsRefresh: Bool = false) async throws -> [StampBalance] {
-        var allStamps: [StampBalance] = []
+        let endpoint = "\(baseURL)/stamps/balance/\(address)"
         
-        // Fetch classic stamps
-        let classicEndpoint = "\(baseURL)/stamps/balance/\(address)?type=classic"
-        guard let classicURL = URL(string: classicEndpoint) else {
+        guard let url = URL(string: endpoint) else {
             throw NetworkError.invalidURL
         }
         
-        print("🌐 Fetching classic stamps from: \(classicEndpoint)")
-        let (classicData, _) = try await performRequest(classicURL, forceStampsRefresh: forceStampsRefresh)
-        let classicResponse = try decoder.decode(WalletBalanceResponse.self, from: classicData)
-        var classicStamps = classicResponse.data
-        for i in classicStamps.indices {
-            classicStamps[i].stampType = "classic"
-        }
-        allStamps.append(contentsOf: classicStamps)
-        print("✅ Decoded \(classicStamps.count) classic stamps")
+        print("🌐 Fetching stamps from: \(endpoint)\(forceStampsRefresh ? " (force refresh)" : "")")
         
-        // Fetch cursed stamps
-        let cursedEndpoint = "\(baseURL)/stamps/balance/\(address)?type=cursed"
-        guard let cursedURL = URL(string: cursedEndpoint) else {
-            throw NetworkError.invalidURL
-        }
+        let (data, _) = try await performRequest(url, forceStampsRefresh: forceStampsRefresh)
         
-        print("🌐 Fetching cursed stamps from: \(cursedEndpoint)")
-        let (cursedData, _) = try await performRequest(cursedURL, forceStampsRefresh: forceStampsRefresh)
-        let cursedResponse = try decoder.decode(WalletBalanceResponse.self, from: cursedData)
-        var cursedStamps = cursedResponse.data
-        for i in cursedStamps.indices {
-            cursedStamps[i].stampType = "cursed"
-        }
-        allStamps.append(contentsOf: cursedStamps)
-        print("✅ Decoded \(cursedStamps.count) cursed stamps")
+        print("✅ Received \(data.count) bytes")
         
-        // Fetch POSH stamps
-        let poshEndpoint = "\(baseURL)/stamps/balance/\(address)?type=posh"
-        guard let poshURL = URL(string: poshEndpoint) else {
-            throw NetworkError.invalidURL
+        let apiResponse = try decoder.decode(WalletBalanceResponse.self, from: data)
+        var stamps = apiResponse.data
+        
+        // Set stampType based on stamp number and CPID
+        for i in stamps.indices {
+            let stampNumber = stamps[i].stamp
+            let cpid = stamps[i].cpid
+            
+            if stampNumber > 0 {
+                // Positive stamps are classic
+                stamps[i].stampType = "classic"
+            } else {
+                // Negative stamps: check if POSH (named CPID) or CURSED (numeric CPID)
+                if cpid.hasPrefix("A") && cpid.dropFirst().allSatisfy({ $0.isNumber }) {
+                    // Numeric CPID (A + numbers) = cursed
+                    stamps[i].stampType = "cursed"
+                } else {
+                    // Named CPID = posh
+                    stamps[i].stampType = "posh"
+                }
+            }
         }
         
-        print("🌐 Fetching POSH stamps from: \(poshEndpoint)")
-        let (poshData, _) = try await performRequest(poshURL, forceStampsRefresh: forceStampsRefresh)
-        let poshResponse = try decoder.decode(WalletBalanceResponse.self, from: poshData)
-        var poshStamps = poshResponse.data
-        for i in poshStamps.indices {
-            poshStamps[i].stampType = "posh"
-        }
-        allStamps.append(contentsOf: poshStamps)
-        print("✅ Decoded \(poshStamps.count) POSH stamps")
+        print("✅ Decoded \(stamps.count) stamps")
+        let classicCount = stamps.filter { $0.stampType == "classic" }.count
+        let cursedCount = stamps.filter { $0.stampType == "cursed" }.count
+        let poshCount = stamps.filter { $0.stampType == "posh" }.count
+        print("   - \(classicCount) classic, \(cursedCount) cursed, \(poshCount) posh")
         
-        print("✅ Total stamps fetched: \(allStamps.count)")
-        return allStamps
+        return stamps
     }
     
     /// Fetch details for a specific stamp
