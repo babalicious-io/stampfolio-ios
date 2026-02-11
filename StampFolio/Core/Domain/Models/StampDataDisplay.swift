@@ -11,7 +11,7 @@ import Foundation
 struct StampDataDisplay: Identifiable {
     let stamp: StampData
     let balance: Double?
-    let divisible: Int
+    let divisible: Bool
     let walletAddress: String?
     
     // Market data (fetched on-demand)
@@ -34,7 +34,7 @@ struct StampDataDisplay: Identifiable {
         let quantity = balance ?? Double(stamp.editionsSupply)
         
         // If divisible, convert from satoshi-like units (100,000,000 = 1)
-        if divisible == 1 {
+        if divisible {
             let actualAmount = quantity / 100_000_000.0
             // Remove decimals if it's a whole number
             if actualAmount.truncatingRemainder(dividingBy: 1) == 0 {
@@ -53,7 +53,7 @@ struct StampDataDisplay: Identifiable {
         let userBalance = balance ?? 0.0
         let totalSupply = Double(stamp.editionsSupply)
         
-        if divisible == 1 {
+        if divisible {
             // Convert from satoshi-like units (100,000,000 = 1)
             let actualBalance = userBalance / 100_000_000.0
             let actualSupply = totalSupply / 100_000_000.0
@@ -92,8 +92,8 @@ struct StampDataDisplay: Identifiable {
             editionsSupply: walletBalance.editionsSupply ?? Int(walletBalance.balance),
             fileType: walletBalance.fileType,
             fileSize: nil,
-            divisible: walletBalance.divisible,
-            locked: walletBalance.locked,
+            divisible: walletBalance.isDivisible,
+            locked: walletBalance.locked == 1,
             keyburn: nil,
             blockTime: nil,
             blockIndex: nil,
@@ -103,7 +103,7 @@ struct StampDataDisplay: Identifiable {
             stampUrl: walletBalance.stampUrl
         )
         self.balance = walletBalance.balance
-        self.divisible = walletBalance.divisible
+        self.divisible = walletBalance.isDivisible
         self.walletAddress = walletBalance.ownerAddy
     }
     

@@ -39,11 +39,11 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
     /// Size of the stamp file in bytes
     let fileSize: Int?
     
-    /// Whether the stamp is divisible (0 = false, 1 = true)
-    let divisible: Int
+    /// Whether the stamp is divisible
+    let divisible: Bool
     
-    /// Whether the stamp is locked (0 = false, 1 = true)
-    let locked: Int?
+    /// Whether the stamp is locked
+    let locked: Bool?
     
     /// Keyburn amount (optional)
     let keyburn: Int?
@@ -101,8 +101,8 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
         editionsSupply: Int,
         fileType: String?,
         fileSize: Int?,
-        divisible: Int,
-        locked: Int?,
+        divisible: Bool,
+        locked: Bool?,
         keyburn: Int?,
         blockTime: Date?,
         blockIndex: Int?,
@@ -146,8 +146,8 @@ struct StampData: Identifiable, Codable, Hashable, Sendable {
         self.editionsSupply = try container.decode(Int.self, forKey: .editionsSupply)
         self.fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
         self.fileSize = try container.decodeIfPresent(Int.self, forKey: .fileSize)
-        self.divisible = try container.decode(Int.self, forKey: .divisible)
-        self.locked = try container.decodeIfPresent(Int.self, forKey: .locked)
+        self.divisible = try container.decode(Bool.self, forKey: .divisible)
+        self.locked = try container.decodeIfPresent(Bool.self, forKey: .locked)
         self.keyburn = try container.decodeIfPresent(Int.self, forKey: .keyburn)
         self.blockTime = try container.decodeIfPresent(Date.self, forKey: .blockTime)
         self.blockIndex = try container.decodeIfPresent(Int.self, forKey: .blockIndex)
@@ -295,8 +295,8 @@ extension StampData {
         editionsSupply: 1,
         fileType: "image/png",
         fileSize: 198,
-        divisible: 0,
-        locked: 1,
+        divisible: false,
+        locked: true,
         keyburn: nil,
         blockTime: Date(),
         blockIndex: 933837,
@@ -319,8 +319,8 @@ extension StampData {
             editionsSupply: 256,
             fileType: "text/plain",
             fileSize: nil,
-            divisible: 0,
-            locked: 1,
+            divisible: false,
+            locked: true,
             keyburn: nil,
             blockTime: Date().addingTimeInterval(-86400),
             blockIndex: 782488,
@@ -339,8 +339,8 @@ extension StampData {
             editionsSupply: 1,
             fileType: "image/png",
             fileSize: 500,
-            divisible: 0,
-            locked: 0,
+            divisible: false,
+            locked: false,
             keyburn: nil,
             blockTime: Date().addingTimeInterval(-172800),
             blockIndex: 933835,
