@@ -105,7 +105,7 @@ final class CollectionViewModel {
                 }
                 
                 // Search by CPID
-                if stamp.counterpartyId.localizedCaseInsensitiveContains(searchText) {
+                if stamp.cpid.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
                 
@@ -132,7 +132,7 @@ final class CollectionViewModel {
         // Apply ident filters
         if !activeIdentFilters.isEmpty {
             result = result.filter { displayStamp in
-                guard let stampType = displayStamp.stamp.stampType else { return false }
+                let stampType = displayStamp.stamp.stampType
                 return activeIdentFilters.contains(stampType)
             }
         }
@@ -155,7 +155,7 @@ final class CollectionViewModel {
             ]
             
             result = result.filter { displayStamp in
-                guard let mimetype = displayStamp.stamp.stampMimetype?.lowercased() else { return false }
+                guard let mimetype = displayStamp.stamp.filetype?.lowercased() else { return false }
                 guard let format = mimeToFormat[mimetype] else { return false }
                 return activeFileFormatFilters.contains(format)
             }
@@ -164,7 +164,7 @@ final class CollectionViewModel {
         // Apply edition filters
         if !activeEditionFilters.isEmpty {
             result = result.filter { displayStamp in
-                let supply = displayStamp.stamp.supply
+                let supply = displayStamp.stamp.editionSupply
                 for edition in activeEditionFilters {
                     if edition == "single" && supply == 1 { return true }
                     if edition == "multiple" && supply > 1 { return true }

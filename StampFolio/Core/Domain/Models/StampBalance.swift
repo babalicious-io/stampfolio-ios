@@ -12,7 +12,10 @@ struct StampBalance: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
-    /// Stamp identifier type ("STAMP", "SRC-721", "SRC-101", "CURSED", etc.)
+    /// Stamp type - set based on which API endpoint returned it ("classic", "cursed", "posh")
+    var stampType: String?
+    
+    /// Stamp identifier type ("STAMP", "SRC-721", "SRC-101", etc.)
     let ident: String?
     
     /// Unique stamp number (primary identifier)

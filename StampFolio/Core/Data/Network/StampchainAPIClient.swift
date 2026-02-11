@@ -67,46 +67,58 @@ actor StampchainAPIClient {
     ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     /// - Returns: Array of stamp balances owned by the wallet
     func fetchStampsByWallet(_ address: String, forceStampsRefresh: Bool = false) async throws -> [StampBalance] {
-        let endpoint = "\(baseURL)/stamps/balance/\(address)"
+        var allStamps: [StampBalance] = []
         
-        guard let url = URL(string: endpoint) else {
+        // Fetch classic stamps
+        let classicEndpoint = "\(baseURL)/stamps/balance/\(address)?type=classic"
+        guard let classicURL = URL(string: classicEndpoint) else {
             throw NetworkError.invalidURL
         }
         
-        print("🌐 Fetching stamps from: \(endpoint)\(forceStampsRefresh ? " (force refresh)" : "")")
+        print("🌐 Fetching classic stamps from: \(classicEndpoint)")
+        let (classicData, _) = try await performRequest(classicURL, forceStampsRefresh: forceStampsRefresh)
+        let classicResponse = try decoder.decode(WalletBalanceResponse.self, from: classicData)
+        var classicStamps = classicResponse.data
+        for i in classicStamps.indices {
+            classicStamps[i].stampType = "classic"
+        }
+        allStamps.append(contentsOf: classicStamps)
+        print("✅ Decoded \(classicStamps.count) classic stamps")
         
-        let (data, _) = try await performRequest(url, forceStampsRefresh: forceStampsRefresh)
-        
-        print("✅ Received \(data.count) bytes")
-        
-        // Debug: Print raw JSON
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("📦 Raw JSON (first 500 chars): \(String(jsonString.prefix(500)))")
+        // Fetch cursed stamps
+        let cursedEndpoint = "\(baseURL)/stamps/balance/\(address)?type=cursed"
+        guard let cursedURL = URL(string: cursedEndpoint) else {
+            throw NetworkError.invalidURL
         }
         
-        // Parse the response
-        do {
-            let apiResponse = try decoder.decode(WalletBalanceResponse.self, from: data)
-            print("✅ Decoded \(apiResponse.data.count) stamps")
-            return apiResponse.data
-        } catch {
-            print("❌ Decoding error: \(error)")
-            if let decodingError = error as? DecodingError {
-                switch decodingError {
-                case .keyNotFound(let key, let context):
-                    print("❌ Missing key: \(key.stringValue) - \(context.debugDescription)")
-                case .typeMismatch(let type, let context):
-                    print("❌ Type mismatch for \(type): \(context.debugDescription)")
-                case .valueNotFound(let type, let context):
-                    print("❌ Value not found for \(type): \(context.debugDescription)")
-                case .dataCorrupted(let context):
-                    print("❌ Data corrupted: \(context.debugDescription)")
-                @unknown default:
-                    print("❌ Unknown decoding error")
-                }
-            }
-            throw error
+        print("🌐 Fetching cursed stamps from: \(cursedEndpoint)")
+        let (cursedData, _) = try await performRequest(cursedURL, forceStampsRefresh: forceStampsRefresh)
+        let cursedResponse = try decoder.decode(WalletBalanceResponse.self, from: cursedData)
+        var cursedStamps = cursedResponse.data
+        for i in cursedStamps.indices {
+            cursedStamps[i].stampType = "cursed"
         }
+        allStamps.append(contentsOf: cursedStamps)
+        print("✅ Decoded \(cursedStamps.count) cursed stamps")
+        
+        // Fetch POSH stamps
+        let poshEndpoint = "\(baseURL)/stamps/balance/\(address)?type=posh"
+        guard let poshURL = URL(string: poshEndpoint) else {
+            throw NetworkError.invalidURL
+        }
+        
+        print("🌐 Fetching POSH stamps from: \(poshEndpoint)")
+        let (poshData, _) = try await performRequest(poshURL, forceStampsRefresh: forceStampsRefresh)
+        let poshResponse = try decoder.decode(WalletBalanceResponse.self, from: poshData)
+        var poshStamps = poshResponse.data
+        for i in poshStamps.indices {
+            poshStamps[i].stampType = "posh"
+        }
+        allStamps.append(contentsOf: poshStamps)
+        print("✅ Decoded \(poshStamps.count) POSH stamps")
+        
+        print("✅ Total stamps fetched: \(allStamps.count)")
+        return allStamps
     }
     
     /// Fetch details for a specific stamp

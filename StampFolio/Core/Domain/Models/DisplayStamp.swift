@@ -18,7 +18,7 @@ struct DisplayStamp: Identifiable {
     
     /// Formatted quantity for display
     var formattedQuantity: String {
-        let quantity = balance ?? Double(stamp.supply)
+        let quantity = balance ?? Double(stamp.editionSupply)
         
         // If divisible, convert from satoshi-like units (100,000,000 = 1)
         if divisible == 1 {
@@ -38,7 +38,7 @@ struct DisplayStamp: Identifiable {
     /// Formatted balance with total supply (e.g., "2/69")
     var formattedBalanceWithSupply: String {
         let userBalance = balance ?? 0.0
-        let totalSupply = Double(stamp.supply)
+        let totalSupply = Double(stamp.editionSupply)
         
         if divisible == 1 {
             // Convert from satoshi-like units (100,000,000 = 1)
@@ -70,13 +70,14 @@ struct DisplayStamp: Identifiable {
     /// Create from StampBalance
     init(from stampBalance: StampBalance) {
         self.stamp = Stamp(
-            stampType: stampBalance.ident ?? "CLASSIC",
-            stampId: stampBalance.stamp,
-            counterpartyId: stampBalance.cpid,
+            stampType: stampBalance.stampType ?? "classic",
+            stampIdent: stampBalance.ident,
+            sid: stampBalance.stamp,
+            cpid: stampBalance.cpid,
             creatorAddy: stampBalance.creatorAddy,
             creatorName: stampBalance.creatorName,
-            supply: stampBalance.supply ?? Int(stampBalance.balance),
-            stampMimetype: stampBalance.stampMimetype,
+            editionSupply: stampBalance.supply ?? Int(stampBalance.balance),
+            filetype: stampBalance.stampMimetype,
             fileSize: nil,
             divisible: stampBalance.divisible,
             blockTime: nil,

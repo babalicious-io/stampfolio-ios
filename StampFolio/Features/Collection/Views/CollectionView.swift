@@ -185,13 +185,18 @@ struct CollectionView: View {
                 Menu {
                     Section("STAMP TYPE") {
                         Toggle("Classic", isOn: Binding(
-                            get: { viewModel.activeIdentFilters.contains("STAMP") },
-                            set: { _ in viewModel.toggleIdentFilter("STAMP") }
+                            get: { viewModel.activeIdentFilters.contains("classic") },
+                            set: { _ in viewModel.toggleIdentFilter("classic") }
+                        ))
+                        
+                        Toggle("Cursed", isOn: Binding(
+                            get: { viewModel.activeIdentFilters.contains("cursed") },
+                            set: { _ in viewModel.toggleIdentFilter("cursed") }
                         ))
                         
                         Toggle("Posh", isOn: Binding(
-                            get: { viewModel.activeIdentFilters.contains("POSH") },
-                            set: { _ in viewModel.toggleIdentFilter("POSH") }
+                            get: { viewModel.activeIdentFilters.contains("posh") },
+                            set: { _ in viewModel.toggleIdentFilter("posh") }
                         ))
                     }
                     
