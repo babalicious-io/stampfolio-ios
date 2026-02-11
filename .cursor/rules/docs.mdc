@@ -12,6 +12,7 @@ This rule provides quick access to all essential documentation for building Stam
 
 Quick reference to local project documentation files:
 
+- **[STAMPCHAIN-API.md](../docs/STAMPCHAIN-API.md)** - **Complete Stampchain API reference, stamp categories, and ident field documentation**
 - **[CURSOR-RULES.md](../docs/CURSOR-RULES.md)** - Available Cursor rules and workflows for iOS development
 - **[QUICKSTART.md](../docs/QUICKSTART.md)** - Quick reference guide for all 21 development rules
 - **[SETUP-COMPLETE.md](../docs/SETUP-COMPLETE.md)** - Initial project setup summary and configuration
