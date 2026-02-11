@@ -81,7 +81,9 @@ struct StampFolioApp: App {
                     // Clear market data cache when app enters background or terminates
                     // Ensures fresh data on next app launch
                     if newPhase == .background || newPhase == .inactive {
-                        collectionViewModel.clearMarketDataCache()
+                        Task { @MainActor in
+                            collectionViewModel.clearMarketDataCache()
+                        }
                     }
                 }
         }

@@ -146,8 +146,12 @@ final class SettingsViewModel {
     func deleteWallet(_ wallet: WalletConfig, context: ModelContext, collectionViewModel: CollectionViewModel? = nil) {
         context.delete(wallet)
         
-        // Clear market data cache when wallet is deleted
-        collectionViewModel?.clearMarketDataCache()
+        // Clear market data cache when wallet is deleted (on main actor)
+        if let viewModel = collectionViewModel {
+            Task { @MainActor in
+                viewModel.clearMarketDataCache()
+            }
+        }
         
         do {
             try context.save()

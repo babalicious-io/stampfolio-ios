@@ -587,6 +587,7 @@ final class CollectionViewModel {
     // MARK: - Market Data Fetching
     
     /// Fetch market data for a single stamp if not already cached
+    @MainActor
     func fetchMarketDataIfNeeded(for stampDisplay: StampDataDisplay) async {
         let stampId = stampDisplay.stamp.stampId
         
@@ -611,7 +612,7 @@ final class CollectionViewModel {
                 marketDataCache[stampId] = marketData
             }
             
-            // Update display stamp
+            // Update display stamp on main actor
             if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
                 stamps[index].marketData = marketData
                 stamps[index].isLoadingMarketData = false
@@ -627,6 +628,7 @@ final class CollectionViewModel {
     }
     
     /// Fetch market data for multiple stamps concurrently
+    @MainActor
     func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDataDisplay]) async {
         // Filter stamps that need market data
         let stampsToFetch = visibleStamps.filter { 
@@ -656,13 +658,14 @@ final class CollectionViewModel {
                 }
             }
             
+            // Collect all results on main actor
             for await (stampId, marketData) in group {
                 if let marketData = marketData {
                     // Update cache
                     marketDataCache[stampId] = marketData
                 }
                 
-                // Update display stamps
+                // Update display stamps on main actor
                 if let index = stamps.firstIndex(where: { $0.stamp.stampId == stampId }) {
                     stamps[index].marketData = marketData
                     stamps[index].isLoadingMarketData = false
@@ -672,6 +675,7 @@ final class CollectionViewModel {
     }
     
     /// Clear market data cache (call on app close or wallet deletion)
+    @MainActor
     func clearMarketDataCache() {
         marketDataCache.removeAll()
         
