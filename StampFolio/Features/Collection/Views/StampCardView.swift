@@ -19,7 +19,7 @@ struct StampCardView: View {
     let viewMode: ViewMode
     
     // Convenience accessor
-    private var stamp: Stamp { displayStamp.stamp }
+    private var stamp: StampData { displayStamp.stamp }
     
     // MARK: - Environment
     

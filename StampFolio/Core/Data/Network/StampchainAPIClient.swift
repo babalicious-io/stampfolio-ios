@@ -141,7 +141,7 @@ actor StampchainAPIClient {
     ///   - limit: Number of stamps per page
     ///   - page: Page number (0-indexed)
     /// - Returns: Array of stamps
-    func fetchStamps(limit: Int = 50, page: Int = 0) async throws -> [Stamp] {
+    func fetchStamps(limit: Int = 50, page: Int = 0) async throws -> [StampData] {
         let endpoint = "\(baseURL)/stamps?limit=\(limit)&page=\(page)"
         
         guard let url = URL(string: endpoint) else {

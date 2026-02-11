@@ -15,7 +15,7 @@ struct StampMetadataPopup: View {
     let displayStamp: StampDataDisplay
     
     // Convenience accessor for the underlying stamp
-    private var stamp: Stamp { displayStamp.stamp }
+    private var stamp: StampData { displayStamp.stamp }
     
     // MARK: - Environment
     
