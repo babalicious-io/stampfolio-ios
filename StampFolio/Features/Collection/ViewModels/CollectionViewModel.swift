@@ -618,7 +618,21 @@ final class CollectionViewModel {
                 stamps[index].isLoadingMarketData = false
             }
         } catch {
-            print("❌ Failed to fetch market data for stamp \(stampId): \(error.localizedDescription)")
+            print("❌ Failed to fetch market data for stamp \(stampId): \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("Key '\(key.stringValue)' not found: \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    print("Type '\(type)' mismatch: \(context.debugDescription)")
+                case .valueNotFound(let type, let context):
+                    print("Value '\(type)' not found: \(context.debugDescription)")
+                case .dataCorrupted(let context):
+                    print("Data corrupted: \(context.debugDescription)")
+                @unknown default:
+                    print("Unknown decoding error")
+                }
+            }
             
             // Mark as not loading on error
             if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
@@ -652,7 +666,21 @@ final class CollectionViewModel {
                         let stampData = try await self.apiClient.fetchStamp(stampDisplay.stamp.stampId)
                         return (stampDisplay.stamp.stampId, stampData.marketData)
                     } catch {
-                        print("❌ Failed to fetch market data for stamp \(stampDisplay.stamp.stampId): \(error.localizedDescription)")
+                        print("❌ Failed to fetch market data for stamp \(stampDisplay.stamp.stampId): \(error)")
+                        if let decodingError = error as? DecodingError {
+                            switch decodingError {
+                            case .keyNotFound(let key, let context):
+                                print("Key '\(key.stringValue)' not found: \(context.debugDescription)")
+                            case .typeMismatch(let type, let context):
+                                print("Type '\(type)' mismatch: \(context.debugDescription)")
+                            case .valueNotFound(let type, let context):
+                                print("Value '\(type)' not found: \(context.debugDescription)")
+                            case .dataCorrupted(let context):
+                                print("Data corrupted: \(context.debugDescription)")
+                            @unknown default:
+                                print("Unknown decoding error")
+                            }
+                        }
                         return (stampDisplay.stamp.stampId, nil)
                     }
                 }
