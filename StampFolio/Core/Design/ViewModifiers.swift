@@ -45,6 +45,7 @@ struct EmptyWalletViewModifier: ViewModifier {
     let walletCount: Int
     @Binding var showAddWallet: Bool
     @Environment(\.appColorScheme) private var appColorScheme
+    @AppStorage("isDarkMode") private var isDarkMode = true
     
     func body(content: Content) -> some View {
         if walletCount == 0 {
@@ -64,7 +65,7 @@ struct EmptyWalletViewModifier: ViewModifier {
                 } label: {
                     Text("Add Wallet")
                         .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(isDarkMode ? Color.black : Color.white)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 16)
                         .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
