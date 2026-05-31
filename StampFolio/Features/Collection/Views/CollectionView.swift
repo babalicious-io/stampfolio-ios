@@ -34,6 +34,7 @@ struct CollectionView: View {
     @State private var showOfflineBanner = false
     @State private var viewSize: CGSize = .zero
     @State private var showAddWallet = false
+    @State private var showSlideshow = false
     @State private var selectedStamp: StampDataDisplay?
     @State private var metadataStamp: StampDataDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
@@ -102,6 +103,7 @@ struct CollectionView: View {
             mainContent
                 .toolbar {
                     viewModeToolbarItem
+                    slideshowToolbarItem
                     filterAndSortGroupToolbarItem
                     settingsToolbarItem
                 }
@@ -129,6 +131,13 @@ struct CollectionView: View {
                     initialIndex: index
                 )
             }
+        }
+        .fullScreenCover(isPresented: $showSlideshow) {
+            StampDetailView(
+                stamps: viewModel.stamps.map(\.stamp),
+                initialIndex: 0,
+                isSlideshow: true
+            )
         }
         .sheet(item: $metadataStamp) { displayStamp in
             StampMetadataPopup(displayStamp: displayStamp, viewModel: viewModel)
@@ -175,6 +184,22 @@ struct CollectionView: View {
             .accessibilityLabel("View mode")
             .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
             .accessibilityHint("Tap to cycle through view modes")
+        }
+    }
+    
+    private var slideshowToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                guard !viewModel.stamps.isEmpty else { return }
+                showSlideshow = true
+            } label: {
+                Image(systemName: "play.square.stack")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Color.primary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Start slideshow")
+            .accessibilityHint("Play through all stamps automatically")
         }
     }
     

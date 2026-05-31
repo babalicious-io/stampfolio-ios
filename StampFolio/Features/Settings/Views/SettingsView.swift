@@ -28,6 +28,7 @@ struct SettingsView: View {
     @AppStorage("showStamps") private var showStamps = true
     @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
     @AppStorage("performancePreview") private var performancePreview = true
+    @AppStorage("slideshowInterval") private var slideshowInterval = 5
     @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: WalletConfig?
     @State private var protocolEditMode: EditMode = .inactive
@@ -108,6 +109,7 @@ struct SettingsView: View {
                 
                 // Performance Section
                 Section {
+                    slideshowPicker
                     previewDisplayToggle
                 } header: {
                     Text("Performance")
@@ -286,6 +288,28 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Slideshow Interval Picker
+    
+    private static let slideshowIntervals = [3, 5, 7, 9, 10, 12, 15, 20, 25, 30, 45, 60, 90, 120]
+    
+    private var slideshowPicker: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "play.square.stack.fill")
+                .foregroundStyle(appColorScheme.primary)
+            Picker("Slideshow", selection: $slideshowInterval) {
+                ForEach(Self.slideshowIntervals, id: \.self) { secs in
+                    Text("\(secs)s")
+                        .tag(secs)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(appColorScheme.primary)
+        }
+        .padding(.vertical, 4)
+        .accessibilityLabel("Slideshow interval")
+        .accessibilityHint("Choose how long each stamp is displayed during a slideshow")
     }
     
     // MARK: - Animated Preview Toggle

@@ -18,6 +18,7 @@ struct StampDetailView: View {
     
     let stamps: [StampData]
     let initialIndex: Int
+    let isSlideshow: Bool
     
     // MARK: - Environment
     
@@ -27,6 +28,7 @@ struct StampDetailView: View {
     // MARK: - State
     
     @State private var currentIndex: Int
+    @AppStorage("slideshowInterval") private var slideshowInterval = 5
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
@@ -44,9 +46,10 @@ struct StampDetailView: View {
     
     // MARK: - Initialization
     
-    init(stamps: [StampData], initialIndex: Int) {
+    init(stamps: [StampData], initialIndex: Int, isSlideshow: Bool = false) {
         self.stamps = stamps
         self.initialIndex = initialIndex
+        self.isSlideshow = isSlideshow
         _currentIndex = State(initialValue: initialIndex)
     }
     
@@ -90,6 +93,12 @@ struct StampDetailView: View {
         .ignoresSafeArea()
         .persistentSystemOverlays(.hidden)
         .statusBarHidden(true)
+        .task(id: isSlideshow ? currentIndex : -1) {
+            guard isSlideshow, !stamps.isEmpty else { return }
+            try? await Task.sleep(for: .seconds(slideshowInterval))
+            guard !Task.isCancelled else { return }
+            navigateToNextSlideshow()
+        }
         .accessibilityAddTraits(.isImage)
         .accessibilityLabel("\(currentStamp.formattedStampId), \(currentIndex + 1) of \(stamps.count)")
         .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
@@ -257,6 +266,14 @@ struct StampDetailView: View {
         
         withAnimation(.spring(response: 0.3)) {
             currentIndex -= 1
+            horizontalDragOffset = .zero
+            resetZoom()
+        }
+    }
+    
+    private func navigateToNextSlideshow() {
+        withAnimation(.spring(response: 0.3)) {
+            currentIndex = currentIndex < stamps.count - 1 ? currentIndex + 1 : 0
             horizontalDragOffset = .zero
             resetZoom()
         }
