@@ -646,6 +646,48 @@ This phase implements the [deep dive](#deep-dive--real-on-device-htmlcssjssvg-re
 | Kaluma (JerryScript runtime for RP2040/RP2350) | https://kalumajs.org/ |
 | mcujs (JerryScript runtime for RP2040/RP2350) | https://github.com/mcu-js/mcujs |
 | RP2350 PSRAM memory mapping notes | https://forums.raspberrypi.com/viewtopic.php?t=375109 |
+| Waveshare ESP32-S3-Touch-LCD-1.54 product page | https://www.waveshare.com/esp32-s3-lcd-1.54.htm?sku=33869 |
+| Waveshare ESP32-S3-Touch-LCD-1.54 docs/firmware | https://docs.waveshare.com/ESP32-S3-Touch-LCD-1.54 · https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54 |
+| LVGL SVG + ThorVG configuration (ESP32-S3) | https://forum.lvgl.io/t/efficiently-work-with-svg-images/23225 |
+| Espruino JS interpreter for ESP32-S3 | https://github.com/rgomezwap/EspruinoS3 |
+
+---
+
+## Appendix — Alternative Hardware: Waveshare ESP32-S3-Touch-LCD-1.54
+
+The user asked whether the same on-device rendering approach applies to the [Waveshare ESP32-S3-Touch-LCD-1.54](https://www.waveshare.com/esp32-s3-lcd-1.54.htm?sku=33869) (~$19). **Short answer: yes — and the prior art for litehtml and ThorVG is actually more direct here, because it's the exact chip family (ESP32) those projects were already demonstrated on**, not just "a comparable MCU class." The trade-offs are a much smaller screen and a different software stack, not weaker rendering feasibility.
+
+### Hardware comparison
+
+| Spec | Pimoroni Presto | Waveshare ESP32-S3-Touch-LCD-1.54 |
+|------|------------------|-------------------------------------|
+| MCU | RP2350B, dual Arm Cortex-M33 @ 150 MHz | **ESP32-S3R8**, dual Xtensa LX7 @ **240 MHz** |
+| On-chip SRAM | 520 KB | 512 KB |
+| PSRAM | 8 MB | 8 MB (identical) |
+| Flash | 16 MB | 16 MB (identical) |
+| Display | 4″ IPS, **480×480**, capacitive touch | 1.54″ IPS, **240×240** (ST7789, SPI), capacitive touch (CST816) |
+| Wireless | Wi-Fi 4 + BLE 5.4 (RM2/CYW43439) | Wi-Fi 4 (802.11 b/g/n) + BLE 5 |
+| Storage | microSD | TF (microSD) card slot |
+| Audio | Piezo speaker only | **Real speaker + dual mic array + ES8311 codec + ES7210 encoder** — actual audio playback/capture is possible here, unlike Presto |
+| Extras | 7× ambient RGB LEDs | 6-axis IMU (accelerometer + gyroscope), 3.7 V Li-ion battery header with charging |
+| Native software stack | MicroPython + PicoGraphics/PicoVector/`jpegdec`/`pngdec` (Pimoroni) | ESP-IDF, Arduino, or MicroPython (ESP32 port) — **no PicoGraphics-equivalent**; graphics normally come from **LVGL** |
+| Price | ~$90–110 (kit) | ~$19 |
+
+### What changes for the HTML/CSS/JS/SVG research specifically
+
+- **ThorVG on ESP32-S3 is not hypothetical — it's a documented, working LVGL configuration today.** LVGL 9 has first-class SVG support gated behind `LV_USE_SVG` + `LV_USE_VECTOR_GRAPHIC` + `LV_USE_THORVG_INTERNAL`, and people are running it on ESP32-S3 boards with ST7789/RGB panels right now (with known caveats: needs the LVGL draw-thread stack raised to ≥32 KB, and there are open bugs around complex paths and PSRAM-vs-internal-SRAM DMA buffer placement). This is stronger, more concrete evidence than what exists for RP2350, where ThorVG-on-microcontroller evidence is the more general "has been shown to run on ESP32" claim.
+- **litehtml's only concrete microcontroller port (`leopck/microbrowser`) targets this exact chip family (ESP32)**, not RP2350 — so that prior art transfers directly rather than "by analogy."
+- **JavaScript engine choice differs.** Kaluma and mcujs (used in the Presto research) are Pico-SDK-specific and won't run here. Two paths instead:
+  - **JerryScript directly** — it's portable C99 with no Pico-specific dependencies, so it can be built for ESP32-S3 via ESP-IDF the same way any other embedded JerryScript integration works; you'd be doing the JerryScript↔ESP-IDF integration yourself rather than reusing Kaluma's.
+  - **Espruino** — a separate JS-for-microcontrollers interpreter that already has **community-maintained ESP32-S3 builds** (`rgomezwap/EspruinoS3`, ESP-IDF 4.x/5.x), including its own `Graphics` object for driving displays from JS. This is arguably a *more direct* starting point than JerryScript for this specific board, since someone has already done the "get a JS engine talking to ESP32-S3 peripherals" step.
+- **Toolchain differences work in this board's favor for litehtml.** ESP-IDF ships a full GCC toolchain with STL and C++ exceptions enabled by default, whereas the Pico SDK toolchain more commonly builds with `-fno-exceptions`/`-fno-rtti` and needs explicit reconfiguration to support litehtml's STL usage comfortably. Less toolchain fighting for the HTML/CSS layout piece.
+- **No PicoGraphics-equivalent exists for this board.** The natural path is to build the whole stack on **LVGL** (which already has ST7789 drivers, an `esp_lcd`-based display pipeline, and the ThorVG integration built in) rather than write a bespoke framebuffer library — arguably less work than the Presto approach where PicoVector/`document_container` glue has to be hand-rolled from scratch.
+- **The 240×240 display cuts rasterization cost ~4× versus Presto's 480×480**, which helps CPU-bound SVG/HTML layout performance, at the obvious cost of a much smaller, lower-detail viewing surface — fine for compact pixel-art stamps, cramped for text-heavy HTML compositions.
+- **Real audio hardware** (codec, mic array, speaker) means `audio/*` stamps — a hard "no" on Presto — could actually have a playback story on this board, though that's a separate research thread from HTML/CSS/JS/SVG.
+
+### Recommendation
+
+Given how much more concrete the ThorVG/litehtml prior art is for this exact chip, **this board is a strong candidate for prototyping and validating the native rendering engine itself** (SVG-via-ThorVG-in-LVGL, HTML-via-litehtml, JS-via-Espruino-or-JerryScript) before porting the working approach to Presto's larger screen — or as a lower-cost, smaller-form-factor alternative product target (a "stamp badge" rather than a "stamp frame") if the 240×240 display and lack of ambient lighting are acceptable trade-offs. It is not a drop-in replacement for the Presto product plan in this document, since it uses a different MCU architecture, toolchain, and graphics stack (ESP-IDF/LVGL vs. Pimoroni's MicroPython/PicoGraphics), but every conclusion in the [deep dive](#deep-dive--real-on-device-htmlcssjssvg-rendering) about *what's achievable* transfers — if anything, more favorably.
 
 ---
 
