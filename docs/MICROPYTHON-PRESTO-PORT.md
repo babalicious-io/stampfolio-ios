@@ -692,28 +692,41 @@ The user asked whether the same on-device rendering approach applies to the [Wav
 
 Given how much more concrete the ThorVG/litehtml prior art is for this exact chip, **this board is a strong candidate for prototyping and validating the native rendering engine itself** (SVG-via-ThorVG-in-LVGL, HTML-via-litehtml, JS-via-Espruino-or-JerryScript) before porting the working approach to Presto's larger screen — or as a lower-cost, smaller-form-factor alternative product target (a "stamp badge" rather than a "stamp frame") if the 240×240 display and lack of ambient lighting are acceptable trade-offs. It is not a drop-in replacement for the Presto product plan in this document, since it uses a different MCU architecture, toolchain, and graphics stack (ESP-IDF/LVGL vs. Pimoroni's MicroPython/PicoGraphics), but every conclusion in the [deep dive](#deep-dive--real-on-device-htmlcssjssvg-rendering) about *what's achievable* transfers — if anything, more favorably.
 
-### Sub-appendix — ESP32-C6 vs ESP32-S3 "sibling" boards (same screen, different chip)
+### Sub-appendix — ESP32-C6-Touch-AMOLED-2.16 vs ESP32-S3-Touch-LCD-1.54
 
-A follow-up question compared two more Waveshare boards: **ESP32-C6-Touch-AMOLED-2.16** and **ESP32-S3-Touch-AMOLED-2.16**. These are worth calling out specifically because, unlike the 1.54″ board above, **the screen is identical between them** — same 2.16″, 480×480, CO5300/CST9220 AMOLED touch panel, same audio codec (ES8311), mic array (ES7210), IMU (QMI8658), RTC (PCF85063), power-management chip (AXP2101), and TF card slot. Waveshare builds both as the same physical board with two different SoC modules soldered on. The difference is entirely in the chip:
+A follow-up question compared two more Waveshare boards, sold on Amazon.se:
 
-| Spec | ESP32-C6-Touch-AMOLED-2.16 | ESP32-S3-Touch-AMOLED-2.16 |
-|------|------------------------------|------------------------------|
+- **ESP32-C6-Touch-AMOLED-2.16** — 2.16″ AMOLED, 480×480, ESP32-C6
+- **ESP32-S3-Touch-LCD-1.54** — the same 1.54″ board covered earlier in this appendix, ESP32-S3
+
+*(Correction: an earlier draft of this section incorrectly assumed the second board was the ESP32-S3-Touch-AMOLED-2.16 "sibling" of the first. It is not — it's the smaller 1.54″ LCD board. The comparison below reflects the boards actually linked.)*
+
+| Spec | ESP32-C6-Touch-AMOLED-2.16 | ESP32-S3-Touch-LCD-1.54 |
+|------|------------------------------|----------------------------|
 | CPU architecture | **RISC-V**, single-core, up to 160 MHz | **Xtensa LX7**, dual-core, up to 240 MHz |
-| PSRAM | **None** — the ESP32-C6 silicon has no external PSRAM interface at all | **8 MB** (ESP32-S3R8) |
+| PSRAM | **None** — ESP32-C6 has no external PSRAM interface at all | **8 MB** (ESP32-S3R8) |
 | On-chip RAM | 512 KB HP SRAM + 16 KB LP SRAM | 512 KB SRAM |
 | Flash | 16 MB | 16 MB |
+| Display | **2.16″ AMOLED, 480×480**, QSPI, CO5300 driver | **1.54″ IPS LCD, 240×240**, 4-wire SPI, ST7789 driver |
+| Touch | CST9220 (capacitive) | CST816 (capacitive, touch version only) |
 | Wireless | **Wi-Fi 6** + BLE 5 + **802.15.4 (Zigbee 3.0 / Thread)** | Wi-Fi 4 (802.11 b/g/n) + BLE 5 — no Zigbee/Thread |
-| Display, touch, audio, IMU, RTC, PMU, storage | Identical | Identical |
+| Audio | ES8311 codec + ES7210 dual-mic encoder + speaker | Same (ES8311 + ES7210 + speaker + dual mic) |
+| IMU / RTC / TF card / battery header | All present | IMU + TF card + battery header present; no RTC listed |
 
-So the user's framing ("apart from screen size") doesn't quite apply here — **the screens are the same size and resolution on this pair**; the meaningful differences are compute architecture, core count, clock speed, and — most importantly for this research — **PSRAM**.
+**So the user's original framing was correct — these two boards differ in more than just screen size.** They differ in:
 
-**Can the same software run on both?** Mostly yes at the *application/source* level, not as an identical binary:
+1. **Screen size *and* technology** — 2.16″ AMOLED (480×480, higher contrast, no backlight) vs. 1.54″ IPS LCD (240×240, backlit).
+2. **CPU architecture and core count** — RISC-V single-core (C6) vs. Xtensa dual-core (S3).
+3. **PSRAM** — none vs. 8 MB, the single most consequential difference for this research.
+4. **Wireless radio generation** — Wi-Fi 6 + Zigbee/Thread (C6) vs. Wi-Fi 4 only (S3).
 
-- Both are supported by ESP-IDF, Arduino-ESP32, LVGL, and MicroPython's ESP32 port, and Espressif's tooling (`idf.py set-target esp32c6` vs `esp32s3`) is explicitly designed to build the same C/C++ project for either chip. Community board-support work (e.g. the [xiaozhi-esp32](https://github.com/78/xiaozhi-esp32/issues/1947) project) treats this AMOLED-2.16 pair as sharing almost all peripheral driver code, since the board layout and I²C-addressed peripherals are identical.
-- litehtml, ThorVG, and JerryScript are all portable C/C++ with no architecture-specific code, so they compile for RISC-V (C6) the same as Xtensa (S3) — but you get **two separate compiled firmware images**, one per target, not one binary that runs on both (RISC-V and Xtensa are different instruction sets).
-- **The real blocker is PSRAM, not architecture.** A single 480×480 framebuffer at 16bpp is ~450 KB — on the S3 that comfortably lives in PSRAM, leaving the 512 KB of fast on-chip SRAM for the app, network stack, and the litehtml/ThorVG/JerryScript working set. On the **C6, there is no PSRAM at all**, so that same framebuffer would consume essentially the *entire* 512 KB SRAM budget by itself, before Wi-Fi/BLE stack, filesystem, or any rendering engine gets a look. This isn't a tuning problem — it's a hard hardware ceiling.
+The audio, IMU, and storage peripherals are the closest thing to "the same" between these two — Waveshare reuses the same audio codec/mic/IMU parts across most of its ESP32 AI-development-board line regardless of screen or chip.
 
-**Practical takeaway:** treat the ESP32-S3 variant (of either the 1.54″ board or this 2.16″ AMOLED sibling) as the target for the native litehtml/ThorVG/JerryScript rendering work — its PSRAM is what makes that feasible at all, matching Presto's architecture. The ESP32-C6 variant is better scoped as a **PNG/JPEG-only stamp viewer with everything else (SVG, HTML, JS) going through the server-side render proxy permanently** — not because the C6 is a worse chip generally (it has newer Wi-Fi 6/Zigbee radios and is often cheaper), but because it structurally lacks the RAM headroom the on-device rendering approach depends on.
+**Can the same software run on both?** Only the parts that don't depend on PSRAM or the missing peripherals:
+
+- Networking, Wi-Fi/BLE app logic, and simple framebuffer-based UI code can be written once and compiled separately for each target via ESP-IDF (`idf.py set-target esp32c6` / `esp32s3`) or MicroPython's respective ports — but always as **two separate builds**, since RISC-V and Xtensa are different instruction sets.
+- The **native litehtml/ThorVG/JerryScript rendering stack from the deep dive is realistically S3-only.** On the C6, even the smaller 240×240-class framebuffer math doesn't apply — this board has the *larger* 480×480 AMOLED (~450 KB per 16bpp framebuffer) and *no PSRAM* to hold it in, so nearly the entire 512 KB on-chip RAM budget is consumed by the display buffer alone. There's essentially no room left for a JS heap, HTML layout tree, or SVG rasterization buffer.
+- Practical scope for the ESP32-C6-Touch-AMOLED-2.16 board: a native PNG/JPEG stamp viewer (straightforward, RAM-light, no PSRAM needed) with SVG/HTML/JS routed permanently through the server-side render proxy — the same "proxy-only" scoping recommended for the C6 board in the sub-appendix above, just with a larger, higher-contrast AMOLED screen than the C6/1.54″ pairing would have suggested.
 
 ---
 
