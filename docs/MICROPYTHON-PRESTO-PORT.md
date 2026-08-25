@@ -13,9 +13,9 @@ Research document for porting StampFolio stamp display capabilities to the **Pim
 |----------|--------|
 | Is MicroPython suited? | **Yes** — Presto ships with MicroPython firmware, `presto`, PicoGraphics, PicoVector, and Wi-Fi helpers. |
 | Can the processor handle the app? | **A focused stamp viewer, yes.** A faithful port of the full StampFolio iOS app, **no**. |
-| Can we support all stamp file types (SVG, HTML, etc.)? | **Not natively on-device.** Tiered support with server-side rasterization is the realistic path to broad coverage. |
+| Can we support all stamp file types (SVG, HTML, etc.)? | **Mostly, yes — with real on-device engines, not just a server proxy.** Further research (see [Deep Dive](#deep-dive--real-on-device-htmlcssjssvg-rendering) below) found that a small HTML/CSS layout engine (litehtml), a vector/SVG engine (ThorVG), and a JS engine (JerryScript) **all have working prior art on RP2040/RP2350-class hardware**. They can be built into Presto as native MicroPython C++ modules — the same pattern already used for `picographics`/`jpegdec`/`pngdec`. A server-side render proxy is still recommended as a fallback for the hardest cases (WebRTC, heavy modern CSS), but it is no longer the *only* path for SVG and interactive HTML. |
 
-**Recommended product scope:** **StampFrame for Presto** — fetch stamps for one or more wallets from Stampchain, cache on microSD, display fullscreen with touch navigation and optional slideshow. Omit Ordinals, Counterparty, QR scanning, WebKit rendering, and rich media playback.
+**Recommended product scope:** **StampFrame for Presto** — fetch stamps for one or more wallets from Stampchain, cache on microSD, display fullscreen with touch navigation and optional slideshow. Treat native SVG/HTML/JS rendering as an advanced, incremental capability layered on top of the core viewer — not a blocker for v1. Omit Ordinals, Counterparty, QR scanning, and rich audio/video playback.
 
 ---
 
@@ -142,8 +142,8 @@ C/C++ via the Pimoroni SDK is an option for performance-critical paths later, bu
 | Nearest-neighbor upscale (24×24 pixel art) | ✅ | Ideal for classic stamps |
 | Animated GIF | ⚠️ | No built-in decoder; static frame or custom library |
 | WebP / AVIF / BMP | ❌ on-device | Needs conversion |
-| SVG rendering | ❌ on-device | PicoVector ≠ SVG; needs raster proxy |
-| HTML rendering | ⚠️ tiered | Static HTML (no JS) on-device; interactive HTML needs proxy |
+| SVG rendering | ⚠️ advanced | PicoVector ≠ SVG loader, but a native **ThorVG**/NanoSVG module can parse+rasterize most non-text SVGs on-device (see deep dive) |
+| HTML rendering | ⚠️ tiered, upgradable | Static HTML (no JS) on-device today; a native **litehtml** (+ JerryScript for `<script>`) module raises this ceiling substantially, with proxy as fallback |
 | Audio / video playback | ❌ | Piezo only; no video decoder |
 | QR wallet scanning | ❌ | No camera |
 | Ordinals / Counterparty tabs | ❌ | Different protocols, heavy/browser content |
@@ -163,8 +163,8 @@ C/C++ via the Pimoroni SDK is an option for performance-critical paths later, bu
 | **WebP** | ✅ | ❌ | Server/proxy → PNG or JPEG |
 | **AVIF** | ✅ | ❌ | Server/proxy → PNG or JPEG |
 | **BMP** | ✅ | ❌ | Server/proxy → PNG |
-| **SVG** | ✅ WKWebView | ❌ | Server rasterize (resvg, cairosvg, etc.) |
-| **HTML** | ✅ WKWebView | ⚠️ tiered | Static layout composer on-device; JS-heavy → server PNG |
+| **SVG** | ✅ WKWebView | ⚠️ partial (native) | On-device via ThorVG/NanoSVG module for most vector-only SVGs; server rasterize (resvg, cairosvg, etc.) as fallback for text-heavy/filtered SVGs |
+| **HTML** | ✅ WKWebView | ⚠️ tiered (native) | On-device via litehtml (+ optional JerryScript for scripted canvas apps) for most layouts; server PNG snapshot as fallback for WebRTC/heavy-JS stamps |
 | **text/plain** | ✅ | ✅ | Fetch + wrap text with PicoGraphics / PicoVector |
 | **audio/** | ✅ AVKit | ❌ | Icon + stamp metadata only |
 | **video/** | ✅ AVKit | ❌ | Icon + stamp metadata only |
@@ -173,9 +173,9 @@ C/C++ via the Pimoroni SDK is an option for performance-critical paths later, bu
 
 ### Can we support SVG and HTML?
 
-**SVG:** still needs server rasterization or a dedicated SVG subset parser — PicoVector is not an SVG loader.
+**SVG:** PicoVector is not an SVG loader, but a dedicated, dependency-light **SVG parsing + rasterization engine (ThorVG or NanoSVG)** can be built into Presto's firmware as a native module and used for real on-device rendering of most vector-only SVGs — see the [deep dive](#deep-dive--real-on-device-htmlcssjssvg-rendering) below. Server rasterization remains the fallback for SVGs the engine can't fully handle (text elements, `<style>` blocks, filters).
 
-**HTML:** your intuition is partly right. HTML stamps **are** stored on-chain as Base64 (classic) or binary (OLGA), but **Stampchain already decodes them** when you fetch over HTTP. The real question is not decoding — it is **rendering HTML/CSS/JS without a browser**.
+**HTML:** your intuition is partly right. HTML stamps **are** stored on-chain as Base64 (classic) or binary (OLGA), but **Stampchain already decodes them** when you fetch over HTTP. The real question is **rendering HTML/CSS/JS without a full browser** — and further investigation found that a *small* browser-like stack (HTML/CSS layout engine + JS engine + a hand-built canvas/DOM shim) is more feasible on this hardware than initially assessed, though it is real engineering work, not a drop-in library. Details below.
 
 ---
 
@@ -200,7 +200,7 @@ Both classic (~7 KB) and OLGA (~64 KB) HTML payloads fit easily in Presto’s 8 
 
 ### There is no iframe on Presto — but you can build the equivalent
 
-iOS uses `WKWebView` as an isolated rendering surface (conceptually like an iframe). **Presto has no WebView, HTML engine, or JavaScript runtime** in MicroPython or C++.
+iOS uses `WKWebView` as an isolated rendering surface (conceptually like an iframe). **Out of the box, Presto has no WebView, HTML engine, or JavaScript runtime** in MicroPython or C++ — the stock firmware ships PicoGraphics/PicoVector/`jpegdec`/`pngdec` only. A custom-built native module *can* add HTML layout (litehtml), SVG (ThorVG), and JS (JerryScript) support — see the [deep dive](#deep-dive--real-on-device-htmlcssjssvg-rendering) — but that is additional firmware engineering, not something the device does today.
 
 What “iframe-like container” means in practice on Presto:
 
@@ -223,9 +223,9 @@ Real examples from Stampchain (Aug 2026):
 
 | Stamp | Size | Scripts | Feasible on Presto? |
 |-------|------|---------|-------------------|
-| #1462443 “Story of OLGA” | 1.2 KB | **0** — static HTML + CSS + `<img src="/s/CPID">` + text | **Yes** — on-device layout renderer |
-| #1465071 “STAMP·PAINT” | 28 KB | **1** — canvas drawing app | **Partial** — static screenshot or server render |
-| #1472320 “STAMPCAST” | 41 KB | **1 huge inline script** — WebRTC, WebSocket, Nostr, crypto | **No on-device** — server rasterize only |
+| #1462443 “Story of OLGA” | 1.2 KB | **0** — static HTML + CSS + `<img src="/s/CPID">` + text | **Yes** — on-device layout renderer (though note it uses `cqh` units, a modern-CSS gap even litehtml has — see deep dive) |
+| #1465071 “STAMP·PAINT” | 28 KB | **1** — canvas drawing app | **Partial today** (static screenshot or server render); **the prime candidate for the native JerryScript + Canvas2D shim** in Phase 4a, since it's "just" canvas drawing calls with no WebRTC/WebSocket dependency |
+| #1472320 “STAMPCAST” | 41 KB | **1 huge inline script** — WebRTC, WebSocket, Nostr, crypto | **No on-device, ever** — server rasterize only, regardless of engine investment (see deep dive) |
 
 Many HTML stamps under 65 KB are **static compositions** (positioned divs, embedded images, styled text). Others are **full web apps** that require a browser and network services.
 
@@ -331,10 +331,10 @@ flowchart TD
 | Base64 decode | `ubinascii.a2b_base64` | TinyBase64 / mbedtls |
 | Static HTML subset parser | Practical in pure Python | Faster, same logic |
 | Recursive `/s/` fetch + PNG blit | Good fit | Good fit |
-| Embedded JS engine (JerryScript, etc.) | Theoretically possible, **impractical** for real stamp HTML | Same — stamps use browser APIs |
-| Real iframe/WebView | **Not available** | **Not available** on RP2350 |
+| Embedded JS engine (JerryScript, etc.) | Not directly — JerryScript/litehtml/ThorVG are C/C++ libraries | **Required** — see [deep dive](#deep-dive--real-on-device-htmlcssjssvg-rendering); exposed to MicroPython as a native module |
+| Real iframe/WebView | **Not available** | **Not available**, but a native litehtml+JerryScript+canvas-shim module gets meaningfully closer for a useful subset of stamps (see deep dive) |
 
-**Recommendation:** implement Workaround 4 in MicroPython. Promote the static HTML composer to C++ only if profiling shows parse/compose time is too slow for slideshow use.
+**Recommendation:** implement Workaround 4 in MicroPython for v1. Treat native on-device rendering (litehtml/ThorVG/JerryScript as a compiled MicroPython C++ module) as a v2 "Tier 2" enhancement that slots into the same router — see the deep dive below for what's realistically achievable and what still requires the proxy.
 
 ### Summary: what you CAN do for HTML stamps
 
@@ -345,9 +345,87 @@ flowchart TD
 | Static layout composer (no JS) | Layout + img + text stamps | Yes |
 | `data:image` Base64 extract | Many small stamps | Yes |
 | Recursive `/s/` child fetch | SRC-style compositions | Yes |
-| Full CSS/JS/DOM rendering | Interactive web apps | **No** |
-| Iframe / WebView container | All HTML (like iOS) | **No** — build viewport manually |
+| Full CSS/JS/DOM rendering | Interactive web apps | **Partial** — see deep dive; full compliance no |
+| Iframe / WebView container | All HTML (like iOS) | **No** — build viewport manually, closer with native engine |
 | Server PNG snapshot | JS-heavy stamps | Yes (with proxy) |
+
+---
+
+## Deep Dive — Real On-Device HTML/CSS/JS/SVG Rendering
+
+This section replaces the earlier "no HTML/JS engine exists for this hardware class" assumption. Follow-up research found **working prior art** for each missing piece (HTML/CSS layout, vector/SVG rendering, JavaScript execution) specifically on RP2040/RP2350-class microcontrollers. None of it is Presto-specific or plug-and-play, but none of it needs to be invented from scratch either.
+
+### The three missing engines, and what already runs on this class of hardware
+
+| Need | Library | Evidence it works on RP2040/RP2350-class MCUs | License |
+|------|---------|------------------------------------------------|---------|
+| **HTML/CSS layout** | [litehtml](https://github.com/litehtml/litehtml) | Pure C++/STL + [gumbo-parser](https://codeberg.org/gumbo-parser/gumbo-parser) (dependency-free C99 HTML5 parser). Cross-compiled and run on **ESP32** (a comparable 32-bit MCU class) in the [`leopck/microbrowser`](https://github.com/leopck/microbrowser) project. Supports CSS2.1 fully, most of CSS3 including an actively-developed flexbox implementation; **grid layout and CSS custom properties (`var()`) are partial/branch-only** | BSD-3-Clause |
+| **SVG parsing + rasterizing** | [ThorVG](https://github.com/thorvg/thorvg) (preferred) or [NanoSVG](https://github.com/memononen/nanosvg) (simpler fallback) | ThorVG: ~150–300 KB core, explicitly demonstrated running on **ESP32** microcontrollers, and is already the SVG/Lottie rendering backend inside **LVGL** (a GUI library commonly deployed on RP2040/RP2350 boards). NanoSVG: single C header, trivially portable, already informally used in embedded contexts, but parses a much smaller SVG subset | MIT (ThorVG) / zlib (NanoSVG) |
+| **JavaScript execution** | [JerryScript](https://github.com/jerryscript-project/jerryscript) | Directly proven on **RP2040 *and* RP2350** by two independent open-source runtimes: **[Kaluma](https://kalumajs.org/)** ("runs minimally on microcontrollers with 300 KB ROM with 64 KB RAM") and **[mcujs](https://github.com/mcu-js/mcujs)**. Both ship on real Pico/Pico2 boards today, with REPL, modules, and a `graphics` module for driving SPI displays from JS | Apache-2.0 |
+
+Presto's **16 MB flash, 520 KB SRAM, and 8 MB PSRAM** comfortably exceed what any of these three engines need individually — Kaluma's entire runtime fits in less RAM than a single 480×480 RGB565 framebuffer (450 KB) that Presto already allocates for the display.
+
+### Why this changes the picture
+
+The earlier assessment treated "no browser engine" as a hard wall. It's more accurate to say: **there is no finished browser engine for this hardware, but the three building blocks a browser engine is made of already run on it individually.** The Presto-specific work is *integration*, not invention:
+
+1. **litehtml never draws anything itself.** It parses HTML/CSS and computes layout, then calls back into a `document_container` interface you implement — `draw_text`, `draw_background`, `draw_image`, `get_image_size`, etc. This is the *exact same shape* of integration Presto's own `picographics`, `jpegdec`, and `pngdec` MicroPython modules already do: a C/C++ library that needs someone to wire its output to the PicoGraphics framebuffer. `draw_image` calls forward to `jpegdec`/`pngdec` (raster `<img>`) or to ThorVG (inline/SVG `<img>`); `draw_text` calls forward to PicoVector's Alright Font renderer or a simple bitmap font.
+2. **ThorVG/NanoSVG rasterize into a plain pixel buffer** — no different from the JPEG/PNG decoders Presto already ships; the output blits to PicoGraphics the same way.
+3. **JerryScript needs a host to bind native functions into it** (`jerry_call_function`, etc.) — Kaluma's `graphics` module is a working example of exactly this pattern (JS `gc.drawRect(...)` → C draws to a display buffer). A Presto module would do the same, binding a small **Canvas2D-like API** (`fillRect`, `drawImage`, `getContext('2d')`) into JerryScript so `<script>` blocks that draw to `<canvas>` (like STAMP·PAINT) can genuinely execute instead of falling back to a screenshot.
+4. **All three are C/C++ libraries**, so they integrate the same way the existing native decoders do: via MicroPython's [`USER_C_MODULES`](https://docs.micropython.org/en/latest/develop/cmodules.html) build mechanism, with a thin `extern "C"` wrapper exposing a Python-facing API (e.g. `import html_engine; html_engine.render(html_str, viewport)`).
+
+### JerryScript heap sizing (using the 8 MB PSRAM)
+
+By default JerryScript uses a small internal heap (default 512 KB, 16-bit compressed pointers) sized for devices with a few hundred KB of RAM total. Presto has room to be far more generous:
+
+```
+-DJERRY_SYSTEM_ALLOCATOR=ON   # delegate heap allocation to a custom allocator
+-DJERRY_CPOINTER_32_BIT=ON    # required by the system allocator; supports >512KB heaps
+```
+
+With the system allocator enabled, the JerryScript heap can be backed by a block carved out of Presto's PSRAM (mapped at `0x11000000` on RP2350 via the QMI interface), giving scripts several MB to work with — vastly more headroom than any ≤64 KB HTML stamp's inline `<script>` will need. The tradeoff: PSRAM access is slower than on-chip SRAM (roughly 24 QSPI clock cycles of overhead per access), so heavy script execution will be noticeably slower than on a desktop — acceptable for a stamp viewer, not for anything latency-sensitive.
+
+### What still has to be hand-built (the real engineering effort)
+
+Wiring these three libraries together into something that renders real stamp HTML is genuine, unclaimed engineering work — there is no existing "litehtml + ThorVG + JerryScript" combined browser engine to adopt. Rough shape of the work, roughly ordered by effort:
+
+| Component | Purpose | Relative effort |
+|-----------|---------|------------------|
+| `document_container` implementation | Bridges litehtml's layout output to PicoGraphics/PicoVector drawing calls, `jpegdec`/`pngdec` for raster `<img>`, ThorVG for SVG `<img>`/backgrounds | Moderate — mechanical but sizeable interface (~30 callback methods) |
+| Font shim | `get_text_width`/`draw_text` backed by Alright Fonts (`.af`) or a simple bitmap font, since litehtml has zero built-in font/text rendering | Moderate |
+| Canvas2D shim for JerryScript | Native-bound `CanvasRenderingContext2D`-subset (`fillRect`, `drawImage`, `arc`, `stroke`, pixel `getImageData`-lite) so canvas-drawing `<script>` stamps (e.g. STAMP·PAINT) can run for real | Moderate–High |
+| Minimal DOM/event shim | `document.getElementById`, `addEventListener('pointerdown', …)`, `setTimeout`/`setInterval` bound into JerryScript (Kaluma/mcujs already demonstrate the event-loop pattern to reuse) | Moderate–High |
+| Networking bridge | `fetch`/`XMLHttpRequest` → wrap Presto's existing HTTP client; a minimal `WebSocket` client is feasible (RFC 6455 framing over the same TCP socket, ~150 lines of C) if a script needs one | Low–Moderate |
+| MicroPython native module glue | `USER_C_MODULES` CMake wiring + `extern "C"` wrapper, following the exact pattern of `picographics`/`jpegdec` | Low |
+
+### What remains out of reach regardless of engine choice
+
+- **WebRTC** (ICE/STUN/TURN negotiation, DTLS-SRTP, audio/video codec pipelines) — no embedded WebRTC stack targets RP2350-class hardware, and the codec/CPU requirements are far beyond a 150 MHz dual-core M33. Stamps like **STAMPCAST** remain server-proxy-only, permanently.
+- **Full modern CSS** — litehtml's flexbox support is real but still maturing, and it does **not** reliably support CSS grid, container query units (`cqh`/`cqw`), `backdrop-filter`, or arbitrary `var()` custom-property chains. These are not exotic — the real-world stamp examples surveyed (§"HTML stamps are not all 'basic'") use `cqh` units and CSS variables even in their *simplest* tier. Expect **visual fidelity gaps** even for "no `<script>`" HTML stamps, not just for scripted ones.
+- **True DOM/CSSOM compliance** — `querySelectorAll`, live NodeLists, CSSOM manipulation, and pixel-identical rendering vs. a real browser engine are not realistic goals; the DOM/canvas shim above is deliberately a small, purpose-built subset, not a WebKit clone.
+
+### Revised routing recommendation
+
+The hybrid router (Workaround 4) still applies, but the "native" branch's ceiling is now much higher than "layout composer with no JS":
+
+```mermaid
+flowchart TD
+    fetch[Fetch decoded HTML / SVG bytes]
+    tryNative[Try native engine: litehtml + ThorVG + JerryScript canvas shim]
+    ok{Rendered without\nunsupported features?}
+    cache[Cache PNG on microSD]
+    proxy[Server headless-render proxy]
+    pngDec[jpegdec/pngdec the proxy PNG]
+
+    fetch --> tryNative
+    tryNative --> ok
+    ok -->|Yes| cache
+    ok -->|No - grid/backdrop-filter/\nWebRTC/WebSocket/unknown API| proxy
+    proxy --> pngDec
+    pngDec --> cache
+```
+
+**Practical takeaway:** budget the native litehtml/ThorVG/JerryScript module as a distinct, optional v2 milestone (see Phase 4a below) rather than a v1 requirement. It meaningfully increases the share of stamps that render on-device without any network dependency, but the server-side proxy should remain in the architecture permanently as the fallback for the hardest 10–20% of interactive/WebRTC/modern-CSS stamps.
 
 ---
 
@@ -449,6 +527,21 @@ flowchart TD
 
 **Exit criteria:** Static HTML stamps (e.g. layout + text + embedded images) render on-device; JS-heavy stamps render via proxy; unsupported stamps show clear fallback UI.
 
+### Phase 4a — Native rendering engine (advanced, optional v2)
+
+This phase implements the [deep dive](#deep-dive--real-on-device-htmlcssjssvg-rendering) above. It is a firmware-level effort (C++, custom MicroPython build), separate from the Python application logic in the other phases, and should only be attempted once Phases 0–4 give a working, shippable baseline.
+
+1. Build a custom Presto firmware image with `USER_C_MODULES` pointing at three new native modules (mirroring the existing `picographics`/`jpegdec`/`pngdec` integration pattern):
+   - `svg_engine` — ThorVG (preferred) or NanoSVG, exposing `render(svg_bytes, width, height) -> framebuffer`.
+   - `html_engine` — litehtml + gumbo-parser, with a `document_container` implementation that calls back into PicoGraphics/PicoVector, `jpegdec`/`pngdec`, and `svg_engine`.
+   - `js_engine` — JerryScript (following Kaluma's/mcujs's integration approach), heap backed by PSRAM via `JERRY_SYSTEM_ALLOCATOR` + `JERRY_CPOINTER_32_BIT`.
+2. Implement the Canvas2D shim and bind it into `js_engine` so `<canvas>`-drawing `<script>` blocks execute against a real framebuffer.
+3. Implement the minimal DOM/event shim (`getElementById`, `addEventListener`, `setTimeout`/`setInterval`) and a `fetch`/`XMLHttpRequest` bridge onto Presto's existing HTTP client.
+4. Wire `html_engine.render()` and `svg_engine.render()` into the Workaround 4 router as the first-attempt "native" branch, falling back to the server proxy when the engine reports an unsupported feature (grid layout, `backdrop-filter`, WebSocket/WebRTC usage, video/audio elements) or fails to parse.
+5. Build a small regression suite of real Stampchain HTML/SVG stamps (across the three tiers identified above) to track native-render success rate over time, and to catch regressions as litehtml/ThorVG are updated.
+
+**Exit criteria:** A measurable majority of non-WebRTC HTML/SVG stamps render natively on-device (no network round-trip beyond fetching the stamp itself); the proxy fallback rate and reasons are logged for future engine improvements.
+
 ### Phase 5 — Polish
 
 1. Slideshow timer (configurable interval — mirror iOS `slideshowInterval`).
@@ -459,7 +552,7 @@ flowchart TD
 
 **Exit criteria:** Stable desk-frame experience suitable for daily use.
 
-### Phase 6 — Out of scope (future / different hardware)
+### Phase 6 — Out of scope (regardless of engine work)
 
 - Ordinals and Counterparty protocol support
 - QR wallet setup on-device
@@ -467,6 +560,8 @@ flowchart TD
 - Video/audio playback
 - Market data and filtering UI
 - SRC-20 / SRC-721 token management
+- WebRTC-based stamps (e.g. STAMPCAST) — permanently proxy-only, regardless of on-device engine investment
+- Pixel-identical rendering vs. a real browser for modern-CSS (grid, `backdrop-filter`, container queries) or heavily scripted stamps
 
 ---
 
@@ -491,16 +586,18 @@ flowchart TD
 
 ### Possible with additional infrastructure
 
-- SVG stamps (via server-side rasterization)
-- HTML stamps with JavaScript / WebRTC / canvas apps (via headless browser render → PNG)
+- SVG stamps rendered **natively on-device** via a compiled ThorVG/NanoSVG MicroPython module (Phase 4a); server-side rasterization remains the fallback for text/filter-heavy SVGs
+- HTML stamps rendered **natively on-device** via a compiled litehtml (+ JerryScript canvas shim) MicroPython module (Phase 4a) for most layouts and simple canvas scripts; server-side headless-browser render → PNG remains the fallback for WebRTC/heavy-JS/modern-CSS stamps
 - WebP / AVIF stamps (via server conversion)
 - Animated GIF (custom MicroPython GIF decoder or pre-converted frame sequence on SD)
 
-### Not possible (on Presto as-is)
+### Not possible (on Presto, regardless of engineering investment)
 
-- Real iframe / WebView container (no HTML engine on RP2350 — build a manual viewport instead)
-- Full CSS cascade, flexbox, grid, or `@media` layout engine
-- JavaScript execution for interactive stamp apps (WebSocket, WebRTC, DOM APIs)
+- WebRTC-based stamps (STAMPCAST-style) — no embedded WebRTC/media-codec stack targets this hardware class; permanently server-proxy-only
+- Faithful, standards-compliant CSS grid, container query units (`cqh`/`cqw`), `backdrop-filter`, or full CSS custom-property cascades — litehtml supports CSS2.1 and a maturing flexbox subset, not these
+- True DOM/CSSOM compliance (`querySelectorAll`, live NodeLists, full event model) — only a small hand-built DOM/event shim is realistic
+- Pixel-identical rendering vs. a real WebKit/browser view
+- Faithful 1:1 port of StampFolio iOS (SwiftUI, tabs, WebKit, AVKit)
 - Native WebP / AVIF decode without adding large third-party libraries
 - Video playback
 - Rich audio playback (beyond piezo beeps)
@@ -518,11 +615,11 @@ flowchart TD
 | Time to first prototype | Fast | Slower |
 | Wi-Fi / HTTP examples | Included | More boilerplate |
 | JPEG/PNG decode | Built-in modules | Same underlying libraries |
-| SVG/HTML | Still impossible natively | Still needs external rasterization |
+| SVG/HTML/JS engines (litehtml/ThorVG/JerryScript) | Consumed as a compiled native module (`import html_engine`) | **Required to implement** — these are C/C++ libraries; MicroPython is the orchestration layer on top |
 | GIF animation | Limited | Better performance potential |
 | Maintenance | Easier for hobby deployment | Better for production firmware |
 
-**Recommendation:** Prototype in MicroPython. Profile decode and slideshow timing; port only hot paths to C++ if needed.
+**Recommendation:** Prototype the app (Phases 0–5) in MicroPython. The native rendering engine (Phase 4a) is unavoidably a C++ effort — MicroPython's `USER_C_MODULES` mechanism is what makes it available to the Python app as a normal `import`, exactly like the existing `picographics`/`jpegdec`/`pngdec` modules.
 
 ---
 
@@ -539,6 +636,16 @@ flowchart TD
 | Stampchain API | https://stampchain.io/docs#/ |
 | StampFolio domain model | `./app-build/DOMAIN-MODELS.md` |
 | Bitcoin Stamps FAQ (OLGA / file sizes) | https://stampchain.io/faq |
+| MicroPython external C modules (`USER_C_MODULES`) | https://docs.micropython.org/en/latest/develop/cmodules.html |
+| litehtml (HTML/CSS layout engine) | https://github.com/litehtml/litehtml |
+| litehtml on ESP32 (`microbrowser`, WIP prior art) | https://github.com/leopck/microbrowser |
+| gumbo-parser (HTML5 parser used by litehtml) | https://codeberg.org/gumbo-parser/gumbo-parser |
+| ThorVG (embeddable vector/SVG/Lottie engine) | https://github.com/thorvg/thorvg |
+| NanoSVG (single-header SVG parser/rasterizer) | https://github.com/memononen/nanosvg |
+| JerryScript (embeddable ECMAScript engine) | https://github.com/jerryscript-project/jerryscript |
+| Kaluma (JerryScript runtime for RP2040/RP2350) | https://kalumajs.org/ |
+| mcujs (JerryScript runtime for RP2040/RP2350) | https://github.com/mcu-js/mcujs |
+| RP2350 PSRAM memory mapping notes | https://forums.raspberrypi.com/viewtopic.php?t=375109 |
 
 ---
 
@@ -546,6 +653,8 @@ flowchart TD
 
 **MicroPython on Pimoroni Presto is a good platform for a Bitcoin Stamp desk display**, not a full StampFolio port. The RP2350 has sufficient CPU, RAM, and storage for API calls, caching, and PNG/JPEG rendering at 480×480. Stamp payloads (≤64 KB) are well within device limits.
 
-**All stamp file types cannot be rendered natively.** SVG and HTML require the same class of solution the iOS app solves with WebKit — but on Presto that must be **server-side rasterization** rather than an on-device browser. With a tiered pipeline (native decode first, proxy fallback second, placeholder last), most of the stamp catalog can be displayed meaningfully.
+**SVG and HTML rendering is more achievable on-device than initially assessed.** The building blocks — a small HTML/CSS layout engine (litehtml), a vector/SVG engine (ThorVG/NanoSVG), and a JS engine (JerryScript) — all have **working prior art on RP2040/RP2350-class hardware** (ESP32 litehtml port, ThorVG on ESP32 and inside LVGL, JerryScript via Kaluma/mcujs on Pico/Pico2). None of this is plug-and-play for Presto specifically: bridging litehtml's `document_container` to PicoGraphics, adding a Canvas2D shim for JerryScript, and building a minimal DOM/event/networking layer is real, unclaimed engineering work (Phase 4a). But it is squarely the same *kind* of work as the native `picographics`/`jpegdec`/`pngdec` modules Presto already ships — not a fundamentally different undertaking.
 
-**Next step:** Implement Phase 1 proof of concept — fetch and display a single PNG stamp from Stampchain on Presto hardware.
+**A server-side render proxy should stay in the architecture permanently regardless.** WebRTC-based stamps (STAMPCAST-style) and stamps depending on modern CSS features litehtml doesn't support (grid, `backdrop-filter`, container query units) are out of reach for any on-device engine on this hardware. The recommended router (Workaround 4 / Phase 4a) tries the native engine first and falls back to the proxy — so investing in the native engine reduces reliance on network infrastructure and proxy costs over time without ever fully eliminating the need for it.
+
+**Next step:** Implement Phase 1 proof of concept — fetch and display a single PNG stamp from Stampchain on Presto hardware. Treat Phase 4a (native rendering engine) as a distinct, later milestone once the core viewer (Phases 0–5) is shipping.
