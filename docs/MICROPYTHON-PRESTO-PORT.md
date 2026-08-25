@@ -653,6 +653,8 @@ This phase implements the [deep dive](#deep-dive--real-on-device-htmlcssjssvg-re
 | Waveshare ESP32-C6-Touch-AMOLED-2.16 | https://www.waveshare.com/esp32-c6-touch-amoled-2.16.htm |
 | Waveshare ESP32-S3-Touch-AMOLED-2.16 | https://www.waveshare.com/esp32-s3-touch-amoled-2.16.htm |
 | xiaozhi-esp32 board-support notes (AMOLED-2.16 peripheral map) | https://github.com/78/xiaozhi-esp32/issues/1947 |
+| Waveshare "ESP32 LCD Selection" full board comparison table | https://www.waveshare.com/esp32-s3-lcd-1.54.htm |
+| Waveshare ESP32-S3-Touch-AMOLED-1.43 (case options) | https://www.waveshare.com/wiki/ESP32-S3-Touch-AMOLED-1.43 |
 
 ---
 
@@ -713,6 +715,38 @@ So to directly answer both questions:
 2. **"So I should avoid C6?" — yes, specifically for the native HTML/CSS/JS/SVG rendering goal this research thread is about.** The ESP32-C6's complete lack of PSRAM is disqualifying for that specific purpose: this board's 480×480 framebuffer (~450 KB at 16bpp) alone would consume nearly all 512 KB of on-chip RAM, leaving no realistic room for a JerryScript heap, litehtml layout tree, or ThorVG rasterization buffer. The ESP32-S3 variants (either the 1.54″ LCD or the 2.16″ AMOLED) have the 8 MB of PSRAM this whole approach depends on — pick between them based on screen size/technology preference, not rendering capability, since both are otherwise equally suited to the native engine work.
 
 That said, **"avoid C6" is scoped to this specific use case, not a blanket recommendation.** The ESP32-C6 is a perfectly reasonable (often cheaper) choice if the plan is a PNG/JPEG-only stamp viewer with SVG/HTML/JS routed permanently through the server-side render proxy — it also has the newer Wi-Fi 6 and Zigbee/Thread radios, which the S3 variants lack, in case those matter for other integration plans.
+
+### Sub-appendix — other square (1:1) ESP32-S3 display boards, and bare-PCB vs. cased SKUs
+
+Two follow-up questions: (1) are there other small, **square** (1:1 pixel aspect ratio) Waveshare boards using the ESP32-S3, besides the 1.54″ LCD and 2.16″ AMOLED already covered; and (2) does Waveshare sell these without the white plastic case/housing.
+
+Pulled directly from Waveshare's own "ESP32 LCD Selection" comparison table, every **square-resolution, ESP32-S3 (not C6/C3/C5), ≥8 MB PSRAM** board — i.e. boards that meet the same "PSRAM available for the rendering engine" bar as the 1.54″/2.16″ boards already assessed:
+
+| Model | Resolution | Panel tech | Driver | Touch | Notes |
+|-------|-----------|------------|--------|-------|-------|
+| `ESP32-S3-LCD-0.85` | 128×128 | LCD | GC9107 | No | Smallest square option; no touch |
+| `ESP32-S3-LCD-1.3` / `-B` / `-C` | 240×240 | IPS LCD | ST7789 | No | Bare PCB by default; `-B` adds case, `-C` adds case + display prism cube |
+| `ESP32-S3-LCD-1.54` / `ESP32-S3-Touch-LCD-1.54` | 240×240 | IPS LCD | ST7789 | Optional (Touch variant) | Already covered above |
+| `ESP32-S3-Touch-AMOLED-1.32` | 466×466 | AMOLED | CO5300 | Yes | Uses smaller `ESP32-S3-PICO-1-N8R8` module (8 MB flash, not 16 MB) — otherwise same 8 MB PSRAM |
+| `ESP32-S3-Touch-AMOLED-1.43` / `-B` / `-C` | 466×466 | AMOLED | SH8601/CO5300 | Yes | Explicit "without case" / "with case" SKU options |
+| `ESP32-S3-Touch-AMOLED-1.75` / `-B` | 466×466 | AMOLED | CO5300 | Yes | `-B` adds case |
+| `ESP32-S3-Touch-LCD-1.46` / `-B` | 412×412 | TFT | SPD2010 | Yes | `-B` adds case |
+| `ESP32-S3-Touch-LCD-1.85` / `-B` / `-C` / `-C-BOX` | 360×360 | LCD | ST77916 | Yes | Bare by default; `-BOX` suffix adds enclosure |
+| `ESP32-S3-Touch-LCD-2.1` / `-B` | 480×480 | LCD (RGB interface) | ST7701 | Yes | `-B` variant, same resolution |
+| `ESP32-S3-Touch-LCD-2.8C` / `ESP32-S3-LCD-2.8C` | 480×480 | LCD (RGB interface) | ST7701 | Optional | Distinct from the non-square 2.8″ (240×320) board of the same family name |
+| `ESP32-S3-Touch-AMOLED-2.16` | 480×480 | AMOLED | CO5300 | Yes | Already covered above |
+
+*(Excluded: `ESP32-S3-LCD-1.28`/`-Touch-1.28` — 240×240 pixels but a physically **round** display (GC9A01A round-panel driver) and only 2 MB PSRAM, not comparable to the others on either count.)*
+
+So yes — there's a wide range of square ESP32-S3 boards beyond the two already covered, spanning 128×128 up to 480×480, in both LCD and AMOLED panel technology, all with the 8 MB PSRAM this research's rendering approach depends on (aside from the 0.85″ board's much smaller usable screen).
+
+**On the case/housing question — it varies by board, and there's no single answer:**
+
+- **`ESP32-S3-Touch-LCD-1.54`** (the board from earlier in this appendix) ships with a **custom-molded plastic case as standard** — Waveshare's own product description calls it out as a fixed feature, and no bare-PCB SKU is listed for it.
+- **`ESP32-S3-Touch-AMOLED-2.16`** ships **without a case** — the included-items list is just the board plus a "PC insulating sheet," no enclosure.
+- Several other boards explicitly offer **both**, as separate SKUs: `ESP32-S3-LCD-1.3` (bare) vs. `-B`/`-C` (cased); `ESP32-S3-Touch-AMOLED-1.43` (explicit "without case version" vs. "with case version"); `ESP32-S3-Touch-LCD-1.85` (bare) vs. `-C-BOX` (cased); `ESP32-S3-Touch-AMOLED-1.75` (bare) vs. `-B` (cased).
+
+**Practical takeaway:** if a bare board (no housing) matters for a custom enclosure, check each product page's "Version Options" section individually — don't assume a `-B`/`-C`/`-BOX` suffix pattern always exists, since the 1.54″ LCD board (unusually) doesn't offer a bare-PCB option at all, while most of its siblings do.
 
 ---
 
