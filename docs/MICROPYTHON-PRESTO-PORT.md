@@ -143,7 +143,7 @@ C/C++ via the Pimoroni SDK is an option for performance-critical paths later, bu
 | Animated GIF | ⚠️ | No built-in decoder; static frame or custom library |
 | WebP / AVIF / BMP | ❌ on-device | Needs conversion |
 | SVG rendering | ❌ on-device | PicoVector ≠ SVG; needs raster proxy |
-| HTML rendering | ❌ on-device | No browser/DOM/JS engine |
+| HTML rendering | ⚠️ tiered | Static HTML (no JS) on-device; interactive HTML needs proxy |
 | Audio / video playback | ❌ | Piezo only; no video decoder |
 | QR wallet scanning | ❌ | No camera |
 | Ordinals / Counterparty tabs | ❌ | Different protocols, heavy/browser content |
@@ -164,7 +164,7 @@ C/C++ via the Pimoroni SDK is an option for performance-critical paths later, bu
 | **AVIF** | ✅ | ❌ | Server/proxy → PNG or JPEG |
 | **BMP** | ✅ | ❌ | Server/proxy → PNG |
 | **SVG** | ✅ WKWebView | ❌ | Server rasterize (resvg, cairosvg, etc.) |
-| **HTML** | ✅ WKWebView | ❌ | Server headless render → PNG; or placeholder |
+| **HTML** | ✅ WKWebView | ⚠️ tiered | Static layout composer on-device; JS-heavy → server PNG |
 | **text/plain** | ✅ | ✅ | Fetch + wrap text with PicoGraphics / PicoVector |
 | **audio/** | ✅ AVKit | ❌ | Icon + stamp metadata only |
 | **video/** | ✅ AVKit | ❌ | Icon + stamp metadata only |
@@ -173,20 +173,181 @@ C/C++ via the Pimoroni SDK is an option for performance-critical paths later, bu
 
 ### Can we support SVG and HTML?
 
-**Not with full fidelity on the device alone.**
+**SVG:** still needs server rasterization or a dedicated SVG subset parser — PicoVector is not an SVG loader.
 
-- **SVG** requires path parsing, transforms, gradients, embedded fonts, and often external references — far beyond PicoVector’s drawing API.
-- **HTML** requires a layout engine, CSS, and usually JavaScript — Presto has no WebKit equivalent.
+**HTML:** your intuition is partly right. HTML stamps **are** stored on-chain as Base64 (classic) or binary (OLGA), but **Stampchain already decodes them** when you fetch over HTTP. The real question is not decoding — it is **rendering HTML/CSS/JS without a browser**.
 
-**Achievable with a companion rasterization step:**
+---
 
-1. Presto requests `stamp_mimetype` from Stampchain API.
-2. For `image/svg+xml` or `text/html`, Presto fetches a **pre-rendered 480×480 PNG** from:
-   - A small proxy service you operate, or
-   - A future Stampchain `/preview/{txHash}.png` endpoint (if added).
-3. Presto decodes the PNG locally and caches it on microSD.
+## HTML Stamps — Base64, “Iframe”, and Workarounds
 
-This mirrors how the iOS app already relies on Stampchain’s `/content/{txHash}` endpoint to preprocess HTML — the preprocessing would move to **server-side rasterization** instead of **client-side WebKit**.
+### How HTML stamps are actually stored and served
+
+| Layer | Format | What you get |
+|-------|--------|--------------|
+| **On-chain / indexer DB** | Base64 string in `stamp_base64` (API field on `/stamps/{id}`) | Raw encoded payload |
+| **HTTP `/s/{txHash}`** | Decoded UTF-8 HTML | Ready-to-parse markup (`Content-Type: text/html`) |
+| **HTTP `/content/{txHash}`** | Same decoded HTML (iOS uses this for HTML stamps) | Used by StampFolio’s `StampVectorView` / `WKWebView` |
+
+**You do not need to Base64-decode on Presto if you fetch from Stampchain** — the server has already done it. Base64 decode on-device is only needed if you read `stamp_base64` directly from the JSON API:
+
+```python
+import ubinascii
+html = ubinascii.a2b_base64(stamp["stamp_base64"]).decode("utf-8")
+```
+
+Both classic (~7 KB) and OLGA (~64 KB) HTML payloads fit easily in Presto’s 8 MB PSRAM after decode.
+
+### There is no iframe on Presto — but you can build the equivalent
+
+iOS uses `WKWebView` as an isolated rendering surface (conceptually like an iframe). **Presto has no WebView, HTML engine, or JavaScript runtime** in MicroPython or C++.
+
+What “iframe-like container” means in practice on Presto:
+
+```
+┌─────────────────────────────────────┐
+│  Presto 480×480 framebuffer         │
+│  ┌───────────────────────────────┐  │
+│  │  "Viewport" — your render     │  │  ← You implement this in PicoGraphics
+│  │  target for one stamp         │  │
+│  └───────────────────────────────┘  │
+│  Stamp # overlay, touch nav         │
+└─────────────────────────────────────┘
+```
+
+You allocate a logical viewport and draw into it — but **you** must interpret the HTML, not load it into a browser.
+
+### HTML stamps are not all “basic” — two tiers exist
+
+Real examples from Stampchain (Aug 2026):
+
+| Stamp | Size | Scripts | Feasible on Presto? |
+|-------|------|---------|-------------------|
+| #1462443 “Story of OLGA” | 1.2 KB | **0** — static HTML + CSS + `<img src="/s/CPID">` + text | **Yes** — on-device layout renderer |
+| #1465071 “STAMP·PAINT” | 28 KB | **1** — canvas drawing app | **Partial** — static screenshot or server render |
+| #1472320 “STAMPCAST” | 41 KB | **1 huge inline script** — WebRTC, WebSocket, Nostr, crypto | **No on-device** — server rasterize only |
+
+Many HTML stamps under 65 KB are **static compositions** (positioned divs, embedded images, styled text). Others are **full web apps** that require a browser and network services.
+
+### Workaround 1 — On-device static HTML renderer (best for simple stamps)
+
+For HTML with **no JavaScript** (or JS you intentionally ignore), implement a **minimal layout engine**:
+
+1. Fetch decoded HTML from `https://stampchain.io/s/{txHash}`.
+2. Parse a **supported subset**:
+   - `<img class="s" src="/s/CPID" style="left:…%;top:…%;width:…%;height:…%">`
+   - `<div class="s t" style="…font-size:…cqh;color:#…">text</div>`
+   - Inline `background:#000` on `html,body`
+3. For each `/s/CPID` reference → fetch child stamp → decode PNG/JPEG with `pngdec`/`jpegdec`.
+4. Map percentage positions to 480×480 pixel coordinates.
+5. Draw text with PicoGraphics or PicoVector (map `cqh` units approximately).
+6. Cache the **composited result** as PNG on microSD.
+
+This matches stamps like the OLGA story page, which is pure layout:
+
+```html
+<div id="c">
+  <img class="s" src="/s/A492736669247841788" style="left:2.3%;top:12%;width:95.552%;height:56.492%">
+  <div class="s t" style="left:3%;top:1.38%;...">The Story of OLGA</div>
+  ...
+</div>
+```
+
+No JS execution required — only recursive `/s/` fetches (same pattern Stampchain uses when serving HTML).
+
+**Also handle without a browser:**
+
+- `data:image/png;base64,...` in `<img src>` → decode Base64 locally, blit to framebuffer
+- Plain text nodes → wrap and draw
+- Basic colors from inline styles (`#RRGGBB`)
+
+### Workaround 2 — Extract-and-blit (fast path)
+
+Before building a full layout parser, scan decoded HTML for:
+
+1. **`data:image/*;base64,`** — decode and display directly (common in small stamps).
+2. **Single `<img src="/s/…">`** — fetch one child image, scale to 480×480.
+3. **No visual elements found** — show placeholder with stamp number.
+
+This covers a surprising number of simple HTML stamps with minimal code.
+
+### Workaround 3 — Server-side render (JS-heavy stamps)
+
+For stamps with `<script>` blocks (WebRTC, canvas animation, Nostr, etc.):
+
+1. Presto detects `<script` in the HTML string (cheap scan).
+2. Requests a **480×480 PNG snapshot** from a render proxy:
+   - Headless Chromium / Playwright loads `https://stampchain.io/content/{txHash}`
+   - Waits for render (or fixed timeout)
+   - Returns PNG
+3. Presto decodes PNG locally and caches on microSD.
+
+This is the only viable path for interactive HTML like STAMPCAST. The stamp is ≤65 KB, but its **runtime requirements** (WebSocket, WebRTC, `window`, DOM) far exceed what an MCU can provide — size is not the limiting factor.
+
+### Workaround 4 — Hybrid router (recommended)
+
+```python
+def render_html_stamp(tx_hash, html_bytes):
+    html = html_bytes.decode("utf-8")
+
+    if "<script" not in html.lower():
+        return compose_static_html(html, viewport=480)  # Workaround 1/2
+
+    png = fetch_render_proxy(tx_hash, size=480)         # Workaround 3
+    if png:
+        return decode_png(png)
+
+    return draw_placeholder(stamp_id)                   # Fallback
+```
+
+```mermaid
+flowchart TD
+    fetch[Fetch /s/txHash or decode stamp_base64]
+    classify{Contains script tag?}
+    static[Static HTML composer]
+    resolveImg[Resolve /s/ CPID refs]
+    dataUri[Decode data:image base64]
+    draw[Blit to 480x480 viewport]
+    proxy[Server headless render]
+    pngDec[jpegdec/pngdec]
+    cache[Cache PNG on microSD]
+
+    fetch --> classify
+    classify -->|No| static
+    static --> resolveImg
+    static --> dataUri
+    resolveImg --> draw
+    dataUri --> draw
+    draw --> cache
+    classify -->|Yes| proxy
+    proxy --> pngDec
+    pngDec --> cache
+```
+
+### MicroPython vs C++ for HTML workarounds
+
+| Approach | MicroPython | C++ |
+|----------|-------------|-----|
+| Base64 decode | `ubinascii.a2b_base64` | TinyBase64 / mbedtls |
+| Static HTML subset parser | Practical in pure Python | Faster, same logic |
+| Recursive `/s/` fetch + PNG blit | Good fit | Good fit |
+| Embedded JS engine (JerryScript, etc.) | Theoretically possible, **impractical** for real stamp HTML | Same — stamps use browser APIs |
+| Real iframe/WebView | **Not available** | **Not available** on RP2350 |
+
+**Recommendation:** implement Workaround 4 in MicroPython. Promote the static HTML composer to C++ only if profiling shows parse/compose time is too slow for slideshow use.
+
+### Summary: what you CAN do for HTML stamps
+
+| Technique | Covers | On-device? |
+|-----------|--------|------------|
+| Fetch decoded HTML from Stampchain | All HTML stamps | Yes |
+| Base64 decode from `stamp_base64` | All HTML stamps | Yes |
+| Static layout composer (no JS) | Layout + img + text stamps | Yes |
+| `data:image` Base64 extract | Many small stamps | Yes |
+| Recursive `/s/` child fetch | SRC-style compositions | Yes |
+| Full CSS/JS/DOM rendering | Interactive web apps | **No** |
+| Iframe / WebView container | All HTML (like iOS) | **No** — build viewport manually |
+| Server PNG snapshot | JS-heavy stamps | Yes (with proxy) |
 
 ---
 
@@ -279,14 +440,14 @@ This mirrors how the iOS app already relies on Stampchain’s `/content/{txHash}
 
 **Exit criteria:** Offline viewing of previously synced stamps; graceful handling of unsupported types.
 
-### Phase 4 — Non-native formats (SVG, HTML, WebP, AVIF)
+### Phase 4 — HTML and non-native formats (SVG, WebP, AVIF)
 
-1. Deploy a minimal raster proxy (or negotiate Stampchain preview endpoint).
-2. Proxy accepts `tx_hash` + target size (480), returns PNG.
-3. Presto fetches proxy URL for non-native MIME types only.
+1. **HTML router:** scan for `<script`; route static HTML to on-device composer, JS HTML to proxy.
+2. **Static HTML composer:** parse positioned `<img src="/s/…">` and text `<div>` elements; resolve child stamps recursively; map `%` layout to 480×480; handle `data:image/*;base64,` inline.
+3. **Render proxy** for JS-heavy HTML and for SVG/WebP/AVIF (headless browser or image conversion service).
 4. Show placeholder icon + stamp number when proxy unavailable.
 
-**Exit criteria:** Majority of catalog viewable; unsupported stamps show clear fallback UI.
+**Exit criteria:** Static HTML stamps (e.g. layout + text + embedded images) render on-device; JS-heavy stamps render via proxy; unsupported stamps show clear fallback UI.
 
 ### Phase 5 — Polish
 
@@ -324,19 +485,22 @@ This mirrors how the iOS app already relies on Stampchain’s `/content/{txHash}
 - Ambient RGB lighting tied to displayed stamp
 - Nearest-neighbor upscale for small pixel-art stamps (24×24 → 480×480)
 - Static preview for GIF stamps
+- Static HTML stamps (layout + CSS + embedded `/s/` images, no JavaScript)
+- HTML with inline `data:image/*;base64` payloads
 - Graceful placeholders for unsupported types
 
 ### Possible with additional infrastructure
 
 - SVG stamps (via server-side rasterization)
-- HTML stamps (via headless browser render → PNG)
+- HTML stamps with JavaScript / WebRTC / canvas apps (via headless browser render → PNG)
 - WebP / AVIF stamps (via server conversion)
 - Animated GIF (custom MicroPython GIF decoder or pre-converted frame sequence on SD)
 
 ### Not possible (on Presto as-is)
 
-- Faithful 1:1 port of StampFolio iOS (SwiftUI, tabs, WebKit, AVKit)
-- Native in-browser HTML/SVG/JS rendering
+- Real iframe / WebView container (no HTML engine on RP2350 — build a manual viewport instead)
+- Full CSS cascade, flexbox, grid, or `@media` layout engine
+- JavaScript execution for interactive stamp apps (WebSocket, WebRTC, DOM APIs)
 - Native WebP / AVIF decode without adding large third-party libraries
 - Video playback
 - Rich audio playback (beyond piezo beeps)
