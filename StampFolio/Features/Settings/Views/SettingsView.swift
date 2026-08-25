@@ -117,6 +117,21 @@ struct SettingsView: View {
                     Text("Display small static preview images instead of animated GIFs in grids and lists to save resources.")
                 }
                 
+                // Documentation Section
+                Section {
+                    NavigationLink {
+                        MarkdownDocumentView(
+                            resourceName: "MICROPYTHON-PRESTO-PORT",
+                            title: "Presto Port Research"
+                        )
+                    } label: {
+                        Label("MicroPython Presto Research", systemImage: "doc.richtext")
+                    }
+                    .accessibilityHint("Opens formatted research document about porting to Pimoroni Presto")
+                } header: {
+                    Text("Documentation")
+                }
+                
                 // About Section
                 Section {
                     aboutText

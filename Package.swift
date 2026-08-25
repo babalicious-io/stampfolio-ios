@@ -15,7 +15,9 @@ let package = Package(
     targets: [
         .target(
             name: "StampFolio",
-            dependencies: ["Kingfisher"]
+            dependencies: ["Kingfisher"],
+            path: "StampFolio",
+            resources: [.process("Resources/Documents")]
         )
     ]
 )
