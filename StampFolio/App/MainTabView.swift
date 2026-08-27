@@ -122,6 +122,7 @@ struct MainTabView: View {
 #Preview {
     MainTabView()
         .environment(CollectionViewModel())
+        .environment(CounterpartyViewModel())
         .environment(SettingsViewModel())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)

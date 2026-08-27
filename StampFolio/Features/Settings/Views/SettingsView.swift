@@ -15,6 +15,7 @@ struct SettingsView: View {
     
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(CollectionViewModel.self) private var collectionViewModel
+    @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
@@ -380,7 +381,12 @@ struct SettingsView: View {
     // MARK: - Actions
     
     private func deleteWallet(_ wallet: WalletConfig) {
-        viewModel.deleteWallet(wallet, context: modelContext, collectionViewModel: collectionViewModel)
+        viewModel.deleteWallet(
+            wallet,
+            context: modelContext,
+            collectionViewModel: collectionViewModel,
+            counterpartyViewModel: counterpartyViewModel
+        )
     }
     
     private func enforceProtocolSelection() {
@@ -463,5 +469,6 @@ struct WalletRow: View {
     SettingsView()
         .environment(SettingsViewModel())
         .environment(CollectionViewModel())
+        .environment(CounterpartyViewModel())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }
