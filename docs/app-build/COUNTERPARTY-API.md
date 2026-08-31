@@ -100,11 +100,15 @@ CounterpartyAssetDisplay   (UI layer: asset + balance + wallet)
 - `CounterpartyAPIClient` (`Core/Data/Network/`) — actor, own `URLCache` (disk path
   `counterparty_cache`, separate from Stampchain's `stampchain_cache`), reuses the shared
   `NetworkError` enum defined in `StampchainAPIClient.swift`.
+- `CounterpartyAssetImageResolver` (`Core/Data/Network/`) — actor, own `URLCache` (disk path
+  `counterparty_manifest_cache`), resolves an asset's artwork URL from its `description` field
+  (see "Resolving artwork from `description`" below) and decodes `CounterpartyAssetManifest`
+  (`Core/Domain/Models/`) when the description points to a JSON manifest.
 - `CounterpartyViewModel` (`Features/Counterparty/ViewModels/`) — `@Observable`, fetches all
   wallets concurrently with `withTaskGroup`, exposes `assets`/`isLoading`/`errorMessage`/
-  `searchText`/sort options, and lazily fetches per-asset detail (holders, floor price) only when
-  the detail sheet opens, caching results in memory (cleared on wallet delete and on app
-  background, same lifecycle as `CollectionViewModel.clearMarketDataCache()`).
+  `searchText`/filter sets/sort options, and lazily fetches per-asset detail (holders, floor
+  price) only when the detail sheet opens, caching results in memory (cleared on wallet delete
+  and on app background, same lifecycle as `CollectionViewModel.clearMarketDataCache()`).
 
 ## Key Design Decisions
 
@@ -117,18 +121,39 @@ one. To avoid listing the same asset twice (once under the Stamps tab, once unde
 loaded yet for the current wallets, proactively triggers that fetch first so the exclusion is
 accurate regardless of which tab the user opens first.
 
-### List-only UI (no image grid)
+### Resolving artwork from `description`
 
-Unlike Stamps/Ordinals, most Counterparty assets have no associated artwork — they're fungible
-tokens. The Counterparty tab uses a token-list layout (ticker, issuer, balance, divisible/locked
-badges) rather than an image grid.
+Counterparty assets don't carry an image URL directly. Most fungible tokens have no artwork at
+all, but some reference it indirectly through the `description` field, which is sometimes a URL
+to an external JSON manifest (e.g. `description: "https://xcp.fun/XCPIANS.json"`) containing the
+real image URL (`image`, or an `images: [{type, data}]` array), and occasionally a direct link to
+the image itself.
+
+`CounterpartyAssetImageResolver` (`Core/Data/Network/`) is an actor that resolves this indirection:
+it skips the network call entirely for assets whose `description` isn't a URL, otherwise fetches
+it once, tries to decode it as a `CounterpartyAssetManifest`, and falls back to treating the
+`description` URL as a direct image link if the response's MIME type is `image/*`. Results
+(including "no artwork") are cached in memory per asset name.
+
+`CounterpartyAssetImageView` (`Features/Counterparty/Views/`) wraps this resolver and renders the
+artwork with Kingfisher (`KFImage`, same downsampling/retry/fade pipeline as `StampPixelView`),
+falling back to the existing placeholder icon when there's no artwork or the load fails. It's
+shared by the row, card, detail, and slideshow views so each asset's image is only resolved once.
+
+### Full toolbar and grid parity with Stamps
+
+The Counterparty tab (`CounterpartyView`) matches the Stamps tab's toolbar: view mode
+(`CounterpartyAssetCardView` grid vs. `CounterpartyAssetRowView` list, stored under
+`@AppStorage("counterpartyViewMode")`), a slideshow (`CounterpartyAssetSlideshowView`, a simpler
+page-based viewer than `StampDetailView` since Counterparty content is image-only), a filter menu
+(`CounterpartyViewModel.activeDivisibleFilters`/`activeLockedFilters`/`activeAssetTypeFilters`),
+sort, and settings.
 
 ### Holdings view, not a DEX/marketplace view
 
-`ProtocolType.counterparty.rawValue` is `"Marketplace"`, which could imply a DEX/order-book view
-(`/orders`, `/dispensers` globally). This implementation ships the wallet-holdings view first
-(matching the Stamps/Ordinals pattern), since `CounterpartyView` is wallet-scoped like the other
-tabs. A future iteration could add order/dispenser browsing using the same `CounterpartyAPIClient`.
+This implementation ships the wallet-holdings view first (matching the Stamps/Ordinals pattern),
+since `CounterpartyView` is wallet-scoped like the other tabs. A future iteration could add
+order/dispenser browsing using the same `CounterpartyAPIClient`.
 
 ## Related Documents
 
