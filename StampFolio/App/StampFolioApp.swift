@@ -29,6 +29,7 @@ struct StampFolioApp: App {
     /// when SwiftUI rebuilds view hierarchy (@Observable best practice)
     @State private var settingsViewModel = SettingsViewModel()
     @State private var collectionViewModel = CollectionViewModel()
+    @State private var counterpartyViewModel = CounterpartyViewModel()
     @State private var networkMonitor = NetworkMonitor()
     
     /// Theme preference stored in UserDefaults
@@ -68,6 +69,7 @@ struct StampFolioApp: App {
             ContentView()
                 .environment(settingsViewModel)
                 .environment(collectionViewModel)
+                .environment(counterpartyViewModel)
                 .environment(networkMonitor)
                 .environment(\.appColorScheme, colorScheme)
                 .preferredColorScheme(isDarkMode ? .dark : .light)
@@ -83,6 +85,7 @@ struct StampFolioApp: App {
                     if newPhase == .background || newPhase == .inactive {
                         Task { @MainActor in
                             collectionViewModel.clearMarketDataCache()
+                            counterpartyViewModel.clearDetailCache()
                         }
                     }
                 }

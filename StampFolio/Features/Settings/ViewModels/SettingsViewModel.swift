@@ -143,13 +143,24 @@ final class SettingsViewModel {
     ///   - wallet: The wallet to delete
     ///   - context: SwiftData model context
     ///   - collectionViewModel: Collection view model to clear market data cache
-    func deleteWallet(_ wallet: WalletConfig, context: ModelContext, collectionViewModel: CollectionViewModel? = nil) {
+    ///   - counterpartyViewModel: Counterparty view model to clear asset detail cache
+    func deleteWallet(
+        _ wallet: WalletConfig,
+        context: ModelContext,
+        collectionViewModel: CollectionViewModel? = nil,
+        counterpartyViewModel: CounterpartyViewModel? = nil
+    ) {
         context.delete(wallet)
         
-        // Clear market data cache when wallet is deleted (on main actor)
+        // Clear caches when wallet is deleted (on main actor)
         if let viewModel = collectionViewModel {
             Task { @MainActor in
                 viewModel.clearMarketDataCache()
+            }
+        }
+        if let viewModel = counterpartyViewModel {
+            Task { @MainActor in
+                viewModel.clearDetailCache()
             }
         }
         

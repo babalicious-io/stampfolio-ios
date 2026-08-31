@@ -41,6 +41,7 @@ struct ContentView: View {
     ContentView()
         .environment(SettingsViewModel())
         .environment(CollectionViewModel())
+        .environment(CounterpartyViewModel())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }
