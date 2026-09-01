@@ -147,7 +147,7 @@ final class SettingsViewModel {
     func deleteWallet(
         _ wallet: WalletConfig,
         context: ModelContext,
-        collectionViewModel: CollectionViewModel? = nil,
+        collectionViewModel: StampViewModel? = nil,
         counterpartyViewModel: CounterpartyViewModel? = nil
     ) {
         context.delete(wallet)

@@ -1,5 +1,5 @@
 //
-//  MarketData.swift
+//  StampAssetMarketData.swift
 //  StampFolio
 //
 //  Market data associated with a Bitcoin Stamp
@@ -8,7 +8,7 @@
 import Foundation
 
 /// Market data for a stamp (floor price, holder count, etc.)
-struct StampMarketData: Codable, Hashable, Sendable {
+struct StampAssetMarketData: Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
@@ -112,10 +112,10 @@ struct StampMarketData: Codable, Hashable, Sendable {
 
 // MARK: - Sample Data
 
-extension StampMarketData {
+extension StampAssetMarketData {
     
     /// Sample market data for previews
-    static let sample = StampMarketData(
+    static let sample = StampAssetMarketData(
         floorPriceBTC: Decimal(string: "0.00001234"),
         holderCount: 42,
         openDispensersCount: 3

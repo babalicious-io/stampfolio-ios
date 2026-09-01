@@ -1,5 +1,5 @@
 //
-//  StampDetailView.swift
+//  StampAssetFullscreenView.swift
 //  StampFolio
 //
 //  Full-screen immersive stamp viewer (content only, no UI)
@@ -12,11 +12,11 @@ import AVKit
 import AVFoundation
 
 /// Full-screen stamp detail view for immersive viewing
-struct StampDetailView: View {
+struct StampAssetFullscreenView: View {
     
     // MARK: - Properties
     
-    let stamps: [StampData]
+    let stamps: [StampAsset]
     let initialIndex: Int
     let isSlideshow: Bool
     
@@ -38,7 +38,7 @@ struct StampDetailView: View {
     
     // MARK: - Computed Properties
     
-    private var currentStamp: StampData {
+    private var currentStamp: StampAsset {
         stamps[currentIndex]
     }
     
@@ -46,7 +46,7 @@ struct StampDetailView: View {
     
     // MARK: - Initialization
     
-    init(stamps: [StampData], initialIndex: Int, isSlideshow: Bool = false) {
+    init(stamps: [StampAsset], initialIndex: Int, isSlideshow: Bool = false) {
         self.stamps = stamps
         self.initialIndex = initialIndex
         self.isSlideshow = isSlideshow
@@ -511,5 +511,5 @@ struct VideoContentView: View {
 // MARK: - Preview
 
 #Preview {
-    StampDetailView(stamps: [StampData.sample], initialIndex: 0)
+    StampAssetFullscreenView(stamps: [StampAsset.sample], initialIndex: 0)
 }

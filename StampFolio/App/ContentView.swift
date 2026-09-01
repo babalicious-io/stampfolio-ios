@@ -40,7 +40,7 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environment(SettingsViewModel())
-        .environment(CollectionViewModel())
+        .environment(StampViewModel())
         .environment(CounterpartyViewModel())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)

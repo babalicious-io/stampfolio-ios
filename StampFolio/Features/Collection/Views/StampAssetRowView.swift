@@ -1,5 +1,5 @@
 //
-//  StampRowView.swift
+//  StampAssetRowView.swift
 //  StampFolio
 //
 //  Row view displaying a stamp in list mode
@@ -9,16 +9,16 @@ import SwiftUI
 import SwiftData
 
 /// Row view displaying a stamp in the collection list
-struct StampRowView: View {
+struct StampAssetRowView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampDataDisplay
+    let displayStamp: StampAssetDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     
     // Convenience accessor
-    private var stamp: StampData { displayStamp.stamp }
+    private var stamp: StampAsset { displayStamp.stamp }
     
     // MARK: - Environment
     
@@ -102,19 +102,19 @@ struct StampRowView: View {
             failedImageView
         } else if stamp.isHTML || stamp.isSVG {
             // Vector: HTML/SVG via WebView
-            StampVectorView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
+            StampAssetVectorView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
         } else if stamp.isText {
             // Text: Plain text content
-            StampTextView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
+            StampAssetTextView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
         } else if stamp.isLibrary, let label = stamp.libraryLabel {
             // Library: JS/CSS/GZIP files
-            StampLibraryView(label: label)
+            StampAssetLibraryView(label: label)
         } else if stamp.isAudio || stamp.isVideo {
             // Media: Audio/Video placeholders
-            StampMediaView(type: stamp.isAudio ? .audio : .video)
+            StampAssetMediaView(type: stamp.isAudio ? .audio : .video)
         } else {
             // Raster: Pixel images (jpg, png, webp, gif)
-            StampPixelView(stamp: stamp, geometry: CGSize(width: 64, height: 64), onFailure: { imageLoadFailed = true })
+            StampAssetPixelView(stamp: stamp, geometry: CGSize(width: 64, height: 64), onFailure: { imageLoadFailed = true })
         }
     }
     
@@ -170,14 +170,14 @@ struct StampRowView: View {
 
 #Preview {
     VStack(spacing: 12) {
-        StampRowView(
-            displayStamp: StampDataDisplay(from: StampData.sample),
+        StampAssetRowView(
+            displayStamp: StampAssetDisplay(from: StampAsset.sample),
             onTap: {},
             onLongPress: {}
         )
         
-        StampRowView(
-            displayStamp: StampDataDisplay(from: StampData.samples[1]),
+        StampAssetRowView(
+            displayStamp: StampAssetDisplay(from: StampAsset.samples[1]),
             onTap: {},
             onLongPress: {}
         )

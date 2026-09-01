@@ -206,7 +206,7 @@ StampFolio uses a simplified approach to stamp type classification that avoids d
 
 - **API Client**: `StampchainAPIClient.swift` - `fetchStampsByWallet()` method
 - **Type Assignment Logic**: Computed after decoding API response
-- **Filtering**: `CollectionViewModel.swift` - filters by assigned `stampType` property
+- **Filtering**: `StampViewModel.swift` - filters by assigned `stampType` property
 
 ## Database Schema Reference
 

@@ -1,32 +1,18 @@
 //
-//  StampMediaView.swift
+//  StampAssetLibraryView.swift
 //  StampFolio
 //
-//  Renders audio/video stamp placeholders
+//  Renders library file stamp placeholders (JS, CSS, GZIP)
 //
 
 import SwiftUI
 
-/// View for rendering audio/video stamp placeholders
-struct StampMediaView: View {
-    
-    // MARK: - Media Type
-    
-    enum MediaType {
-        case audio
-        case video
-        
-        var iconName: String {
-            switch self {
-            case .audio: return "waveform"
-            case .video: return "play.fill"
-            }
-        }
-    }
+/// View for rendering library file stamp placeholders
+struct StampAssetLibraryView: View {
     
     // MARK: - Properties
     
-    let type: MediaType
+    let label: String
     
     // MARK: - Environment
     
@@ -38,8 +24,9 @@ struct StampMediaView: View {
         ZStack {
             gradientBackground
             
-            Image(systemName: type.iconName)
+            Text(label)
                 .font(.system(size: 44))
+                .fontWeight(.bold)
                 .foregroundStyle(.white)
         }
     }

@@ -1,5 +1,5 @@
 //
-//  DisplayStamp.swift
+//  StampAssetDisplay.swift
 //  StampFolio
 //
 //  Model for displaying stamps with balance information
@@ -8,14 +8,14 @@
 import Foundation
 
 /// Wrapper for displaying stamps with their balance information
-struct StampDataDisplay: Identifiable {
-    let stamp: StampData
+struct StampAssetDisplay: Identifiable {
+    let stamp: StampAsset
     let balance: Double?
     let divisible: Bool
     let walletAddress: String?
     
     // Market data (fetched on-demand)
-    var marketData: StampMarketData?
+    var marketData: StampAssetMarketData?
     var isLoadingMarketData: Bool = false
     
     var id: Int { stamp.id }
@@ -82,11 +82,11 @@ struct StampDataDisplay: Identifiable {
     
     /// Memberwise initializer
     init(
-        stamp: StampData,
+        stamp: StampAsset,
         balance: Double? = nil,
         divisible: Bool,
         walletAddress: String? = nil,
-        marketData: StampMarketData? = nil,
+        marketData: StampAssetMarketData? = nil,
         isLoadingMarketData: Bool = false
     ) {
         self.stamp = stamp
@@ -97,9 +97,9 @@ struct StampDataDisplay: Identifiable {
         self.isLoadingMarketData = isLoadingMarketData
     }
     
-    /// Create from WalletBalanceData
-    init(from walletBalance: WalletBalanceData) {
-        self.stamp = StampData(
+    /// Create from StampAssetBalance
+    init(from walletBalance: StampAssetBalance) {
+        self.stamp = StampAsset(
             stampType: walletBalance.stampType ?? "classic",
             assetId: walletBalance.assetId,
             stampId: walletBalance.stampId,
@@ -124,8 +124,8 @@ struct StampDataDisplay: Identifiable {
         self.walletAddress = walletBalance.ownerAddy
     }
     
-    /// Create from StampData (no balance info)
-    init(from stamp: StampData) {
+    /// Create from StampAsset (no balance info)
+    init(from stamp: StampAsset) {
         self.stamp = stamp
         self.balance = nil
         self.divisible = stamp.divisible

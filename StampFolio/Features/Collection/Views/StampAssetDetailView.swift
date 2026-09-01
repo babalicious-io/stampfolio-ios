@@ -1,5 +1,5 @@
 //
-//  StampMetadataPopup.swift
+//  StampAssetDetailView.swift
 //  StampFolio
 //
 //  Metadata popup showing stamp details
@@ -8,20 +8,20 @@
 import SwiftUI
 
 /// Popup displaying stamp metadata details
-struct StampMetadataPopup: View {
+struct StampAssetDetailView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampDataDisplay
-    let viewModel: CollectionViewModel
+    let displayStamp: StampAssetDisplay
+    let viewModel: StampViewModel
     
     // Get current stamp from viewModel (updates when market data fetched)
-    private var currentDisplayStamp: StampDataDisplay {
+    private var currentDisplayStamp: StampAssetDisplay {
         viewModel.stamps.first(where: { $0.id == displayStamp.id }) ?? displayStamp
     }
     
     // Convenience accessor for the underlying stamp (always use current data)
-    private var stamp: StampData { currentDisplayStamp.stamp }
+    private var stamp: StampAsset { currentDisplayStamp.stamp }
     
     // MARK: - Environment
     
@@ -279,6 +279,6 @@ struct MetadataRow: View {
 // MARK: - Preview
 
 #Preview {
-    StampMetadataPopup(displayStamp: StampDataDisplay(from: StampData.sample), viewModel: CollectionViewModel())
+    StampAssetDetailView(displayStamp: StampAssetDisplay(from: StampAsset.sample), viewModel: StampViewModel())
         .presentationDetents([.medium, .large])
 }

@@ -13,7 +13,7 @@ struct SearchView: View {
     
     // MARK: - Environment
     
-    @Environment(CollectionViewModel.self) private var viewModel
+    @Environment(StampViewModel.self) private var viewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
@@ -22,8 +22,8 @@ struct SearchView: View {
     
     @FocusState private var isSearchFieldFocused: Bool
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @State private var selectedStamp: StampDataDisplay?
-    @State private var metadataStamp: StampDataDisplay?
+    @State private var selectedStamp: StampAssetDisplay?
+    @State private var metadataStamp: StampAssetDisplay?
     
     // MARK: - Body
     
@@ -45,14 +45,14 @@ struct SearchView: View {
         .searchable(text: $viewModel.searchText, prompt: "Search")
         .fullScreenCover(item: $selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
-                StampDetailView(
+                StampAssetFullscreenView(
                     stamps: viewModel.stamps.map(\.stamp),
                     initialIndex: index
                 )
             }
         }
         .sheet(item: $metadataStamp) { displayStamp in
-            StampMetadataPopup(displayStamp: displayStamp, viewModel: viewModel)
+            StampAssetDetailView(displayStamp: displayStamp, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
     }
@@ -101,7 +101,7 @@ struct SearchView: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 ForEach(viewModel.filteredStamps) { displayStamp in
-                    StampRowView(
+                    StampAssetRowView(
                         displayStamp: displayStamp,
                         onTap: {
                             metadataStamp = displayStamp
@@ -122,6 +122,6 @@ struct SearchView: View {
 
 #Preview {
     SearchView()
-        .environment(CollectionViewModel())
+        .environment(StampViewModel())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

@@ -1,5 +1,5 @@
 //
-//  CollectionView.swift
+//  StampView.swift
 //  StampFolio
 //
 //  Main collection view displaying stamps in a grid
@@ -16,11 +16,11 @@ enum ViewMode: String, Codable {
 }
 
 /// Main collection view showing stamps from all wallets
-struct CollectionView: View {
+struct StampView: View {
     
     // MARK: - Environment
     
-    @Environment(CollectionViewModel.self) private var viewModel
+    @Environment(StampViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -35,8 +35,8 @@ struct CollectionView: View {
     @State private var viewSize: CGSize = .zero
     @State private var showAddWallet = false
     @State private var showSlideshow = false
-    @State private var selectedStamp: StampDataDisplay?
-    @State private var metadataStamp: StampDataDisplay?
+    @State private var selectedStamp: StampAssetDisplay?
+    @State private var metadataStamp: StampAssetDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -126,21 +126,21 @@ struct CollectionView: View {
         }
         .fullScreenCover(item: $selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
-                StampDetailView(
+                StampAssetFullscreenView(
                     stamps: viewModel.stamps.map(\.stamp),
                     initialIndex: index
                 )
             }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
-            StampDetailView(
+            StampAssetFullscreenView(
                 stamps: viewModel.stamps.map(\.stamp),
                 initialIndex: 0,
                 isSlideshow: true
             )
         }
         .sheet(item: $metadataStamp) { displayStamp in
-            StampMetadataPopup(displayStamp: displayStamp, viewModel: viewModel)
+            StampAssetDetailView(displayStamp: displayStamp, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showAddWallet) {
@@ -464,7 +464,7 @@ struct CollectionView: View {
                 // List view mode
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.filteredStamps) { displayStamp in
-                        StampRowView(
+                        StampAssetRowView(
                             displayStamp: displayStamp,
                             onTap: {
                                 metadataStamp = displayStamp
@@ -487,7 +487,7 @@ struct CollectionView: View {
                 // Grid view modes
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(viewModel.filteredStamps) { displayStamp in
-                        StampCardView(
+                        StampAssetCardView(
                             displayStamp: displayStamp,
                             onTap: {
                                 metadataStamp = displayStamp
@@ -524,8 +524,8 @@ struct CollectionView: View {
 // MARK: - Preview
 
 #Preview {
-    CollectionView()
-        .environment(CollectionViewModel())
+    StampView()
+        .environment(StampViewModel())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

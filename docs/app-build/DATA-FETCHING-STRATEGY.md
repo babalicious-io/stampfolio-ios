@@ -88,7 +88,7 @@ Use a **two-tier data model** with **lazy market data fetching**:
 
 #### Phase 1: Two-Tier Data Model
 
-**Tier 1: `WalletBalanceData` (from balance endpoint)**
+**Tier 1: `StampAssetBalance` (from balance endpoint)**
 ```swift
 // Already have from initial wallet load
 - stamp_id, tx_hash, cpid
@@ -98,14 +98,14 @@ Use a **two-tier data model** with **lazy market data fetching**:
 - market_data: nil/empty (ignored)
 ```
 
-**Tier 2: `StampData` + `StampMarketData` (from individual stamp endpoint)**
+**Tier 2: `StampAsset` + `StampAssetMarketData` (from individual stamp endpoint)**
 ```swift
 // Fetched on-demand
-StampData:
-- All fields from WalletBalanceData
+StampAsset:
+- All fields from StampAssetBalance
 - Plus: file_size, block_time, block_index, keyburn
 
-StampMarketData:
+StampAssetMarketData:
 - floor_price_btc, recent_sale_price_btc
 - holder_count, open_dispensers_count
 - volume_24h/7d/30d_btc
@@ -148,8 +148,8 @@ StampMarketData:
 
 **Memory Cache**
 ```swift
-// In CollectionViewModel
-@State private var marketDataCache: [Int: StampMarketData] = [:]
+// In StampViewModel
+@State private var marketDataCache: [Int: StampAssetMarketData] = [:]
 
 // Update when fetched
 marketDataCache[stampId] = fetchedMarketData
@@ -201,7 +201,7 @@ User adds wallet address
         ↓
 Fetch /stamps/balance/{address}
         ↓
-Create [WalletBalanceData] → [StampDataDisplay]
+Create [StampAssetBalance] → [StampAssetDisplay]
         ↓
 Display in Grid View ✅ (no market data needed)
         |
@@ -213,7 +213,7 @@ Check marketDataCache
         ↓
 Fetch missing: /stamps/{id} for each visible stamp
         ↓
-Update StampDataDisplay with StampMarketData
+Update StampAssetDisplay with StampAssetMarketData
         ↓
 Display holders + floor price in Row View ✅
         |
@@ -230,18 +230,18 @@ Fresh data on next app launch ✅
 
 ## Implementation Steps
 
-### Step 1: Update `StampDataDisplay` Model
-Add optional `StampMarketData` property and loading states:
+### Step 1: Update `StampAssetDisplay` Model
+Add optional `StampAssetMarketData` property and loading states:
 
 ```swift
-struct StampDataDisplay: Identifiable {
-    // Existing properties from WalletBalanceData
-    let stamp: StampData
+struct StampAssetDisplay: Identifiable {
+    // Existing properties from StampAssetBalance
+    let stamp: StampAsset
     let balance: Double
     let ownerAddress: String
     
     // NEW: Optional market data (nil until fetched)
-    var marketData: StampMarketData?
+    var marketData: StampAssetMarketData?
     var isLoadingMarketData: Bool = false
     
     // Computed properties for UI
@@ -258,10 +258,10 @@ struct StampDataDisplay: Identifiable {
 ### Step 2: Add Market Data Fetching to ViewModel
 
 ```swift
-// In CollectionViewModel
-@State private var marketDataCache: [Int: StampMarketData] = [:]
+// In StampViewModel
+@State private var marketDataCache: [Int: StampAssetMarketData] = [:]
 
-func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDataDisplay]) async {
+func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampAssetDisplay]) async {
     // Filter stamps that need market data
     let stampsToFetch = visibleStamps.filter { 
         marketDataCache[$0.stamp.stampId] == nil 
@@ -275,7 +275,7 @@ func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDataDisplay]) async 
     }
     
     // Fetch concurrently
-    await withTaskGroup(of: (Int, StampMarketData?).self) { group in
+    await withTaskGroup(of: (Int, StampAssetMarketData?).self) { group in
         for stampDisplay in stampsToFetch {
             group.addTask {
                 let fullData = try? await apiClient.fetchStampDetails(stampDisplay.stamp.stampId)
@@ -302,11 +302,11 @@ func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDataDisplay]) async 
 ### Step 3: Update Row View with Viewport Detection
 
 ```swift
-// In StampRowView or CollectionView
+// In StampAssetRowView or StampView
 ScrollView {
     LazyVStack {
         ForEach(filteredStamps) { stampDisplay in
-            StampRowView(displayStamp: stampDisplay)
+            StampAssetRowView(displayStamp: stampDisplay)
                 .onAppear {
                     // Fetch market data when row appears in list view
                     // Applies to: iPhone (landscape) + iPad (all orientations)
@@ -328,14 +328,14 @@ ScrollView {
 func fetchStampDetails(_ stampId: Int) async throws -> StampDetailResponse {
     let url = "\(baseURL)/stamps/\(stampId)"
     // ... existing fetch implementation
-    // Returns StampData with populated StampMarketData
+    // Returns StampAsset with populated StampAssetMarketData
 }
 ```
 
 ### Step 5: Implement Cache Clearing
 
 ```swift
-// In CollectionViewModel
+// In StampViewModel
 func clearMarketDataCache() {
     marketDataCache.removeAll()
     
@@ -349,7 +349,7 @@ func clearMarketDataCache() {
 
 ```swift
 // In SettingsViewModel - Update deleteWallet method
-func deleteWallet(_ wallet: WalletConfig, viewModel: CollectionViewModel) {
+func deleteWallet(_ wallet: WalletConfig, viewModel: StampViewModel) {
     modelContext.delete(wallet)
     
     // Clear market data cache when wallet deleted
@@ -447,7 +447,7 @@ func sceneWillTerminate(_ scene: UIScene) {
 - [x] Strategy documented
 - [x] Cache clearing requirements defined
 - [ ] Implementation pending user approval
-- [ ] Step 1: Update StampDataDisplay
+- [ ] Step 1: Update StampAssetDisplay
 - [ ] Step 2: Add market data fetching to ViewModel
 - [ ] Step 3: Update Row View with viewport detection (iPhone landscape + iPad)
 - [ ] Step 4: Add API client method

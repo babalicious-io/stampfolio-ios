@@ -1,5 +1,5 @@
 //
-//  StampVectorView.swift
+//  StampAssetVectorView.swift
 //  StampFolio
 //
 //  Renders vector-based stamp content (HTML, SVG)
@@ -10,7 +10,7 @@ import WebKit
 
 /// SwiftUI wrapper that overlays a loading spinner on the WKWebView
 /// until the HTML content finishes rendering.
-struct StampVectorView: View {
+struct StampAssetVectorView: View {
     
     let url: URL?
     let onFailure: () -> Void

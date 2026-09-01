@@ -1,5 +1,5 @@
 //
-//  CollectionViewModel.swift
+//  StampViewModel.swift
 //  StampFolio
 //
 //  ViewModel for the Collection screen
@@ -45,12 +45,12 @@ enum SortOption: String, CaseIterable, Codable {
 
 /// ViewModel managing stamp collection state and data fetching
 @Observable
-final class CollectionViewModel {
+final class StampViewModel {
     
     // MARK: - Properties
     
     /// All stamps from all wallets with display information
-    private(set) var stamps: [StampDataDisplay] = []
+    private(set) var stamps: [StampAssetDisplay] = []
     
     /// Loading state
     private(set) var isLoading: Bool = false
@@ -59,10 +59,10 @@ final class CollectionViewModel {
     private(set) var errorMessage: String?
     
     /// Currently selected stamp for detail view
-    var selectedStamp: StampDataDisplay?
+    var selectedStamp: StampAssetDisplay?
     
     /// Stamp for metadata popup
-    var metadataStamp: StampDataDisplay?
+    var metadataStamp: StampAssetDisplay?
     
     /// Whether refresh is in progress
     private(set) var isRefreshing: Bool = false
@@ -83,7 +83,7 @@ final class CollectionViewModel {
     var activeEditionFilters: Set<String> = []
     
     /// Market data cache (memory-only, cleared on app close/wallet delete)
-    private var marketDataCache: [Int: StampMarketData] = [:]
+    private var marketDataCache: [Int: StampAssetMarketData] = [:]
     
     // MARK: - Computed Properties
     
@@ -93,7 +93,7 @@ final class CollectionViewModel {
     }
     
     /// Filtered stamps based on search text and filters
-    var filteredStamps: [StampDataDisplay] {
+    var filteredStamps: [StampAssetDisplay] {
         var result = stamps
         
         // Apply search filter
@@ -207,17 +207,17 @@ final class CollectionViewModel {
         isLoading = stamps.isEmpty
         errorMessage = nil
         
-        var allStamps: [StampDataDisplay] = []
+        var allStamps: [StampAssetDisplay] = []
         var fetchErrors: [String] = []
         
         // Fetch stamps for each wallet concurrently
-        await withTaskGroup(of: Result<[StampDataDisplay], Error>.self) { group in
+        await withTaskGroup(of: Result<[StampAssetDisplay], Error>.self) { group in
             for wallet in wallets {
                 group.addTask {
                     do {
                         let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
-                        // Convert WalletBalanceData to StampDataDisplay
-                        let displayStamps = walletBalances.map { StampDataDisplay(from: $0) }
+                        // Convert StampAssetBalance to StampAssetDisplay
+                        let displayStamps = walletBalances.map { StampAssetDisplay(from: $0) }
                         return .success(displayStamps)
                     } catch {
                         return .failure(error)
@@ -282,7 +282,7 @@ final class CollectionViewModel {
         
         do {
             let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
-            let newDisplayStamps = walletBalances.map { StampDataDisplay(from: $0) }
+            let newDisplayStamps = walletBalances.map { StampAssetDisplay(from: $0) }
             
             // Remove existing stamps from this wallet, then add fresh ones
             var updatedStamps = stamps.filter { $0.walletAddress != wallet.address }
@@ -394,7 +394,7 @@ final class CollectionViewModel {
                                 let (data, _) = try await URLSession.shared.data(from: url)
                                 guard var htmlString = String(data: data, encoding: .utf8) else { return }
                                 
-                                // Inject viewport (same logic as StampVectorView)
+                                // Inject viewport (same logic as StampAssetVectorView)
                                 if !htmlString.contains("name=\"viewport\"") && !htmlString.contains("name='viewport'") {
                                     if let headRange = htmlString.range(of: "<head>", options: .caseInsensitive) {
                                         htmlString.insert(contentsOf: viewportMeta, at: headRange.upperBound)
@@ -510,7 +510,7 @@ final class CollectionViewModel {
     ///   - option: The sort option to apply
     ///   - wallets: Array of wallets for mapping wallet addresses to display names
     /// - Returns: Sorted array of stamps
-    private func sortedStamps(_ stamps: [StampDataDisplay], by option: SortOption, wallets: [WalletConfig]) -> [StampDataDisplay] {
+    private func sortedStamps(_ stamps: [StampAssetDisplay], by option: SortOption, wallets: [WalletConfig]) -> [StampAssetDisplay] {
         switch option {
         case .stampAscending:
             return stamps.sorted { $0.id < $1.id }
@@ -588,7 +588,7 @@ final class CollectionViewModel {
     
     /// Fetch market data for a single stamp if not already cached
     @MainActor
-    func fetchMarketDataIfNeeded(for stampDisplay: StampDataDisplay) async {
+    func fetchMarketDataIfNeeded(for stampDisplay: StampAssetDisplay) async {
         let stampId = stampDisplay.stamp.stampId
         
         // Skip if already cached or currently loading
@@ -612,10 +612,10 @@ final class CollectionViewModel {
                 marketDataCache[stampId] = marketData
             }
             
-            // Update display stamp on main actor - replace entire StampDataDisplay with updated stamp
+            // Update display stamp on main actor - replace entire StampAssetDisplay with updated stamp
             if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
                 let oldDisplay = stamps[index]
-                stamps[index] = StampDataDisplay(
+                stamps[index] = StampAssetDisplay(
                     stamp: stampData,
                     balance: oldDisplay.balance,
                     divisible: stampData.divisible,
@@ -636,7 +636,7 @@ final class CollectionViewModel {
     
     /// Fetch market data for multiple stamps concurrently
     @MainActor
-    func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDataDisplay]) async {
+    func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampAssetDisplay]) async {
         // Filter stamps that need market data
         let stampsToFetch = visibleStamps.filter { 
             marketDataCache[$0.stamp.stampId] == nil && !$0.isLoadingMarketData
@@ -652,7 +652,7 @@ final class CollectionViewModel {
         }
         
         // Fetch concurrently
-        await withTaskGroup(of: (Int, StampData?).self) { group in
+        await withTaskGroup(of: (Int, StampAsset?).self) { group in
             for stampDisplay in stampsToFetch {
                 group.addTask {
                     do {
@@ -673,10 +673,10 @@ final class CollectionViewModel {
                         marketDataCache[stampId] = marketData
                     }
                     
-                    // Update display stamps on main actor - replace entire StampDataDisplay with updated stamp
+                    // Update display stamps on main actor - replace entire StampAssetDisplay with updated stamp
                     if let index = stamps.firstIndex(where: { $0.stamp.stampId == stampId }) {
                         let oldDisplay = stamps[index]
-                        stamps[index] = StampDataDisplay(
+                        stamps[index] = StampAssetDisplay(
                             stamp: stampData,
                             balance: oldDisplay.balance,
                             divisible: stampData.divisible,

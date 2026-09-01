@@ -15,7 +15,7 @@ struct CounterpartyView: View {
     // MARK: - Environment
 
     @Environment(CounterpartyViewModel.self) private var viewModel
-    @Environment(CollectionViewModel.self) private var collectionViewModel
+    @Environment(StampViewModel.self) private var collectionViewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.appColorScheme) private var appColorScheme
@@ -65,7 +65,7 @@ struct CounterpartyView: View {
         }
     }
 
-    /// Dynamic grid columns using native adaptive sizing with device awareness, mirroring `CollectionView`
+    /// Dynamic grid columns using native adaptive sizing with device awareness, mirroring `StampView`
     private var columns: [GridItem] {
         if viewMode == .list {
             return [GridItem(.flexible(), spacing: 16)]
@@ -119,14 +119,14 @@ struct CounterpartyView: View {
         }
         .fullScreenCover(item: $fullscreenAsset) { displayAsset in
             if let index = viewModel.filteredAssets.firstIndex(where: { $0.id == displayAsset.id }) {
-                CounterpartyAssetSlideshowView(
+                CounterpartyAssetFullscreenView(
                     assets: viewModel.filteredAssets.map(\.asset),
                     initialIndex: index
                 )
             }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
-            CounterpartyAssetSlideshowView(
+            CounterpartyAssetFullscreenView(
                 assets: viewModel.filteredAssets.map(\.asset),
                 initialIndex: 0,
                 isSlideshow: true
@@ -446,7 +446,7 @@ struct CounterpartyView: View {
 #Preview {
     CounterpartyView()
         .environment(CounterpartyViewModel())
-        .environment(CollectionViewModel())
+        .environment(StampViewModel())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

@@ -1,5 +1,5 @@
 //
-//  StampCardView.swift
+//  StampAssetCardView.swift
 //  StampFolio
 //
 //  Individual stamp card for the collection grid
@@ -9,17 +9,17 @@ import SwiftUI
 import SwiftData
 
 /// Card view displaying a stamp in the collection grid
-struct StampCardView: View {
+struct StampAssetCardView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampDataDisplay
+    let displayStamp: StampAssetDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     let viewMode: ViewMode
     
     // Convenience accessor
-    private var stamp: StampData { displayStamp.stamp }
+    private var stamp: StampAsset { displayStamp.stamp }
     
     // MARK: - Environment
     
@@ -66,21 +66,21 @@ struct StampCardView: View {
                     failedImageView
                 } else if stamp.isHTML || stamp.isSVG {
                     // Vector: HTML/SVG via WebView
-                    StampVectorView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
+                    StampAssetVectorView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
                         .frame(width: geometry.size.width, height: geometry.size.width)
                 } else if stamp.isText {
                     // Text: Plain text content
-                    StampTextView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
+                    StampAssetTextView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
                         .frame(width: geometry.size.width, height: geometry.size.width)
                 } else if stamp.isLibrary, let label = stamp.libraryLabel {
                     // Library: JS/CSS/GZIP files
-                    StampLibraryView(label: label)
+                    StampAssetLibraryView(label: label)
                 } else if stamp.isAudio || stamp.isVideo {
                     // Media: Audio/Video placeholders
-                    StampMediaView(type: stamp.isAudio ? .audio : .video)
+                    StampAssetMediaView(type: stamp.isAudio ? .audio : .video)
                 } else {
                     // Raster: Pixel images (jpg, png, webp, gif)
-                    StampPixelView(stamp: stamp, geometry: geometry.size, onFailure: { imageLoadFailed = true })
+                    StampAssetPixelView(stamp: stamp, geometry: geometry.size, onFailure: { imageLoadFailed = true })
                 }
                 
                 // Overlay: Stamp number (top left), wallet icon (top right) and Edition balance (bottom right)
@@ -199,15 +199,15 @@ struct StampCardView: View {
 
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-        StampCardView(
-            displayStamp: StampDataDisplay(from: StampData.sample),
+        StampAssetCardView(
+            displayStamp: StampAssetDisplay(from: StampAsset.sample),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid
         )
         
-        StampCardView(
-            displayStamp: StampDataDisplay(from: StampData.samples[1]),
+        StampAssetCardView(
+            displayStamp: StampAssetDisplay(from: StampAsset.samples[1]),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid

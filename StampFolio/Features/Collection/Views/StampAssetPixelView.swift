@@ -1,5 +1,5 @@
 //
-//  StampPixelView.swift
+//  StampAssetPixelView.swift
 //  StampFolio
 //
 //  Renders pixel-based stamp images (jpg, png, webp, gif)
@@ -9,11 +9,11 @@ import SwiftUI
 import Kingfisher
 
 /// View for rendering pixel-based stamp images
-struct StampPixelView: View {
+struct StampAssetPixelView: View {
     
     // MARK: - Properties
     
-    let stamp: StampData
+    let stamp: StampAsset
     let geometry: CGSize
     let onFailure: () -> Void
     

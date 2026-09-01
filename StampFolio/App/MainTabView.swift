@@ -87,7 +87,7 @@ struct MainTabView: View {
     private func viewForProtocol(_ protocolType: ProtocolType) -> some View {
         switch protocolType {
         case .stamps:
-            CollectionView()
+            StampView()
                 .environment(\.horizontalSizeClass, actualSizeClass)
         case .ordinals:
             OrdinalsView()
@@ -121,7 +121,7 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
-        .environment(CollectionViewModel())
+        .environment(StampViewModel())
         .environment(CounterpartyViewModel())
         .environment(SettingsViewModel())
         .environment(NetworkMonitor())

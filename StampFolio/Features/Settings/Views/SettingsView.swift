@@ -14,7 +14,7 @@ struct SettingsView: View {
     // MARK: - Environment
     
     @Environment(SettingsViewModel.self) private var viewModel
-    @Environment(CollectionViewModel.self) private var collectionViewModel
+    @Environment(StampViewModel.self) private var collectionViewModel
     @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -468,7 +468,7 @@ struct WalletRow: View {
 #Preview {
     SettingsView()
         .environment(SettingsViewModel())
-        .environment(CollectionViewModel())
+        .environment(StampViewModel())
         .environment(CounterpartyViewModel())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

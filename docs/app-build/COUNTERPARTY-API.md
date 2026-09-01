@@ -108,7 +108,7 @@ CounterpartyAssetDisplay   (UI layer: asset + balance + wallet)
   wallets concurrently with `withTaskGroup`, exposes `assets`/`isLoading`/`errorMessage`/
   `searchText`/filter sets/sort options, and lazily fetches per-asset detail (holders, floor
   price) only when the detail sheet opens, caching results in memory (cleared on wallet delete
-  and on app background, same lifecycle as `CollectionViewModel.clearMarketDataCache()`).
+  and on app background, same lifecycle as `StampViewModel.clearMarketDataCache()`).
 
 ## Key Design Decisions
 
@@ -117,7 +117,7 @@ CounterpartyAssetDisplay   (UI layer: asset + balance + wallet)
 A Bitcoin Stamp's `counterpartyId` (CPID) **is** a Counterparty asset — every stamp is backed by
 one. To avoid listing the same asset twice (once under the Stamps tab, once under Counterparty),
 `CounterpartyViewModel.fetchAssetsMetadata` accepts an `excludingCPIDs: Set<String>` parameter.
-`CounterpartyView` computes this set from `CollectionViewModel.stamps` and, if Stamps haven't
+`CounterpartyView` computes this set from `StampViewModel.stamps` and, if Stamps haven't
 loaded yet for the current wallets, proactively triggers that fetch first so the exclusion is
 accurate regardless of which tab the user opens first.
 
@@ -151,9 +151,9 @@ Horizon's own catalog has no real artwork either (`image_is_placeholder: true`),
 caches `nil` — that asset genuinely has no recoverable artwork anywhere.
 
 `CounterpartyAssetImageView` (`Features/Counterparty/Views/`) wraps this resolver and renders the
-artwork with Kingfisher (`KFImage`, same downsampling/retry/fade pipeline as `StampPixelView`),
+artwork with Kingfisher (`KFImage`, same downsampling/retry/fade pipeline as `StampAssetPixelView`),
 including `.interpolation(.none)` since many of these manifests only ever had tiny (e.g. 48×48)
-icons that would otherwise blur when scaled up to card/row size — the same fix `StampPixelView`
+icons that would otherwise blur when scaled up to card/row size — the same fix `StampAssetPixelView`
 already applies for small pixel-art stamps. It falls back to the existing placeholder icon when
 there's no artwork or the load fails, and is shared by the row, card, detail, and slideshow views
 so each asset's image is only resolved once.
@@ -162,8 +162,8 @@ so each asset's image is only resolved once.
 
 The Counterparty tab (`CounterpartyView`) matches the Stamps tab's toolbar: view mode
 (`CounterpartyAssetCardView` grid vs. `CounterpartyAssetRowView` list, stored under
-`@AppStorage("counterpartyViewMode")`), a slideshow (`CounterpartyAssetSlideshowView`, a simpler
-page-based viewer than `StampDetailView` since Counterparty content is image-only), a filter menu
+`@AppStorage("counterpartyViewMode")`), a slideshow (`CounterpartyAssetFullscreenView`, a simpler
+page-based viewer than `StampAssetFullscreenView` since Counterparty content is image-only), a filter menu
 (`CounterpartyViewModel.activeDivisibleFilters`/`activeLockedFilters`/`activeAssetTypeFilters`),
 sort, and settings.
 

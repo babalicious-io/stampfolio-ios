@@ -7,10 +7,10 @@ This document provides an overview of the five core domain models in StampFolio 
 StampFolio uses a clear separation of concerns across five distinct domain models:
 
 1. **WalletConfig** - Local wallet configuration
-2. **WalletBalanceData** - API response data
-3. **StampData** - Core domain entity
-4. **StampMarketData** - Market information
-5. **StampDataDisplay** - UI presentation layer
+2. **StampAssetBalance** - API response data
+3. **StampAsset** - Core domain entity
+4. **StampAssetMarketData** - Market information
+5. **StampAssetDisplay** - UI presentation layer
 
 ---
 
@@ -43,9 +43,9 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 
 ---
 
-### 2. WalletBalanceData
+### 2. StampAssetBalance
 
-**File:** `Core/Domain/Models/WalletBalanceData.swift`
+**File:** `Core/Domain/Models/StampAssetBalance.swift`
 
 **Purpose:** Direct representation of the API response from the Stampchain `/stamps/balance/{address}` endpoint.
 
@@ -53,7 +53,7 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 - API response model (implements `Codable`)
 - Contains stamp information + user's balance for that stamp
 - Includes custom `BalanceValue` enum to handle API's mixed types (Double or String)
-- Temporary - transformed into `StampDataDisplay` for use in the app
+- Temporary - transformed into `StampAssetDisplay` for use in the app
 
 **Properties:**
 ```swift
@@ -81,9 +81,9 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 
 ---
 
-### 3. StampData
+### 3. StampAsset
 
-**File:** `Core/Domain/Models/StampData.swift`
+**File:** `Core/Domain/Models/StampAsset.swift`
 
 **Purpose:** Core domain model representing a Bitcoin Stamp. This is the canonical representation used throughout the app.
 
@@ -109,7 +109,7 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 - blockIndex: Int?
 - txHash: String?
 - fileHash: String?
-- marketData: StampMarketData?  // Optional market info
+- marketData: StampAssetMarketData?  // Optional market info
 - stampUrl: String?
 ```
 
@@ -123,21 +123,21 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 ```
 
 **Usage:**
-- Created from `WalletBalanceData` during API response processing
+- Created from `StampAssetBalance` during API response processing
 - Created from API `/stamps/{id}` endpoint for details
 - Used throughout the app for business logic
 - Contains sample data for previews
 
 ---
 
-### 4. StampMarketData
+### 4. StampAssetMarketData
 
-**File:** `Core/Domain/Models/StampMarketData.swift`
+**File:** `Core/Domain/Models/StampAssetMarketData.swift`
 
 **Purpose:** Contains market-related information for a stamp (pricing, ownership, etc.).
 
 **Key Characteristics:**
-- Embedded within `StampData` as optional property
+- Embedded within `StampAsset` as optional property
 - Separate concern from core stamp data
 - Could be fetched independently from market APIs
 
@@ -150,27 +150,27 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 ```
 
 **Usage:**
-- Currently optional in `StampData`
+- Currently optional in `StampAsset`
 - Potential for future market data features
 - Could be fetched from separate market APIs
 
 ---
 
-### 5. StampDataDisplay
+### 5. StampAssetDisplay
 
-**File:** `Core/Domain/Models/StampDataDisplay.swift`
+**File:** `Core/Domain/Models/StampAssetDisplay.swift`
 
 **Purpose:** UI-layer wrapper that combines stamp data with user-specific information (balance, wallet).
 
 **Key Characteristics:**
 - Presentation layer model
-- Combines `StampData` with user's balance information
+- Combines `StampAsset` with user's balance information
 - Used exclusively by Views and ViewModels
 - Not persisted or sent to APIs
 
 **Properties:**
 ```swift
-- stamp: StampData          // The core stamp data
+- stamp: StampAsset          // The core stamp data
 - balance: Double           // User's balance (how many they own)
 - divisible: Bool           // Whether fractional ownership is allowed
 - walletAddress: String?    // Which wallet owns this stamp
@@ -178,12 +178,12 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 
 **Initializers:**
 ```swift
-init(from walletBalance: WalletBalanceData)  // From API response
-init(from stamp: StampData)                  // From stamp only (balance = 0)
+init(from walletBalance: StampAssetBalance)  // From API response
+init(from stamp: StampAsset)                  // From stamp only (balance = 0)
 ```
 
 **Usage:**
-- Created in `CollectionViewModel` from API responses
+- Created in `StampViewModel` from API responses
 - Used by all collection views (grid, list, detail)
 - Provides context-aware display (shows which wallet owns what)
 
@@ -198,17 +198,17 @@ User adds wallet address in Settings
          ↓
     WalletConfig saved to SwiftData
          ↓
-CollectionViewModel fetches stamps for each wallet
+StampViewModel fetches stamps for each wallet
          ↓
 StampchainAPIClient calls /stamps/balance/{address}
          ↓
-API returns JSON → decoded to [WalletBalanceData]
+API returns JSON → decoded to [StampAssetBalance]
          ↓
 StampchainAPIClient computes stampType for each item
          ↓
-CollectionViewModel transforms to [StampDataDisplay]
+StampViewModel transforms to [StampAssetDisplay]
          ↓
-StampDataDisplay wraps StampData + balance info
+StampAssetDisplay wraps StampAsset + balance info
          ↓
 Views render stamps
 ```
@@ -223,19 +223,19 @@ Views render stamps
          │ Used to fetch
          ↓
 ┌─────────────────────┐
-│ WalletBalanceData   │  (API Response)
+│ StampAssetBalance   │  (API Response)
 │ From Stampchain API │
 └────────┬────────────┘
          │ Transform
          ↓
 ┌─────────────────────┐
-│   StampData         │  (Core Domain)
-│   + StampMarketData │  (Optional)
+│   StampAsset         │  (Core Domain)
+│   + StampAssetMarketData │  (Optional)
 └────────┬────────────┘
          │ Wrap
          ↓
 ┌─────────────────────┐
-│  StampDataDisplay   │  (UI Layer)
+│  StampAssetDisplay   │  (UI Layer)
 │  stamp + balance    │
 └─────────────────────┘
          │
@@ -250,11 +250,11 @@ Views render stamps
 │                     UI Layer                         │
 │                                                      │
 │  ┌────────────────────────────────────────────┐      │
-│  │         StampDataDisplay                   │      │
+│  │         StampAssetDisplay                   │      │
 │  │  ┌──────────────────────────────────┐      │      │
-│  │  │        StampData                 │      │      │
+│  │  │        StampAsset                 │      │      │
 │  │  │  ┌────────────────────────┐      │      │      │
-│  │  │  │   StampMarketData      │      │      │      │
+│  │  │  │   StampAssetMarketData      │      │      │      │
 │  │  │  │   (optional)           │      │      │      │
 │  │  │  └────────────────────────┘      │      │      │
 │  │  └──────────────────────────────────┘      │      │
@@ -269,7 +269,7 @@ Views render stamps
 │                   API Layer                          │
 │                                                      │
 │  ┌────────────────────────────────────────────┐      │
-│  │       WalletBalanceData                    │      │
+│  │       StampAssetBalance                    │      │
 │  │  (Direct API response model)               │      │
 │  └────────────────────────────────────────────┘      │
 └──────────────────────────────────────────────────────┘
@@ -298,9 +298,9 @@ Views render stamps
    - Changes to UI don't affect core domain
 
 2. **Type Safety**
-   - `WalletBalanceData` handles API quirks (mixed types, null values)
-   - `StampData` provides clean, validated domain model
-   - `StampDataDisplay` ensures UI always has complete context
+   - `StampAssetBalance` handles API quirks (mixed types, null values)
+   - `StampAsset` provides clean, validated domain model
+   - `StampAssetDisplay` ensures UI always has complete context
 
 3. **Testability**
    - Models can be tested independently
@@ -308,29 +308,29 @@ Views render stamps
    - Clear boundaries for unit tests
 
 4. **Flexibility**
-   - API changes only affect `WalletBalanceData`
-   - UI changes only affect `StampDataDisplay`
-   - Core business logic in `StampData` remains stable
+   - API changes only affect `StampAssetBalance`
+   - UI changes only affect `StampAssetDisplay`
+   - Core business logic in `StampAsset` remains stable
 
-### Why WalletBalanceData Instead of Direct StampData?
+### Why StampAssetBalance Instead of Direct StampAsset?
 
 The `/stamps/balance/{address}` endpoint returns data that:
 - Mixes stamp metadata with user-specific balance info
 - Has inconsistent types (e.g., `balance` can be Double or String)
 - Includes wallet-specific fields not relevant to core stamp data
 
-By having `WalletBalanceData` as an intermediary:
+By having `StampAssetBalance` as an intermediary:
 - We handle API-specific quirks in one place
 - We can transform/compute values before domain model creation
-- We keep `StampData` clean and API-agnostic
+- We keep `StampAsset` clean and API-agnostic
 
-### Why StampDataDisplay Instead of Using StampData Directly?
+### Why StampAssetDisplay Instead of Using StampAsset Directly?
 
 Views need both:
-- Stamp information (from `StampData`)
+- Stamp information (from `StampAsset`)
 - User context (which wallet, how many they own)
 
-`StampDataDisplay` combines these concerns for the presentation layer while keeping the core `StampData` model focused on stamp properties only.
+`StampAssetDisplay` combines these concerns for the presentation layer while keeping the core `StampAsset` model focused on stamp properties only.
 
 ### Why Compute stampType Instead of Using API Field?
 
@@ -352,15 +352,15 @@ This gives us reliable, consistent type classification.
 ```swift
 // 1. Fetch from API
 let walletBalances = try await apiClient.fetchStampsByWallet(address)
-// Returns: [WalletBalanceData]
+// Returns: [StampAssetBalance]
 
 // 2. Transform to display models
-let displayStamps = walletBalances.map { StampDataDisplay(from: $0) }
-// Creates: [StampDataDisplay] with embedded StampData
+let displayStamps = walletBalances.map { StampAssetDisplay(from: $0) }
+// Creates: [StampAssetDisplay] with embedded StampAsset
 
 // 3. Render in view
 ForEach(displayStamps) { displayStamp in
-    StampCardView(
+    StampAssetCardView(
         displayStamp: displayStamp,  // Has stamp + balance info
         onTap: { selectedStamp = displayStamp }
     )
@@ -370,8 +370,8 @@ ForEach(displayStamps) { displayStamp in
 ### Accessing Data in Views
 
 ```swift
-struct StampCardView: View {
-    let displayStamp: StampDataDisplay
+struct StampAssetCardView: View {
+    let displayStamp: StampAssetDisplay
     
     var body: some View {
         VStack {
@@ -398,8 +398,8 @@ struct StampCardView: View {
 ### Filtering by Stamp Type
 
 ```swift
-// In CollectionViewModel
-var filteredStamps: [StampDataDisplay] {
+// In StampViewModel
+var filteredStamps: [StampAssetDisplay] {
     stamps.filter { displayStamp in
         // Access computed stampType from core model
         activeIdentFilters.contains(displayStamp.stamp.stampType)
@@ -414,10 +414,10 @@ var filteredStamps: [StampDataDisplay] {
 ```
 StampFolio/Core/Domain/Models/
 ├── WalletConfig.swift          # Local persistence
-├── WalletBalanceData.swift     # API response
-├── StampData.swift             # Core domain
-├── StampMarketData.swift       # Market info
-└── StampDataDisplay.swift      # UI presentation
+├── StampAssetBalance.swift     # API response
+├── StampAsset.swift             # Core domain
+├── StampAssetMarketData.swift       # Market info
+└── StampAssetDisplay.swift      # UI presentation
 ```
 
 ---
@@ -438,12 +438,12 @@ See `DATA-FETCHING-STRATEGY.md` for complete implementation plan.
 ### Two-Tier Loading Approach
 
 **Tier 1: Initial Load (Balance Endpoint)**
-- `WalletBalanceData` → Basic stamp information
-- `StampDataDisplay` → UI presentation without market data
+- `StampAssetBalance` → Basic stamp information
+- `StampAssetDisplay` → UI presentation without market data
 - Supports grid view (no market data needed)
 
 **Tier 2: On-Demand (Individual Stamp Endpoint)**
-- `StampData` + `StampMarketData` → Complete stamp details
+- `StampAsset` + `StampAssetMarketData` → Complete stamp details
 - Fetched lazily when needed (row view, detail view)
 - Viewport-based loading + caching
 
@@ -451,10 +451,10 @@ See `DATA-FETCHING-STRATEGY.md` for complete implementation plan.
 
 Each model supports this strategy:
 
-1. **WalletBalanceData**: Lightweight API response for inventory
-2. **StampData**: Complete stamp details (fetched on-demand)
-3. **StampMarketData**: Actual market data (optional, fetched on-demand)
-4. **StampDataDisplay**: Wrapper with optional `marketData` property
+1. **StampAssetBalance**: Lightweight API response for inventory
+2. **StampAsset**: Complete stamp details (fetched on-demand)
+3. **StampAssetMarketData**: Actual market data (optional, fetched on-demand)
+4. **StampAssetDisplay**: Wrapper with optional `marketData` property
 5. **WalletConfig**: Independent local configuration
 
 ## Future Considerations
@@ -467,8 +467,8 @@ Each model supports this strategy:
    - `Favorite` - User-saved stamps
 
 2. **Model Evolution**
-   - Keep API models (WalletBalanceData) flexible
-   - Keep domain models (StampData) stable
+   - Keep API models (StampAssetBalance) flexible
+   - Keep domain models (StampAsset) stable
    - Version API responses if needed
 
 3. **Performance Optimization**

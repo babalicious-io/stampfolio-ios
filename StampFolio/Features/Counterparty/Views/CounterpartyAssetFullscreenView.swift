@@ -1,5 +1,5 @@
 //
-//  CounterpartyAssetSlideshowView.swift
+//  CounterpartyAssetFullscreenView.swift
 //  StampFolio
 //
 //  Full-screen immersive viewer for paging through Counterparty assets
@@ -9,9 +9,9 @@ import SwiftUI
 
 /// Full-screen viewer for Counterparty assets. Counterparty holdings are image-only (unlike
 /// Stamps, which also support HTML/audio/video/text content), so this is a much simpler
-/// single-page viewer than `StampDetailView`, but mirrors the same pinch-to-zoom, pan,
+/// single-page viewer than `StampAssetFullscreenView`, but mirrors the same pinch-to-zoom, pan,
 /// swipe-to-navigate, and swipe-down-to-dismiss gestures for a consistent fullscreen experience.
-struct CounterpartyAssetSlideshowView: View {
+struct CounterpartyAssetFullscreenView: View {
 
     // MARK: - Properties
 
@@ -322,5 +322,5 @@ struct CounterpartyAssetSlideshowView: View {
 // MARK: - Preview
 
 #Preview {
-    CounterpartyAssetSlideshowView(assets: [.sample], initialIndex: 0)
+    CounterpartyAssetFullscreenView(assets: [.sample], initialIndex: 0)
 }

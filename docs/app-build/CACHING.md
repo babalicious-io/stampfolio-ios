@@ -9,7 +9,7 @@ StampFolio uses four caching layers, each serving a different content type:
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        User Interface                       │
-│  StampPixelView  StampVectorView  StampTextView  DetailView │
+│  StampAssetPixelView  StampAssetVectorView  StampAssetTextView  DetailView │
 └──────┬──────────────┬─────────────────┬─────────────┬───────┘
        │              │                 │             │
        ▼              ▼                 ▼             ▼
@@ -86,7 +86,7 @@ ImageCache.default.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
 Grid and row views use `DownsamplingImageProcessor` to decode images at 200x200pt, drastically reducing memory. The `.cacheOriginalImage()` modifier ensures the full-resolution original is also saved to disk for the detail view.
 
 ```swift
-// StampPixelView.swift -- grid/row (downsampled thumbnail)
+// StampAssetPixelView.swift -- grid/row (downsampled thumbnail)
 KFImage(stamp.imageURL)
     .loadDiskFileSynchronously()
     .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200)))
@@ -94,7 +94,7 @@ KFImage(stamp.imageURL)
     .cacheOriginalImage()       // also saves full-res to disk
     .diskCacheExpiration(.never)
 
-// StampDetailView.swift -- fullscreen (full resolution)
+// StampAssetFullscreenView.swift -- fullscreen (full resolution)
 KFImage(currentStamp.imageURL)
     .loadDiskFileSynchronously()
     .cacheOriginalImage()
@@ -200,7 +200,7 @@ Fetching is triggered **immediately** when the wallet is added (in `AddWalletVie
 ### Displaying a Stamp (Cache-First)
 
 ```
-CollectionView .task
+StampView .task
        │
        ▼
 stamps.isEmpty? ──yes──> fetchStampsMetadata()
@@ -219,7 +219,7 @@ stamps.isEmpty? ──yes──> fetchStampsMetadata()
 ### Viewing a Stamp Image
 
 ```
-StampPixelView renders
+StampAssetPixelView renders
        │
        ├── GIF + animated ON ──> KFAnimatedImage (full-res from Kingfisher cache)
        │
@@ -233,7 +233,7 @@ StampPixelView renders
 ### Viewing HTML/SVG Content
 
 ```
-StampVectorView renders
+StampAssetVectorView renders
        │
        ▼
 StampContentCache.read(url)
@@ -300,12 +300,12 @@ Located in Settings > Performance.
 |------|------|
 | `StampchainAPIClient.swift` | URLCache configuration, cache-first API policy, force refresh |
 | `StampFolioApp.swift` | Kingfisher memory cache limit (100 MB) |
-| `CollectionViewModel.swift` | `fetchStampsMetadata()`, `fetchStampsImages()` prefetch orchestration |
+| `StampViewModel.swift` | `fetchStampsMetadata()`, `fetchStampsImages()` prefetch orchestration |
 | `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text content |
-| `StampPixelView.swift` | Downsampled thumbnails, sync disk load, animated preview toggle |
-| `StampDetailView.swift` | Full-resolution images, sync disk load |
-| `StampVectorView.swift` | WKWebView with StampContentCache read/write |
-| `StampTextView.swift` | Text content with StampContentCache read/write |
+| `StampAssetPixelView.swift` | Downsampled thumbnails, sync disk load, animated preview toggle |
+| `StampAssetFullscreenView.swift` | Full-resolution images, sync disk load |
+| `StampAssetVectorView.swift` | WKWebView with StampContentCache read/write |
+| `StampAssetTextView.swift` | Text content with StampContentCache read/write |
 | `AddWalletView.swift` | Immediate fetch trigger on wallet add |
-| `CollectionView.swift` | Cache-first `.task`, deletion-only `.onChange` |
+| `StampView.swift` | Cache-first `.task`, deletion-only `.onChange` |
 | `SettingsView.swift` | Per-wallet refresh swipe, performance preview toggle |

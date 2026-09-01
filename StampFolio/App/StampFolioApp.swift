@@ -28,7 +28,7 @@ struct StampFolioApp: App {
     /// App-level Observable objects declared here to avoid re-initialization
     /// when SwiftUI rebuilds view hierarchy (@Observable best practice)
     @State private var settingsViewModel = SettingsViewModel()
-    @State private var collectionViewModel = CollectionViewModel()
+    @State private var collectionViewModel = StampViewModel()
     @State private var counterpartyViewModel = CounterpartyViewModel()
     @State private var networkMonitor = NetworkMonitor()
     

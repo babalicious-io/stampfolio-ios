@@ -1,5 +1,5 @@
 //
-//  StampTextView.swift
+//  StampAssetTextView.swift
 //  StampFolio
 //
 //  Renders text-based stamp content
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// View for rendering text-based stamp content
-struct StampTextView: View {
+struct StampAssetTextView: View {
     
     // MARK: - Properties
     

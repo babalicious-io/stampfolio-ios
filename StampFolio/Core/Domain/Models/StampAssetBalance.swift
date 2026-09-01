@@ -1,5 +1,5 @@
 //
-//  StampBalance.swift
+//  StampAssetBalance.swift
 //  StampFolio
 //
 //  Model for stamp balance data from wallet address queries
@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a stamp balance from the balance endpoint
-struct WalletBalanceData: Identifiable, Codable, Hashable, Sendable {
+struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     

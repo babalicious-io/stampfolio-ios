@@ -66,7 +66,7 @@ actor StampchainAPIClient {
     ///   - address: Bitcoin wallet address
     ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
     /// - Returns: Array of stamp balances owned by the wallet
-    func fetchStampsByWallet(_ address: String, forceStampsRefresh: Bool = false) async throws -> [WalletBalanceData] {
+    func fetchStampsByWallet(_ address: String, forceStampsRefresh: Bool = false) async throws -> [StampAssetBalance] {
         let endpoint = "\(baseURL)/stamps/balance/\(address)"
         
         guard let url = URL(string: endpoint) else {
@@ -113,8 +113,8 @@ actor StampchainAPIClient {
     
     /// Fetch details for a specific stamp
     /// - Parameter stampNumber: The stamp number/ID
-    /// - Returns: StampData details (includes market data)
-    func fetchStampDetails(_ stampNumber: Int) async throws -> StampData {
+    /// - Returns: StampAsset details (includes market data)
+    func fetchStampDetails(_ stampNumber: Int) async throws -> StampAsset {
         let endpoint = "\(baseURL)/stamps/\(stampNumber)"
         
         guard let url = URL(string: endpoint) else {
@@ -131,7 +131,7 @@ actor StampchainAPIClient {
     /// Public method to fetch stamp with market data (alias for fetchStampDetails)
     /// - Parameter stampNumber: The stamp number/ID
     /// - Returns: Stamp data with market data
-    func fetchStamp(_ stampNumber: Int) async throws -> StampData {
+    func fetchStamp(_ stampNumber: Int) async throws -> StampAsset {
         return try await fetchStampDetails(stampNumber)
     }
     
@@ -148,7 +148,7 @@ actor StampchainAPIClient {
     ///   - limit: Number of stamps per page
     ///   - page: Page number (0-indexed)
     /// - Returns: Array of stamps
-    func fetchStamps(limit: Int = 50, page: Int = 0) async throws -> [StampData] {
+    func fetchStamps(limit: Int = 50, page: Int = 0) async throws -> [StampAsset] {
         let endpoint = "\(baseURL)/stamps?limit=\(limit)&page=\(page)"
         
         guard let url = URL(string: endpoint) else {
@@ -197,7 +197,7 @@ actor StampchainAPIClient {
 
 /// Response wrapper for wallet balance endpoint
 private struct WalletBalanceResponse: Decodable {
-    let data: [WalletBalanceData]
+    let data: [StampAssetBalance]
 }
 
 /// Response wrapper for stamp detail endpoint
@@ -213,12 +213,12 @@ private struct StampDetailResponse: Decodable {
 
 /// Data wrapper for stamp detail (nested structure)
 private struct StampDetailData: Decodable {
-    let stamp: StampData
+    let stamp: StampAsset
 }
 
 /// Response wrapper for stamps list endpoint
 private struct StampsListResponse: Decodable {
-    let data: [StampData]
+    let data: [StampAsset]
     let lastBlock: Int?
     
     enum CodingKeys: String, CodingKey {

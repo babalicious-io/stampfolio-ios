@@ -14,7 +14,7 @@ struct AddWalletView: View {
     // MARK: - Environment
     
     @Environment(SettingsViewModel.self) private var viewModel
-    @Environment(CollectionViewModel.self) private var collectionViewModel
+    @Environment(StampViewModel.self) private var collectionViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appColorScheme) private var appColorScheme
@@ -256,6 +256,6 @@ struct AddWalletView: View {
 #Preview {
     AddWalletView()
         .environment(SettingsViewModel())
-        .environment(CollectionViewModel())
+        .environment(StampViewModel())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }
