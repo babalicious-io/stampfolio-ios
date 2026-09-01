@@ -34,6 +34,12 @@ struct CounterpartyAssetDetailView: View {
         NavigationStack {
             List {
                 Section {
+                    assetImageHeader
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+
+                Section {
                     identificationSection
                 }
 
@@ -70,6 +76,17 @@ struct CounterpartyAssetDetailView: View {
         .task {
             await viewModel.fetchAssetDetailIfNeeded(for: displayAsset)
         }
+    }
+
+    // MARK: - Asset Image Header
+
+    private var assetImageHeader: some View {
+        CounterpartyAssetImageView(asset: asset, size: CGSize(width: 400, height: 220))
+            .frame(maxWidth: .infinity)
+            .frame(height: 220)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
     }
 
     // MARK: - Identification Section

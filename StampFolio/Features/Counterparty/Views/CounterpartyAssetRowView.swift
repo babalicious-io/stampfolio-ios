@@ -20,7 +20,6 @@ struct CounterpartyAssetRowView: View {
 
     // MARK: - Environment
 
-    @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate) private var wallets: [WalletConfig]
 
     // MARK: - State
@@ -87,14 +86,8 @@ struct CounterpartyAssetRowView: View {
     // MARK: - Asset Icon
 
     private var assetIcon: some View {
-        ZStack {
-            Circle()
-                .fill(appColorScheme.primary.opacity(0.15))
-
-            Image(systemName: asset.isNumericAsset ? "number" : "xmark.triangle.circle.square.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(appColorScheme.primary)
-        }
+        CounterpartyAssetImageView(asset: asset, size: CGSize(width: 48, height: 48))
+            .clipShape(Circle())
     }
 
     // MARK: - Issuer Label

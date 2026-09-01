@@ -111,7 +111,7 @@ struct MainTabView: View {
            let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
             protocolOrder = decoded
         } else {
-            protocolOrder = [.stamps, .ordinals, .counterparty]
+            protocolOrder = [.ordinals, .counterparty, .stamps]
         }
     }
     

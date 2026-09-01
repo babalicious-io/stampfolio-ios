@@ -54,30 +54,69 @@ final class CounterpartyViewModel {
     /// Search text for filtering assets
     var searchText: String = ""
 
+    /// Filter state: Active divisibility filters ("divisible" or "non_divisible")
+    var activeDivisibleFilters: Set<String> = []
+
+    /// Filter state: Active lock-status filters ("locked" or "unlocked")
+    var activeLockedFilters: Set<String> = []
+
+    /// Filter state: Active asset-type filters ("named" or "numeric")
+    var activeAssetTypeFilters: Set<String> = []
+
     /// On-demand asset detail cache (memory-only, cleared on app close/wallet delete)
     private var detailCache: [String: CounterpartyAsset] = [:]
 
     // MARK: - Computed Properties
 
-    /// Filtered assets based on search text
+    /// Check if any filters are active
+    var hasActiveFilters: Bool {
+        !activeDivisibleFilters.isEmpty || !activeLockedFilters.isEmpty || !activeAssetTypeFilters.isEmpty
+    }
+
+    /// Filtered assets based on search text and active filters
     var filteredAssets: [CounterpartyAssetDisplay] {
-        guard !searchText.isEmpty else { return assets }
+        var result = assets
 
-        let searchLower = searchText.lowercased()
-        return assets.filter { display in
-            let asset = display.asset
+        if !searchText.isEmpty {
+            let searchLower = searchText.lowercased()
+            result = result.filter { display in
+                let asset = display.asset
 
-            if asset.asset.lowercased().contains(searchLower) {
-                return true
+                if asset.asset.lowercased().contains(searchLower) {
+                    return true
+                }
+                if let longname = asset.assetLongname, longname.lowercased().contains(searchLower) {
+                    return true
+                }
+                if let issuer = asset.issuer, issuer.localizedCaseInsensitiveContains(searchText) {
+                    return true
+                }
+                return false
             }
-            if let longname = asset.assetLongname, longname.lowercased().contains(searchLower) {
-                return true
-            }
-            if let issuer = asset.issuer, issuer.localizedCaseInsensitiveContains(searchText) {
-                return true
-            }
-            return false
         }
+
+        if !activeDivisibleFilters.isEmpty {
+            result = result.filter { display in
+                let key = display.asset.divisible ? "divisible" : "non_divisible"
+                return activeDivisibleFilters.contains(key)
+            }
+        }
+
+        if !activeLockedFilters.isEmpty {
+            result = result.filter { display in
+                let key = display.asset.locked ? "locked" : "unlocked"
+                return activeLockedFilters.contains(key)
+            }
+        }
+
+        if !activeAssetTypeFilters.isEmpty {
+            result = result.filter { display in
+                let key = display.asset.isNumericAsset ? "numeric" : "named"
+                return activeAssetTypeFilters.contains(key)
+            }
+        }
+
+        return result
     }
 
     /// Check if there are assets to display
@@ -178,6 +217,33 @@ final class CounterpartyViewModel {
         assets = []
         errorMessage = nil
         selectedAsset = nil
+    }
+
+    /// Toggle a divisibility filter ("divisible" or "non_divisible")
+    func toggleDivisibleFilter(_ value: String) {
+        if activeDivisibleFilters.contains(value) {
+            activeDivisibleFilters.remove(value)
+        } else {
+            activeDivisibleFilters.insert(value)
+        }
+    }
+
+    /// Toggle a lock-status filter ("locked" or "unlocked")
+    func toggleLockedFilter(_ value: String) {
+        if activeLockedFilters.contains(value) {
+            activeLockedFilters.remove(value)
+        } else {
+            activeLockedFilters.insert(value)
+        }
+    }
+
+    /// Toggle an asset-type filter ("named" or "numeric")
+    func toggleAssetTypeFilter(_ value: String) {
+        if activeAssetTypeFilters.contains(value) {
+            activeAssetTypeFilters.remove(value)
+        } else {
+            activeAssetTypeFilters.insert(value)
+        }
     }
 
     /// Sort assets by the given option
