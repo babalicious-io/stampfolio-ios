@@ -28,7 +28,7 @@ struct StampFolioApp: App {
     /// App-level Observable objects declared here to avoid re-initialization
     /// when SwiftUI rebuilds view hierarchy (@Observable best practice)
     @State private var settingsViewModel = SettingsViewModel()
-    @State private var collectionViewModel = StampViewModel()
+    @State private var stampViewModel = StampViewModel()
     @State private var counterpartyViewModel = CounterpartyViewModel()
     @State private var networkMonitor = NetworkMonitor()
     
@@ -68,7 +68,7 @@ struct StampFolioApp: App {
             
             ContentView()
                 .environment(settingsViewModel)
-                .environment(collectionViewModel)
+                .environment(stampViewModel)
                 .environment(counterpartyViewModel)
                 .environment(networkMonitor)
                 .environment(\.appColorScheme, colorScheme)
@@ -84,7 +84,7 @@ struct StampFolioApp: App {
                     // Ensures fresh data on next app launch
                     if newPhase == .background || newPhase == .inactive {
                         Task { @MainActor in
-                            collectionViewModel.clearMarketDataCache()
+                            stampViewModel.clearMarketDataCache()
                             counterpartyViewModel.clearDetailCache()
                         }
                     }

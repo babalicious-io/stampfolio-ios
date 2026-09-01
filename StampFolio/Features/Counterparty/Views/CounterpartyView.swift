@@ -15,7 +15,7 @@ struct CounterpartyView: View {
     // MARK: - Environment
 
     @Environment(CounterpartyViewModel.self) private var viewModel
-    @Environment(StampViewModel.self) private var collectionViewModel
+    @Environment(StampViewModel.self) private var stampViewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.appColorScheme) private var appColorScheme
@@ -34,7 +34,7 @@ struct CounterpartyView: View {
 
     /// Asset names (CPIDs) already shown as Bitcoin Stamps, so they aren't duplicated here
     private var stampCPIDs: Set<String> {
-        Set(collectionViewModel.stamps.map { $0.asset.counterpartyId })
+        Set(stampViewModel.stamps.map { $0.asset.counterpartyId })
     }
 
     private var hasActiveSort: Bool {
@@ -138,8 +138,8 @@ struct CounterpartyView: View {
 
     /// Ensure Stamps are loaded first (so CPID exclusion is accurate), then fetch Counterparty assets
     private func loadData() async {
-        if collectionViewModel.stamps.isEmpty {
-            await collectionViewModel.fetchStampsMetadata(for: wallets)
+        if stampViewModel.stamps.isEmpty {
+            await stampViewModel.fetchStampsMetadata(for: wallets)
         }
         if viewModel.assets.isEmpty {
             await viewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)

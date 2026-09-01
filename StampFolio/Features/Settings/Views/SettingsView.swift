@@ -14,7 +14,7 @@ struct SettingsView: View {
     // MARK: - Environment
     
     @Environment(SettingsViewModel.self) private var viewModel
-    @Environment(StampViewModel.self) private var collectionViewModel
+    @Environment(StampViewModel.self) private var stampViewModel
     @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -74,7 +74,7 @@ struct SettingsView: View {
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
                                         Task {
-                                            await collectionViewModel.fetchStampMetadata(for: wallet, allWallets: wallets, forceStampsRefresh: true)
+                                            await stampViewModel.fetchStampMetadata(for: wallet, allWallets: wallets, forceStampsRefresh: true)
                                         }
                                     } label: {
                                         Label("Refresh", systemImage: "arrow.clockwise")
@@ -384,7 +384,7 @@ struct SettingsView: View {
         viewModel.deleteWallet(
             wallet,
             context: modelContext,
-            collectionViewModel: collectionViewModel,
+            stampViewModel: stampViewModel,
             counterpartyViewModel: counterpartyViewModel
         )
     }

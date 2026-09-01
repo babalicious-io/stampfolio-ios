@@ -2,7 +2,7 @@
 //  StampViewModel.swift
 //  StampFolio
 //
-//  ViewModel for the Collection screen
+//  ViewModel for the Stamp screen
 //
 
 import Foundation
