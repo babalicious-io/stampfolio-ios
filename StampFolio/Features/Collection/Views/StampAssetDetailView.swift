@@ -12,16 +12,16 @@ struct StampAssetDetailView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampAssetDisplay
+    let displayStamp: StampDisplay
     let viewModel: StampViewModel
     
     // Get current stamp from viewModel (updates when market data fetched)
-    private var currentDisplayStamp: StampAssetDisplay {
+    private var currentDisplayStamp: StampDisplay {
         viewModel.stamps.first(where: { $0.id == displayStamp.id }) ?? displayStamp
     }
     
     // Convenience accessor for the underlying stamp (always use current data)
-    private var stamp: StampAsset { currentDisplayStamp.stamp }
+    private var stamp: StampAsset { currentDisplayStamp.asset }
     
     // MARK: - Environment
     
@@ -279,6 +279,6 @@ struct MetadataRow: View {
 // MARK: - Preview
 
 #Preview {
-    StampAssetDetailView(displayStamp: StampAssetDisplay(from: StampAsset.sample), viewModel: StampViewModel())
+    StampAssetDetailView(displayStamp: StampDisplay(from: StampAsset.sample), viewModel: StampViewModel())
         .presentationDetents([.medium, .large])
 }

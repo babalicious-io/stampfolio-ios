@@ -13,7 +13,7 @@ struct CounterpartyAssetRowView: View {
 
     // MARK: - Properties
 
-    let displayAsset: CounterpartyAssetDisplay
+    let displayAsset: CounterpartyDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
 

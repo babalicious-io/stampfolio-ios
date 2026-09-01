@@ -10,7 +10,7 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 2. **StampAssetBalance** - API response data
 3. **StampAsset** - Core domain entity
 4. **StampAssetMarketData** - Market information
-5. **StampAssetDisplay** - UI presentation layer
+5. **StampDisplay** - UI presentation layer
 
 ---
 
@@ -53,11 +53,11 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 - API response model (implements `Codable`)
 - Contains stamp information + user's balance for that stamp
 - Includes custom `BalanceValue` enum to handle API's mixed types (Double or String)
-- Temporary - transformed into `StampAssetDisplay` for use in the app
+- Temporary - transformed into `StampDisplay` for use in the app
 
 **Properties:**
 ```swift
-- assetId: String?          // API: "ident"
+- ident: String?          // API: "ident"
 - stampId: Int              // API: "stamp" (positive/negative number)
 - counterpartyId: String    // API: "cpid"
 - balance: Double           // User's balance of this stamp
@@ -96,7 +96,7 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 **Properties:**
 ```swift
 - stampType: String         // "classic", "cursed", "posh"
-- assetId: String?          // Stamp identifier (e.g., "STAMP", "SRC-721")
+- ident: String?          // Stamp identifier (e.g., "STAMP", "SRC-721")
 - stampId: Int              // Stamp number (positive/negative)
 - counterpartyId: String    // CPID
 - creatorAddy: String?
@@ -156,9 +156,9 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 
 ---
 
-### 5. StampAssetDisplay
+### 5. StampDisplay
 
-**File:** `Core/Domain/Models/StampAssetDisplay.swift`
+**File:** `Core/Domain/Models/StampDisplay.swift`
 
 **Purpose:** UI-layer wrapper that combines stamp data with user-specific information (balance, wallet).
 
@@ -170,7 +170,7 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 
 **Properties:**
 ```swift
-- stamp: StampAsset          // The core stamp data
+- asset: StampAsset          // The core stamp data
 - balance: Double           // User's balance (how many they own)
 - divisible: Bool           // Whether fractional ownership is allowed
 - walletAddress: String?    // Which wallet owns this stamp
@@ -179,7 +179,7 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 **Initializers:**
 ```swift
 init(from walletBalance: StampAssetBalance)  // From API response
-init(from stamp: StampAsset)                  // From stamp only (balance = 0)
+init(from asset: StampAsset)                  // From stamp only (balance = 0)
 ```
 
 **Usage:**
@@ -206,9 +206,9 @@ API returns JSON → decoded to [StampAssetBalance]
          ↓
 StampchainAPIClient computes stampType for each item
          ↓
-StampViewModel transforms to [StampAssetDisplay]
+StampViewModel transforms to [StampDisplay]
          ↓
-StampAssetDisplay wraps StampAsset + balance info
+StampDisplay wraps StampAsset + balance info
          ↓
 Views render stamps
 ```
@@ -235,7 +235,7 @@ Views render stamps
          │ Wrap
          ↓
 ┌─────────────────────┐
-│  StampAssetDisplay   │  (UI Layer)
+│  StampDisplay   │  (UI Layer)
 │  stamp + balance    │
 └─────────────────────┘
          │
@@ -250,7 +250,7 @@ Views render stamps
 │                     UI Layer                         │
 │                                                      │
 │  ┌────────────────────────────────────────────┐      │
-│  │         StampAssetDisplay                   │      │
+│  │         StampDisplay                   │      │
 │  │  ┌──────────────────────────────────┐      │      │
 │  │  │        StampAsset                 │      │      │
 │  │  │  ┌────────────────────────┐      │      │      │
@@ -300,7 +300,7 @@ Views render stamps
 2. **Type Safety**
    - `StampAssetBalance` handles API quirks (mixed types, null values)
    - `StampAsset` provides clean, validated domain model
-   - `StampAssetDisplay` ensures UI always has complete context
+   - `StampDisplay` ensures UI always has complete context
 
 3. **Testability**
    - Models can be tested independently
@@ -309,7 +309,7 @@ Views render stamps
 
 4. **Flexibility**
    - API changes only affect `StampAssetBalance`
-   - UI changes only affect `StampAssetDisplay`
+   - UI changes only affect `StampDisplay`
    - Core business logic in `StampAsset` remains stable
 
 ### Why StampAssetBalance Instead of Direct StampAsset?
@@ -324,13 +324,13 @@ By having `StampAssetBalance` as an intermediary:
 - We can transform/compute values before domain model creation
 - We keep `StampAsset` clean and API-agnostic
 
-### Why StampAssetDisplay Instead of Using StampAsset Directly?
+### Why StampDisplay Instead of Using StampAsset Directly?
 
 Views need both:
 - Stamp information (from `StampAsset`)
 - User context (which wallet, how many they own)
 
-`StampAssetDisplay` combines these concerns for the presentation layer while keeping the core `StampAsset` model focused on stamp properties only.
+`StampDisplay` combines these concerns for the presentation layer while keeping the core `StampAsset` model focused on stamp properties only.
 
 ### Why Compute stampType Instead of Using API Field?
 
@@ -355,8 +355,8 @@ let walletBalances = try await apiClient.fetchStampsByWallet(address)
 // Returns: [StampAssetBalance]
 
 // 2. Transform to display models
-let displayStamps = walletBalances.map { StampAssetDisplay(from: $0) }
-// Creates: [StampAssetDisplay] with embedded StampAsset
+let displayStamps = walletBalances.map { StampDisplay(from: $0) }
+// Creates: [StampDisplay] with embedded StampAsset
 
 // 3. Render in view
 ForEach(displayStamps) { displayStamp in
@@ -371,23 +371,23 @@ ForEach(displayStamps) { displayStamp in
 
 ```swift
 struct StampAssetCardView: View {
-    let displayStamp: StampAssetDisplay
+    let displayStamp: StampDisplay
     
     var body: some View {
         VStack {
             // Access stamp data
-            Text(displayStamp.stamp.formattedStampId)
+            Text(displayStamp.asset.formattedStampId)
             
             // Access balance info
             Text("Balance: \(displayStamp.balance)")
             
             // Access computed properties
-            if displayStamp.stamp.isImage {
-                StampImageView(url: displayStamp.stamp.stampUrl)
+            if displayStamp.asset.isImage {
+                StampImageView(url: displayStamp.asset.stampUrl)
             }
             
             // Access market data if available
-            if let marketData = displayStamp.stamp.marketData {
+            if let marketData = displayStamp.asset.marketData {
                 Text("Floor: \(marketData.floorPrice ?? 0)")
             }
         }
@@ -399,10 +399,10 @@ struct StampAssetCardView: View {
 
 ```swift
 // In StampViewModel
-var filteredStamps: [StampAssetDisplay] {
+var filteredStamps: [StampDisplay] {
     stamps.filter { displayStamp in
         // Access computed stampType from core model
-        activeIdentFilters.contains(displayStamp.stamp.stampType)
+        activeIdentFilters.contains(displayStamp.asset.stampType)
     }
 }
 ```
@@ -417,7 +417,7 @@ StampFolio/Core/Domain/Models/
 ├── StampAssetBalance.swift     # API response
 ├── StampAsset.swift             # Core domain
 ├── StampAssetMarketData.swift       # Market info
-└── StampAssetDisplay.swift      # UI presentation
+└── StampDisplay.swift      # UI presentation
 ```
 
 ---
@@ -439,7 +439,7 @@ See `DATA-FETCHING-STRATEGY.md` for complete implementation plan.
 
 **Tier 1: Initial Load (Balance Endpoint)**
 - `StampAssetBalance` → Basic stamp information
-- `StampAssetDisplay` → UI presentation without market data
+- `StampDisplay` → UI presentation without market data
 - Supports grid view (no market data needed)
 
 **Tier 2: On-Demand (Individual Stamp Endpoint)**
@@ -454,7 +454,7 @@ Each model supports this strategy:
 1. **StampAssetBalance**: Lightweight API response for inventory
 2. **StampAsset**: Complete stamp details (fetched on-demand)
 3. **StampAssetMarketData**: Actual market data (optional, fetched on-demand)
-4. **StampAssetDisplay**: Wrapper with optional `marketData` property
+4. **StampDisplay**: Wrapper with optional `marketData` property
 5. **WalletConfig**: Independent local configuration
 
 ## Future Considerations

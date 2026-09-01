@@ -35,8 +35,8 @@ struct StampView: View {
     @State private var viewSize: CGSize = .zero
     @State private var showAddWallet = false
     @State private var showSlideshow = false
-    @State private var selectedStamp: StampAssetDisplay?
-    @State private var metadataStamp: StampAssetDisplay?
+    @State private var selectedStamp: StampDisplay?
+    @State private var metadataStamp: StampDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -127,14 +127,14 @@ struct StampView: View {
         .fullScreenCover(item: $selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampAssetFullscreenView(
-                    stamps: viewModel.stamps.map(\.stamp),
+                    stamps: viewModel.stamps.map(\.asset),
                     initialIndex: index
                 )
             }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
             StampAssetFullscreenView(
-                stamps: viewModel.stamps.map(\.stamp),
+                stamps: viewModel.stamps.map(\.asset),
                 initialIndex: 0,
                 isSlideshow: true
             )

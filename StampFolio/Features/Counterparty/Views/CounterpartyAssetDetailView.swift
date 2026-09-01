@@ -12,11 +12,11 @@ struct CounterpartyAssetDetailView: View {
 
     // MARK: - Properties
 
-    let displayAsset: CounterpartyAssetDisplay
+    let displayAsset: CounterpartyDisplay
     let viewModel: CounterpartyViewModel
 
     // Get current asset from viewModel (updates when detail data is fetched)
-    private var currentDisplayAsset: CounterpartyAssetDisplay {
+    private var currentDisplayAsset: CounterpartyDisplay {
         viewModel.assets.first(where: { $0.id == displayAsset.id }) ?? displayAsset
     }
 

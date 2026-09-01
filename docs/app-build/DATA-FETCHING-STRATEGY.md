@@ -201,7 +201,7 @@ User adds wallet address
         ↓
 Fetch /stamps/balance/{address}
         ↓
-Create [StampAssetBalance] → [StampAssetDisplay]
+Create [StampAssetBalance] → [StampDisplay]
         ↓
 Display in Grid View ✅ (no market data needed)
         |
@@ -213,7 +213,7 @@ Check marketDataCache
         ↓
 Fetch missing: /stamps/{id} for each visible stamp
         ↓
-Update StampAssetDisplay with StampAssetMarketData
+Update StampDisplay with StampAssetMarketData
         ↓
 Display holders + floor price in Row View ✅
         |
@@ -230,13 +230,13 @@ Fresh data on next app launch ✅
 
 ## Implementation Steps
 
-### Step 1: Update `StampAssetDisplay` Model
+### Step 1: Update `StampDisplay` Model
 Add optional `StampAssetMarketData` property and loading states:
 
 ```swift
-struct StampAssetDisplay: Identifiable {
+struct StampDisplay: Identifiable {
     // Existing properties from StampAssetBalance
-    let stamp: StampAsset
+    let asset: StampAsset
     let balance: Double
     let ownerAddress: String
     
@@ -261,10 +261,10 @@ struct StampAssetDisplay: Identifiable {
 // In StampViewModel
 @State private var marketDataCache: [Int: StampAssetMarketData] = [:]
 
-func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampAssetDisplay]) async {
+func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDisplay]) async {
     // Filter stamps that need market data
     let stampsToFetch = visibleStamps.filter { 
-        marketDataCache[$0.stamp.stampId] == nil 
+        marketDataCache[$0.asset.stampId] == nil 
     }
     
     // Mark as loading
@@ -278,8 +278,8 @@ func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampAssetDisplay]) async
     await withTaskGroup(of: (Int, StampAssetMarketData?).self) { group in
         for stampDisplay in stampsToFetch {
             group.addTask {
-                let fullData = try? await apiClient.fetchStampDetails(stampDisplay.stamp.stampId)
-                return (stampDisplay.stamp.stampId, fullData?.marketData)
+                let fullData = try? await apiClient.fetchStampDetails(stampDisplay.asset.stampId)
+                return (stampDisplay.asset.stampId, fullData?.marketData)
             }
         }
         
@@ -289,7 +289,7 @@ func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampAssetDisplay]) async
                 marketDataCache[stampId] = marketData
                 
                 // Update display stamps
-                if let index = stamps.firstIndex(where: { $0.stamp.stampId == stampId }) {
+                if let index = stamps.firstIndex(where: { $0.asset.stampId == stampId }) {
                     stamps[index].marketData = marketData
                     stamps[index].isLoadingMarketData = false
                 }
@@ -447,7 +447,7 @@ func sceneWillTerminate(_ scene: UIScene) {
 - [x] Strategy documented
 - [x] Cache clearing requirements defined
 - [ ] Implementation pending user approval
-- [ ] Step 1: Update StampAssetDisplay
+- [ ] Step 1: Update StampDisplay
 - [ ] Step 2: Add market data fetching to ViewModel
 - [ ] Step 3: Update Row View with viewport detection (iPhone landscape + iPad)
 - [ ] Step 4: Add API client method

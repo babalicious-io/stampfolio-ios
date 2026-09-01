@@ -15,8 +15,8 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     /// Stamp type - set based on which API endpoint returned it
     let stampType: String
     
-    /// Asset identifier from ident field ("STAMP", "SRC-721", etc.)
-    let assetId: String?
+    /// Content-standard identifier ("STAMP", "SRC-721", "SRC-101", etc.)
+    let ident: String?
 
     /// Stamp number (e.g., 1384303 or -11)
     let stampId: Int
@@ -69,7 +69,7 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
-        case assetId = "ident"
+        case ident
         case stampId = "stamp"
         case counterpartyId = "cpid"
         case creatorAddy = "creator"
@@ -93,7 +93,7 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     /// Memberwise initializer (required since we have custom decoder)
     init(
         stampType: String,
-        assetId: String?,
+        ident: String?,
         stampId: Int,
         counterpartyId: String,
         creatorAddy: String,
@@ -112,7 +112,7 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
         stampUrl: String
     ) {
         self.stampType = stampType
-        self.assetId = assetId
+        self.ident = ident
         self.stampId = stampId
         self.counterpartyId = counterpartyId
         self.creatorAddy = creatorAddy
@@ -138,7 +138,7 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
         // stampType will be set manually after decoding, default to "classic"
         self.stampType = "classic"
         
-        self.assetId = try container.decodeIfPresent(String.self, forKey: .assetId)
+        self.ident = try container.decodeIfPresent(String.self, forKey: .ident)
         self.stampId = try container.decode(Int.self, forKey: .stampId)
         self.counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
         self.creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
@@ -278,7 +278,7 @@ extension StampAsset {
     /// Sample stamp for previews and testing
     static let sample = StampAsset(
         stampType: "classic",
-        assetId: "STAMP",
+        ident: "STAMP",
         stampId: 1384303,
         counterpartyId: "A888354448084788958",
         creatorAddy: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
@@ -302,7 +302,7 @@ extension StampAsset {
         sample,
         StampAsset(
             stampType: "cursed",
-            assetId: "STAMP",
+            ident: "STAMP",
             stampId: -11,
             counterpartyId: "A2256256256256256256",
             creatorAddy: "1GPon5BBwZJBSvGbj3b973TQ1XMXgDbPwt",
@@ -322,7 +322,7 @@ extension StampAsset {
         ),
         StampAsset(
             stampType: "posh",
-            assetId: "STAMP",
+            ident: "STAMP",
             stampId: -398,
             counterpartyId: "USDSTAMP",
             creatorAddy: "bc1qtest",

@@ -13,12 +13,12 @@ struct StampAssetRowView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampAssetDisplay
+    let displayStamp: StampDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     
     // Convenience accessor
-    private var stamp: StampAsset { displayStamp.stamp }
+    private var stamp: StampAsset { displayStamp.asset }
     
     // MARK: - Environment
     
@@ -171,13 +171,13 @@ struct StampAssetRowView: View {
 #Preview {
     VStack(spacing: 12) {
         StampAssetRowView(
-            displayStamp: StampAssetDisplay(from: StampAsset.sample),
+            displayStamp: StampDisplay(from: StampAsset.sample),
             onTap: {},
             onLongPress: {}
         )
         
         StampAssetRowView(
-            displayStamp: StampAssetDisplay(from: StampAsset.samples[1]),
+            displayStamp: StampDisplay(from: StampAsset.samples[1]),
             onTap: {},
             onLongPress: {}
         )

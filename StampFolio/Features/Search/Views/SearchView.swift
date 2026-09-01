@@ -22,8 +22,8 @@ struct SearchView: View {
     
     @FocusState private var isSearchFieldFocused: Bool
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @State private var selectedStamp: StampAssetDisplay?
-    @State private var metadataStamp: StampAssetDisplay?
+    @State private var selectedStamp: StampDisplay?
+    @State private var metadataStamp: StampDisplay?
     
     // MARK: - Body
     
@@ -46,7 +46,7 @@ struct SearchView: View {
         .fullScreenCover(item: $selectedStamp) { displayStamp in
             if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
                 StampAssetFullscreenView(
-                    stamps: viewModel.stamps.map(\.stamp),
+                    stamps: viewModel.stamps.map(\.asset),
                     initialIndex: index
                 )
             }

@@ -27,14 +27,14 @@ struct CounterpartyView: View {
     @State private var showAddWallet = false
     @State private var showOfflineBanner = false
     @State private var showSlideshow = false
-    @State private var fullscreenAsset: CounterpartyAssetDisplay?
+    @State private var fullscreenAsset: CounterpartyDisplay?
     @AppStorage("counterpartyViewMode") private var viewMode: ViewMode = .normalGrid
 
     // MARK: - Computed Properties
 
     /// Asset names (CPIDs) already shown as Bitcoin Stamps, so they aren't duplicated here
     private var stampCPIDs: Set<String> {
-        Set(collectionViewModel.stamps.map { $0.stamp.counterpartyId })
+        Set(collectionViewModel.stamps.map { $0.asset.counterpartyId })
     }
 
     private var hasActiveSort: Bool {

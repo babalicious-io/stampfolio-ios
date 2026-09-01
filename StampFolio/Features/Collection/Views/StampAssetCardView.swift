@@ -13,13 +13,13 @@ struct StampAssetCardView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampAssetDisplay
+    let displayStamp: StampDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     let viewMode: ViewMode
     
     // Convenience accessor
-    private var stamp: StampAsset { displayStamp.stamp }
+    private var stamp: StampAsset { displayStamp.asset }
     
     // MARK: - Environment
     
@@ -200,14 +200,14 @@ struct StampAssetCardView: View {
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
         StampAssetCardView(
-            displayStamp: StampAssetDisplay(from: StampAsset.sample),
+            displayStamp: StampDisplay(from: StampAsset.sample),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid
         )
         
         StampAssetCardView(
-            displayStamp: StampAssetDisplay(from: StampAsset.samples[1]),
+            displayStamp: StampDisplay(from: StampAsset.samples[1]),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid

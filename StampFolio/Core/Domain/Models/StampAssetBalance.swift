@@ -16,7 +16,7 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
     var stampType: String?
     
     /// Asset identifier type ("STAMP", "SRC-721", "SRC-101", etc.)
-    let assetId: String?
+    let ident: String?
     
     /// Unique stamp number (primary identifier)
     let stampId: Int
@@ -99,7 +99,7 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
-        case assetId = "ident"
+        case ident
         case stampId = "stamp"
         case counterpartyId = "cpid"
         case creatorName = "creator_name"
@@ -124,7 +124,7 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
         // stampType will be set manually after decoding by API client
         self.stampType = nil
         
-        assetId = try container.decodeIfPresent(String.self, forKey: .assetId)
+        ident = try container.decodeIfPresent(String.self, forKey: .ident)
         stampId = try container.decode(Int.self, forKey: .stampId)
         counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
         creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)

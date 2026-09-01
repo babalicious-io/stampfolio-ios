@@ -94,7 +94,7 @@ CounterpartyAssetBalance   (raw API response row, Core/Domain/Models/)
 CounterpartyAsset + CounterpartyAssetMarketData   (canonical domain entity)
         │ wrap
         ▼
-CounterpartyAssetDisplay   (UI layer: asset + balance + wallet)
+CounterpartyDisplay   (UI layer: asset + balance + wallet)
 ```
 
 - `CounterpartyAPIClient` (`Core/Data/Network/`) — actor, own `URLCache` (disk path

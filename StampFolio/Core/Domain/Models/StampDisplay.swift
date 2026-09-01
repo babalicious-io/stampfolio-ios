@@ -1,5 +1,5 @@
 //
-//  StampAssetDisplay.swift
+//  StampDisplay.swift
 //  StampFolio
 //
 //  Model for displaying stamps with balance information
@@ -8,8 +8,8 @@
 import Foundation
 
 /// Wrapper for displaying stamps with their balance information
-struct StampAssetDisplay: Identifiable {
-    let stamp: StampAsset
+struct StampDisplay: Identifiable {
+    let asset: StampAsset
     let balance: Double?
     let divisible: Bool
     let walletAddress: String?
@@ -18,7 +18,7 @@ struct StampAssetDisplay: Identifiable {
     var marketData: StampAssetMarketData?
     var isLoadingMarketData: Bool = false
     
-    var id: Int { stamp.id }
+    var id: Int { asset.id }
     
     // Computed properties for UI
     var holderCount: Int? {
@@ -31,7 +31,7 @@ struct StampAssetDisplay: Identifiable {
     
     /// Formatted quantity for display
     var formattedQuantity: String {
-        let quantity = balance ?? Double(stamp.editionsSupply)
+        let quantity = balance ?? Double(asset.editionsSupply)
         
         // If divisible, convert from satoshi-like units (100,000,000 = 1)
         if divisible {
@@ -51,7 +51,7 @@ struct StampAssetDisplay: Identifiable {
     /// Formatted balance with total supply (e.g., "2/69")
     var formattedBalanceWithSupply: String {
         let userBalance = balance ?? 0.0
-        let totalSupply = Double(stamp.editionsSupply)
+        let totalSupply = Double(asset.editionsSupply)
         
         if divisible {
             // Convert from satoshi-like units (100,000,000 = 1)
@@ -82,14 +82,14 @@ struct StampAssetDisplay: Identifiable {
     
     /// Memberwise initializer
     init(
-        stamp: StampAsset,
+        asset: StampAsset,
         balance: Double? = nil,
         divisible: Bool,
         walletAddress: String? = nil,
         marketData: StampAssetMarketData? = nil,
         isLoadingMarketData: Bool = false
     ) {
-        self.stamp = stamp
+        self.asset = asset
         self.balance = balance
         self.divisible = divisible
         self.walletAddress = walletAddress
@@ -99,9 +99,9 @@ struct StampAssetDisplay: Identifiable {
     
     /// Create from StampAssetBalance
     init(from walletBalance: StampAssetBalance) {
-        self.stamp = StampAsset(
+        self.asset = StampAsset(
             stampType: walletBalance.stampType ?? "classic",
-            assetId: walletBalance.assetId,
+            ident: walletBalance.ident,
             stampId: walletBalance.stampId,
             counterpartyId: walletBalance.counterpartyId,
             creatorAddy: walletBalance.creatorAddy,
@@ -125,10 +125,10 @@ struct StampAssetDisplay: Identifiable {
     }
     
     /// Create from StampAsset (no balance info)
-    init(from stamp: StampAsset) {
-        self.stamp = stamp
+    init(from asset: StampAsset) {
+        self.asset = asset
         self.balance = nil
-        self.divisible = stamp.divisible
+        self.divisible = asset.divisible
         self.walletAddress = nil
     }
 }

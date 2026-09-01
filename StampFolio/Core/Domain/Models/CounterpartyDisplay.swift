@@ -1,5 +1,5 @@
 //
-//  CounterpartyAssetDisplay.swift
+//  CounterpartyDisplay.swift
 //  StampFolio
 //
 //  Model for displaying Counterparty assets with balance information
@@ -8,7 +8,7 @@
 import Foundation
 
 /// Wrapper for displaying a Counterparty asset alongside the user's balance information
-struct CounterpartyAssetDisplay: Identifiable {
+struct CounterpartyDisplay: Identifiable {
 
     // MARK: - Properties
 
@@ -81,10 +81,10 @@ struct CounterpartyAssetDisplay: Identifiable {
 
 // MARK: - Sample Data
 
-extension CounterpartyAssetDisplay {
+extension CounterpartyDisplay {
 
     /// Sample display asset for previews
-    static let sample = CounterpartyAssetDisplay(
+    static let sample = CounterpartyDisplay(
         asset: .sample,
         balance: 31_000_000,
         divisible: true,

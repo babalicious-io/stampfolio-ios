@@ -37,7 +37,7 @@ final class CounterpartyViewModel {
     // MARK: - Properties
 
     /// All non-Stamp Counterparty assets from all wallets, with display information
-    private(set) var assets: [CounterpartyAssetDisplay] = []
+    private(set) var assets: [CounterpartyDisplay] = []
 
     /// Loading state
     private(set) var isLoading: Bool = false
@@ -46,7 +46,7 @@ final class CounterpartyViewModel {
     private(set) var errorMessage: String?
 
     /// Currently selected asset for the detail sheet
-    var selectedAsset: CounterpartyAssetDisplay?
+    var selectedAsset: CounterpartyDisplay?
 
     /// Current sort option
     var currentSortOption: CounterpartySortOption = .balanceDescending
@@ -74,7 +74,7 @@ final class CounterpartyViewModel {
     }
 
     /// Filtered assets based on search text and active filters
-    var filteredAssets: [CounterpartyAssetDisplay] {
+    var filteredAssets: [CounterpartyDisplay] {
         var result = assets
 
         if !searchText.isEmpty {
@@ -202,7 +202,7 @@ final class CounterpartyViewModel {
             return true
         }
 
-        let displayAssets = uniqueBalances.map { CounterpartyAssetDisplay(from: $0) }
+        let displayAssets = uniqueBalances.map { CounterpartyDisplay(from: $0) }
         assets = sortedAssets(displayAssets, by: currentSortOption, wallets: wallets)
 
         if assets.isEmpty && !fetchErrors.isEmpty {
@@ -259,7 +259,7 @@ final class CounterpartyViewModel {
 
     /// Fetch on-demand detail (supply, holders, floor price) for a single asset if not already cached
     @MainActor
-    func fetchAssetDetailIfNeeded(for displayAsset: CounterpartyAssetDisplay) async {
+    func fetchAssetDetailIfNeeded(for displayAsset: CounterpartyDisplay) async {
         let assetName = displayAsset.asset.asset
 
         guard detailCache[assetName] == nil, !displayAsset.isLoadingDetail else {
@@ -276,7 +276,7 @@ final class CounterpartyViewModel {
 
             if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
                 let old = assets[index]
-                assets[index] = CounterpartyAssetDisplay(
+                assets[index] = CounterpartyDisplay(
                     asset: detail,
                     balance: old.balance,
                     divisible: detail.divisible,
@@ -304,10 +304,10 @@ final class CounterpartyViewModel {
     // MARK: - Private Methods
 
     private func sortedAssets(
-        _ assets: [CounterpartyAssetDisplay],
+        _ assets: [CounterpartyDisplay],
         by option: CounterpartySortOption,
         wallets: [WalletConfig]
-    ) -> [CounterpartyAssetDisplay] {
+    ) -> [CounterpartyDisplay] {
         switch option {
         case .nameAscending:
             return assets.sorted { $0.asset.displayName.localizedCaseInsensitiveCompare($1.asset.displayName) == .orderedAscending }
