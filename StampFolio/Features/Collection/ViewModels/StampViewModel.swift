@@ -99,31 +99,31 @@ final class StampViewModel {
         // Apply search filter
         if !searchText.isEmpty {
             let searchLower = searchText.lowercased()
-            result = result.filter { displayStamp in
-                let stamp = displayStamp.asset
+            result = result.filter { display in
+                let asset = display.asset
                 
                 // Search by stamp ID
-                if "\(stamp.id)".contains(searchLower) {
+                if "\(asset.id)".contains(searchLower) {
                     return true
                 }
                 
                 // Search by CPID
-                if stamp.counterpartyId.localizedCaseInsensitiveContains(searchText) {
+                if asset.counterpartyId.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
                 
                 // Search by transaction hash
-                if stamp.txHash.localizedCaseInsensitiveContains(searchText) {
+                if asset.txHash.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
                 
                 // Search by creator address
-                if stamp.creatorAddy.localizedCaseInsensitiveContains(searchText) {
+                if asset.creatorAddy.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
                 
                 // Search by creator name
-                if let creatorName = stamp.creatorName,
+                if let creatorName = asset.creatorName,
                    creatorName.localizedCaseInsensitiveContains(searchText) {
                     return true
                 }
@@ -134,8 +134,8 @@ final class StampViewModel {
         
         // Apply ident filters
         if !activeIdentFilters.isEmpty {
-            result = result.filter { displayStamp in
-                let stampType = displayStamp.asset.stampType
+            result = result.filter { display in
+                let stampType = display.asset.stampType
                 return activeIdentFilters.contains(stampType)
             }
         }
@@ -157,8 +157,8 @@ final class StampViewModel {
                 "audio/mp3": "mp3",
             ]
             
-            result = result.filter { displayStamp in
-                guard let mimetype = displayStamp.asset.fileType?.lowercased() else { return false }
+            result = result.filter { display in
+                guard let mimetype = display.asset.fileType?.lowercased() else { return false }
                 guard let format = mimeToFormat[mimetype] else { return false }
                 return activeFileFormatFilters.contains(format)
             }
@@ -166,8 +166,8 @@ final class StampViewModel {
         
         // Apply edition filters
         if !activeEditionFilters.isEmpty {
-            result = result.filter { displayStamp in
-                let supply = displayStamp.asset.editionsSupply
+            result = result.filter { display in
+                let supply = display.asset.editionsSupply
                 for edition in activeEditionFilters {
                     if edition == "single" && supply == 1 { return true }
                     if edition == "multiple" && supply > 1 { return true }
@@ -217,8 +217,8 @@ final class StampViewModel {
                     do {
                         let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
                         // Convert StampAssetBalance to StampDisplay
-                        let displayStamps = walletBalances.map { StampDisplay(from: $0) }
-                        return .success(displayStamps)
+                        let displayAssets = walletBalances.map { StampDisplay(from: $0) }
+                        return .success(displayAssets)
                     } catch {
                         return .failure(error)
                     }
@@ -227,8 +227,8 @@ final class StampViewModel {
             
             for await result in group {
                 switch result {
-                case .success(let displayStamps):
-                    allStamps.append(contentsOf: displayStamps)
+                case .success(let displayAssets):
+                    allStamps.append(contentsOf: displayAssets)
                 case .failure(let error):
                     let errorDetail = error.localizedDescription
                     print("❌ Fetch error: \(errorDetail)")
@@ -282,11 +282,11 @@ final class StampViewModel {
         
         do {
             let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
-            let newDisplayStamps = walletBalances.map { StampDisplay(from: $0) }
+            let newDisplayAssets = walletBalances.map { StampDisplay(from: $0) }
             
             // Remove existing stamps from this wallet, then add fresh ones
             var updatedStamps = stamps.filter { $0.walletAddress != wallet.address }
-            updatedStamps.append(contentsOf: newDisplayStamps)
+            updatedStamps.append(contentsOf: newDisplayAssets)
             
             // Deduplicate
             var seen = Set<Int>()
@@ -298,10 +298,10 @@ final class StampViewModel {
             
             stamps = sortedStamps(uniqueStamps, by: currentSortOption, wallets: allWallets)
             
-            print("✅ Refreshed wallet \(wallet.displayName): \(newDisplayStamps.count) stamps")
+            print("✅ Refreshed wallet \(wallet.displayName): \(newDisplayAssets.count) stamps")
             
             // Prefetch images for the refreshed stamps
-            if !newDisplayStamps.isEmpty {
+            if !newDisplayAssets.isEmpty {
                 fetchStampsImages()
             }
         } catch {
@@ -323,15 +323,15 @@ final class StampViewModel {
         var vectorURLs: [URL] = []  // HTML/SVG - need viewport injection
         var textURLs: [URL] = []    // Plain text - cache as-is
         
-        for displayStamp in stamps {
-            let stamp = displayStamp.asset
-            guard let url = stamp.imageURL else { continue }
+        for display in stamps {
+            let asset = display.asset
+            guard let url = asset.imageURL else { continue }
             
-            if stamp.isHTML || stamp.isSVG {
+            if asset.isHTML || asset.isSVG {
                 vectorURLs.append(url)
-            } else if stamp.isText {
+            } else if asset.isText {
                 textURLs.append(url)
-            } else if stamp.isLibrary || stamp.isAudio || stamp.isVideo {
+            } else if asset.isLibrary || asset.isAudio || asset.isVideo {
                 // Skip library/audio/video - these are placeholders or not preloadable
                 continue
             } else {
@@ -588,17 +588,17 @@ final class StampViewModel {
     
     /// Fetch market data for a single stamp if not already cached
     @MainActor
-    func fetchMarketDataIfNeeded(for stampDisplay: StampDisplay) async {
-        let stampId = stampDisplay.asset.stampId
+    func fetchMarketDataIfNeeded(for displayAsset: StampDisplay) async {
+        let stampId = displayAsset.asset.stampId
         
         // Skip if already cached or currently loading
         guard marketDataCache[stampId] == nil,
-              !stampDisplay.isLoadingMarketData else {
+              !displayAsset.isLoadingMarketData else {
             return
         }
         
         // Mark as loading
-        if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+        if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
             stamps[index].isLoadingMarketData = true
         }
         
@@ -613,7 +613,7 @@ final class StampViewModel {
             }
             
             // Update display stamp on main actor - replace entire StampDisplay with updated stamp
-            if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+            if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
                 let oldDisplay = stamps[index]
                 stamps[index] = StampDisplay(
                     asset: stampData,
@@ -628,7 +628,7 @@ final class StampViewModel {
             print("❌ Failed to fetch market data for stamp \(stampId): \(error)")
             
             // Mark as not loading on error
-            if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+            if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
                 stamps[index].isLoadingMarketData = false
             }
         }
@@ -645,22 +645,22 @@ final class StampViewModel {
         guard !stampsToFetch.isEmpty else { return }
         
         // Mark all as loading
-        for stampDisplay in stampsToFetch {
-            if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+        for displayAsset in stampsToFetch {
+            if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
                 stamps[index].isLoadingMarketData = true
             }
         }
         
         // Fetch concurrently
         await withTaskGroup(of: (Int, StampAsset?).self) { group in
-            for stampDisplay in stampsToFetch {
+            for displayAsset in stampsToFetch {
                 group.addTask {
                     do {
-                        let stampData = try await self.apiClient.fetchStamp(stampDisplay.asset.stampId)
-                        return (stampDisplay.asset.stampId, stampData)
+                        let stampData = try await self.apiClient.fetchStamp(displayAsset.asset.stampId)
+                        return (displayAsset.asset.stampId, stampData)
                     } catch {
-                        print("❌ Failed to fetch market data for stamp \(stampDisplay.asset.stampId): \(error)")
-                        return (stampDisplay.asset.stampId, nil)
+                        print("❌ Failed to fetch market data for stamp \(displayAsset.asset.stampId): \(error)")
+                        return (displayAsset.asset.stampId, nil)
                     }
                 }
             }

@@ -355,14 +355,14 @@ let walletBalances = try await apiClient.fetchStampsByWallet(address)
 // Returns: [StampAssetBalance]
 
 // 2. Transform to display models
-let displayStamps = walletBalances.map { StampDisplay(from: $0) }
+let displayAssets = walletBalances.map { StampDisplay(from: $0) }
 // Creates: [StampDisplay] with embedded StampAsset
 
 // 3. Render in view
-ForEach(displayStamps) { displayStamp in
+ForEach(displayAssets) { displayAsset in
     StampAssetCardView(
-        displayStamp: displayStamp,  // Has stamp + balance info
-        onTap: { selectedStamp = displayStamp }
+        displayAsset: displayAsset,  // Has stamp + balance info
+        onTap: { selectedStamp = displayAsset }
     )
 }
 ```
@@ -371,23 +371,23 @@ ForEach(displayStamps) { displayStamp in
 
 ```swift
 struct StampAssetCardView: View {
-    let displayStamp: StampDisplay
+    let displayAsset: StampDisplay
     
     var body: some View {
         VStack {
             // Access stamp data
-            Text(displayStamp.asset.formattedStampId)
+            Text(displayAsset.asset.formattedStampId)
             
             // Access balance info
-            Text("Balance: \(displayStamp.balance)")
+            Text("Balance: \(displayAsset.balance)")
             
             // Access computed properties
-            if displayStamp.asset.isImage {
-                StampImageView(url: displayStamp.asset.stampUrl)
+            if displayAsset.asset.isImage {
+                StampImageView(url: displayAsset.asset.stampUrl)
             }
             
             // Access market data if available
-            if let marketData = displayStamp.asset.marketData {
+            if let marketData = displayAsset.asset.marketData {
                 Text("Floor: \(marketData.floorPrice ?? 0)")
             }
         }
@@ -400,9 +400,9 @@ struct StampAssetCardView: View {
 ```swift
 // In StampViewModel
 var filteredStamps: [StampDisplay] {
-    stamps.filter { displayStamp in
+    stamps.filter { display in
         // Access computed stampType from core model
-        activeIdentFilters.contains(displayStamp.asset.stampType)
+        activeIdentFilters.contains(display.asset.stampType)
     }
 }
 ```

@@ -268,18 +268,18 @@ func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDisplay]) async {
     }
     
     // Mark as loading
-    for stampDisplay in stampsToFetch {
-        if let index = stamps.firstIndex(where: { $0.id == stampDisplay.id }) {
+    for displayAsset in stampsToFetch {
+        if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
             stamps[index].isLoadingMarketData = true
         }
     }
     
     // Fetch concurrently
     await withTaskGroup(of: (Int, StampAssetMarketData?).self) { group in
-        for stampDisplay in stampsToFetch {
+        for displayAsset in stampsToFetch {
             group.addTask {
-                let fullData = try? await apiClient.fetchStampDetails(stampDisplay.asset.stampId)
-                return (stampDisplay.asset.stampId, fullData?.marketData)
+                let fullData = try? await apiClient.fetchStampDetails(displayAsset.asset.stampId)
+                return (displayAsset.asset.stampId, fullData?.marketData)
             }
         }
         
@@ -305,14 +305,14 @@ func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDisplay]) async {
 // In StampAssetRowView or StampView
 ScrollView {
     LazyVStack {
-        ForEach(filteredStamps) { stampDisplay in
-            StampAssetRowView(displayStamp: stampDisplay)
+        ForEach(filteredStamps) { displayAsset in
+            StampAssetRowView(displayAsset: displayAsset)
                 .onAppear {
                     // Fetch market data when row appears in list view
                     // Applies to: iPhone (landscape) + iPad (all orientations)
                     if viewModel.displayMode == .list {
                         Task {
-                            await viewModel.fetchMarketDataIfNeeded(for: stampDisplay)
+                            await viewModel.fetchMarketDataIfNeeded(for: displayAsset)
                         }
                     }
                 }

@@ -43,16 +43,16 @@ struct SearchView: View {
             .tint(appColorScheme.primary)
         }
         .searchable(text: $viewModel.searchText, prompt: "Search")
-        .fullScreenCover(item: $selectedStamp) { displayStamp in
-            if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
+        .fullScreenCover(item: $selectedStamp) { displayAsset in
+            if let index = viewModel.stamps.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
                     stamps: viewModel.stamps.map(\.asset),
                     initialIndex: index
                 )
             }
         }
-        .sheet(item: $metadataStamp) { displayStamp in
-            StampAssetDetailView(displayStamp: displayStamp, viewModel: viewModel)
+        .sheet(item: $metadataStamp) { displayAsset in
+            StampAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
     }
@@ -100,14 +100,14 @@ struct SearchView: View {
     private var searchResults: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(viewModel.filteredStamps) { displayStamp in
+                ForEach(viewModel.filteredStamps) { displayAsset in
                     StampAssetRowView(
-                        displayStamp: displayStamp,
+                        displayAsset: displayAsset,
                         onTap: {
-                            metadataStamp = displayStamp
+                            metadataStamp = displayAsset
                         },
                         onLongPress: {
-                            selectedStamp = displayStamp
+                            selectedStamp = displayAsset
                         }
                     )
                 }

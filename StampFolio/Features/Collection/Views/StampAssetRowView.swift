@@ -13,12 +13,12 @@ struct StampAssetRowView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampDisplay
+    let displayAsset: StampDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     
     // Convenience accessor
-    private var stamp: StampAsset { displayStamp.asset }
+    private var asset: StampAsset { displayAsset.asset }
     
     // MARK: - Environment
     
@@ -50,7 +50,7 @@ struct StampAssetRowView: View {
                 onLongPress()  // Show detail view
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(stamp.formattedStampId), \(artistName), Balance: \(displayStamp.formattedQuantity)")
+            .accessibilityLabel("\(asset.formattedStampId), \(artistName), Balance: \(displayAsset.formattedQuantity)")
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
@@ -67,7 +67,7 @@ struct StampAssetRowView: View {
             // Stamp information
             VStack(alignment: .leading, spacing: 4) {
                 // Stamp number
-                Text(stamp.formattedStampId)
+                Text(asset.formattedStampId)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
@@ -79,7 +79,7 @@ struct StampAssetRowView: View {
                     .lineLimit(1)
                 
                 // Edition balance
-                Text("Balance: \(displayStamp.formattedQuantity)")
+                Text("Balance: \(displayAsset.formattedQuantity)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -87,7 +87,7 @@ struct StampAssetRowView: View {
             Spacer()
             
             // Wallet icon (conditional)
-            if showWalletIcons, displayStamp.walletAddress != nil {
+            if showWalletIcons, displayAsset.walletAddress != nil {
                 walletIcon
             }
         }
@@ -100,21 +100,21 @@ struct StampAssetRowView: View {
     private var stampImage: some View {
         if imageLoadFailed {
             failedImageView
-        } else if stamp.isHTML || stamp.isSVG {
+        } else if asset.isHTML || asset.isSVG {
             // Vector: HTML/SVG via WebView
-            StampAssetVectorView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
-        } else if stamp.isText {
+            StampAssetVectorView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
+        } else if asset.isText {
             // Text: Plain text content
-            StampAssetTextView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
-        } else if stamp.isLibrary, let label = stamp.libraryLabel {
+            StampAssetTextView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
+        } else if asset.isLibrary, let label = asset.libraryLabel {
             // Library: JS/CSS/GZIP files
             StampAssetLibraryView(label: label)
-        } else if stamp.isAudio || stamp.isVideo {
+        } else if asset.isAudio || asset.isVideo {
             // Media: Audio/Video placeholders
-            StampAssetMediaView(type: stamp.isAudio ? .audio : .video)
+            StampAssetMediaView(type: asset.isAudio ? .audio : .video)
         } else {
             // Raster: Pixel images (jpg, png, webp, gif)
-            StampAssetPixelView(stamp: stamp, geometry: CGSize(width: 64, height: 64), onFailure: { imageLoadFailed = true })
+            StampAssetPixelView(stamp: asset, geometry: CGSize(width: 64, height: 64), onFailure: { imageLoadFailed = true })
         }
     }
     
@@ -139,17 +139,17 @@ struct StampAssetRowView: View {
     // MARK: - Artist Name
     
     private var artistName: String {
-        if let creatorName = stamp.creatorName {
+        if let creatorName = asset.creatorName {
             return creatorName
         } else {
-            return stamp.creatorAddy.truncatedAddress(length: 6)
+            return asset.creatorAddy.truncatedAddress(length: 6)
         }
     }
     
     // MARK: - Wallet Icon
     
     private var walletIcon: some View {
-        let wallet = wallets.first { $0.address == displayStamp.walletAddress }
+        let wallet = wallets.first { $0.address == displayAsset.walletAddress }
         let walletColor = wallet?.walletColor.color ?? .gray
         
         return Image(systemName: "wallet.bifold.fill")
@@ -171,13 +171,13 @@ struct StampAssetRowView: View {
 #Preview {
     VStack(spacing: 12) {
         StampAssetRowView(
-            displayStamp: StampDisplay(from: StampAsset.sample),
+            displayAsset: StampDisplay(from: StampAsset.sample),
             onTap: {},
             onLongPress: {}
         )
         
         StampAssetRowView(
-            displayStamp: StampDisplay(from: StampAsset.samples[1]),
+            displayAsset: StampDisplay(from: StampAsset.samples[1]),
             onTap: {},
             onLongPress: {}
         )

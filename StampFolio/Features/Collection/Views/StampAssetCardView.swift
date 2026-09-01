@@ -13,13 +13,13 @@ struct StampAssetCardView: View {
     
     // MARK: - Properties
     
-    let displayStamp: StampDisplay
+    let displayAsset: StampDisplay
     let onTap: () -> Void
     let onLongPress: () -> Void
     let viewMode: ViewMode
     
     // Convenience accessor
-    private var stamp: StampAsset { displayStamp.asset }
+    private var asset: StampAsset { displayAsset.asset }
     
     // MARK: - Environment
     
@@ -51,7 +51,7 @@ struct StampAssetCardView: View {
                 onLongPress()  // Show detail view
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(stamp.formattedStampId)
+            .accessibilityLabel(asset.formattedStampId)
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
@@ -64,23 +64,23 @@ struct StampAssetCardView: View {
                 // Stamp image routing
                 if imageLoadFailed {
                     failedImageView
-                } else if stamp.isHTML || stamp.isSVG {
+                } else if asset.isHTML || asset.isSVG {
                     // Vector: HTML/SVG via WebView
-                    StampAssetVectorView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
+                    StampAssetVectorView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
                         .frame(width: geometry.size.width, height: geometry.size.width)
-                } else if stamp.isText {
+                } else if asset.isText {
                     // Text: Plain text content
-                    StampAssetTextView(url: stamp.imageURL, onFailure: { imageLoadFailed = true })
+                    StampAssetTextView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
                         .frame(width: geometry.size.width, height: geometry.size.width)
-                } else if stamp.isLibrary, let label = stamp.libraryLabel {
+                } else if asset.isLibrary, let label = asset.libraryLabel {
                     // Library: JS/CSS/GZIP files
                     StampAssetLibraryView(label: label)
-                } else if stamp.isAudio || stamp.isVideo {
+                } else if asset.isAudio || asset.isVideo {
                     // Media: Audio/Video placeholders
-                    StampAssetMediaView(type: stamp.isAudio ? .audio : .video)
+                    StampAssetMediaView(type: asset.isAudio ? .audio : .video)
                 } else {
                     // Raster: Pixel images (jpg, png, webp, gif)
-                    StampAssetPixelView(stamp: stamp, geometry: geometry.size, onFailure: { imageLoadFailed = true })
+                    StampAssetPixelView(stamp: asset, geometry: geometry.size, onFailure: { imageLoadFailed = true })
                 }
                 
                 // Overlay: Stamp number (top left), wallet icon (top right) and Edition balance (bottom right)
@@ -94,7 +94,7 @@ struct StampAssetCardView: View {
                             Spacer()
                             
                             // Wallet icon - top right
-                            if showWalletIcons, displayStamp.walletAddress != nil {
+                            if showWalletIcons, displayAsset.walletAddress != nil {
                                 walletIcon
                             }
                         }
@@ -146,7 +146,7 @@ struct StampAssetCardView: View {
     // MARK: - Stamp Number Pill
     
     private var stampNumber: some View {
-        Text("#\(stamp.id)")
+        Text("#\(asset.id)")
             .font(.caption)
             .fontWeight(.medium)
             .foregroundStyle(.primary)
@@ -156,13 +156,13 @@ struct StampAssetCardView: View {
                 Capsule()
                     .fill(Color(uiColor: .systemBackground).opacity(0.85))
             )
-            .accessibilityLabel("Stamp number \(stamp.id)")
+            .accessibilityLabel("Stamp number \(asset.id)")
     }
     
     // MARK: - Stamp Editions Pill
     
     private var stampEditions: some View {
-        Text(displayStamp.formattedBalanceWithSupply)
+        Text(displayAsset.formattedBalanceWithSupply)
             .font(.caption)
             .fontWeight(.bold)
             .foregroundStyle(appColorScheme.primary)
@@ -172,13 +172,13 @@ struct StampAssetCardView: View {
                 Capsule()
                     .fill(Color(uiColor: .systemBackground).opacity(0.85))
             )
-            .accessibilityLabel("Balance: \(displayStamp.formattedBalanceWithSupply)")
+            .accessibilityLabel("Balance: \(displayAsset.formattedBalanceWithSupply)")
     }
     
     // MARK: - Wallet Icon Pill
     
     private var walletIcon: some View {
-        let wallet = wallets.first { $0.address == displayStamp.walletAddress }
+        let wallet = wallets.first { $0.address == displayAsset.walletAddress }
         let walletColor = wallet?.walletColor.color ?? .gray
         
         return Image(systemName: "wallet.bifold.fill")
@@ -200,14 +200,14 @@ struct StampAssetCardView: View {
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
         StampAssetCardView(
-            displayStamp: StampDisplay(from: StampAsset.sample),
+            displayAsset: StampDisplay(from: StampAsset.sample),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid
         )
         
         StampAssetCardView(
-            displayStamp: StampDisplay(from: StampAsset.samples[1]),
+            displayAsset: StampDisplay(from: StampAsset.samples[1]),
             onTap: {},
             onLongPress: {},
             viewMode: .normalGrid

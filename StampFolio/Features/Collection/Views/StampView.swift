@@ -124,8 +124,8 @@ struct StampView: View {
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             showOfflineBanner = !isConnected
         }
-        .fullScreenCover(item: $selectedStamp) { displayStamp in
-            if let index = viewModel.stamps.firstIndex(where: { $0.id == displayStamp.id }) {
+        .fullScreenCover(item: $selectedStamp) { displayAsset in
+            if let index = viewModel.stamps.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
                     stamps: viewModel.stamps.map(\.asset),
                     initialIndex: index
@@ -139,8 +139,8 @@ struct StampView: View {
                 isSlideshow: true
             )
         }
-        .sheet(item: $metadataStamp) { displayStamp in
-            StampAssetDetailView(displayStamp: displayStamp, viewModel: viewModel)
+        .sheet(item: $metadataStamp) { displayAsset in
+            StampAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showAddWallet) {
@@ -463,21 +463,21 @@ struct StampView: View {
             if viewMode == .list {
                 // List view mode
                 LazyVStack(spacing: 12) {
-                    ForEach(viewModel.filteredStamps) { displayStamp in
+                    ForEach(viewModel.filteredStamps) { displayAsset in
                         StampAssetRowView(
-                            displayStamp: displayStamp,
+                            displayAsset: displayAsset,
                             onTap: {
-                                metadataStamp = displayStamp
+                                metadataStamp = displayAsset
                             },
                             onLongPress: {
-                                selectedStamp = displayStamp
+                                selectedStamp = displayAsset
                             }
                         )
                         .onAppear {
                             // Fetch market data when row appears in list view
                             // Applies to: iPhone (landscape) + iPad (all orientations)
                             Task {
-                                await viewModel.fetchMarketDataIfNeeded(for: displayStamp)
+                                await viewModel.fetchMarketDataIfNeeded(for: displayAsset)
                             }
                         }
                     }
@@ -486,14 +486,14 @@ struct StampView: View {
             } else {
                 // Grid view modes
                 LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(viewModel.filteredStamps) { displayStamp in
+                    ForEach(viewModel.filteredStamps) { displayAsset in
                         StampAssetCardView(
-                            displayStamp: displayStamp,
+                            displayAsset: displayAsset,
                             onTap: {
-                                metadataStamp = displayStamp
+                                metadataStamp = displayAsset
                             },
                             onLongPress: {
-                                selectedStamp = displayStamp
+                                selectedStamp = displayAsset
                             },
                             viewMode: viewMode
                         )
