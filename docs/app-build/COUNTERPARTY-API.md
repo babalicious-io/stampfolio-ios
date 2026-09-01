@@ -129,16 +129,34 @@ to an external JSON manifest (e.g. `description: "https://xcp.fun/XCPIANS.json"`
 real image URL (`image`, or an `images: [{type, data}]` array), and occasionally a direct link to
 the image itself.
 
-`CounterpartyAssetImageResolver` (`Core/Data/Network/`) is an actor that resolves this indirection:
-it skips the network call entirely for assets whose `description` isn't a URL, otherwise fetches
-it once, tries to decode it as a `CounterpartyAssetManifest`, and falls back to treating the
-`description` URL as a direct image link if the response's MIME type is `image/*`. Results
-(including "no artwork") are cached in memory per asset name.
+`CounterpartyAssetImageResolver` (`Core/Data/Network/`) is an actor that resolves this indirection.
+It tries the on-chain `description` first: fetches it once, tries to decode it as a
+`CounterpartyAssetManifest`, and falls back to treating the `description` URL as a direct image
+link if the response's MIME type is `image/*`. Results (including "no artwork") are cached in
+memory per asset name.
+
+Many `description` links date back to Counterparty's 2014-2016 "Rare Pepe" era and their hosts
+have since died, moved, or serve **plain HTTP only** (which iOS's App Transport Security blocks
+by default — no ATS exception is added for this, see below). When the direct attempt fails, or
+`description` isn't a URL at all, the resolver falls back to
+[Horizon Market](https://horizon.market)'s public asset endpoint
+(`GET https://horizon.market/api/tokens/counterparty/{asset}`, documented as part of their
+[`horizon-market-client`](https://github.com/UnspendableLabs/Horizon-Market-Client) API surface,
+served with `Access-Control-Allow-Origin: *`). Horizon (and pepe.wtf, which it shares an S3/Arweave
+artwork archive with) maintains its own permanent, re-hosted copy of this artwork instead of
+depending on the fragile original hosts, and proxies any HTTP-only sources over HTTPS
+(`/api/asset-media/proxy?url=...`) — so this fallback recovers artwork for assets whose on-chain
+`description` link is now dead, without StampFolio needing any ATS exceptions of its own. If
+Horizon's own catalog has no real artwork either (`image_is_placeholder: true`), the resolver
+caches `nil` — that asset genuinely has no recoverable artwork anywhere.
 
 `CounterpartyAssetImageView` (`Features/Counterparty/Views/`) wraps this resolver and renders the
 artwork with Kingfisher (`KFImage`, same downsampling/retry/fade pipeline as `StampPixelView`),
-falling back to the existing placeholder icon when there's no artwork or the load fails. It's
-shared by the row, card, detail, and slideshow views so each asset's image is only resolved once.
+including `.interpolation(.none)` since many of these manifests only ever had tiny (e.g. 48×48)
+icons that would otherwise blur when scaled up to card/row size — the same fix `StampPixelView`
+already applies for small pixel-art stamps. It falls back to the existing placeholder icon when
+there's no artwork or the load fails, and is shared by the row, card, detail, and slideshow views
+so each asset's image is only resolved once.
 
 ### Full toolbar and grid parity with Stamps
 

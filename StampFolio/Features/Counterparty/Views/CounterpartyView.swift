@@ -27,6 +27,7 @@ struct CounterpartyView: View {
     @State private var showAddWallet = false
     @State private var showOfflineBanner = false
     @State private var showSlideshow = false
+    @State private var fullscreenAsset: CounterpartyAssetDisplay?
     @AppStorage("counterpartyViewMode") private var viewMode: ViewMode = .normalGrid
 
     // MARK: - Computed Properties
@@ -118,6 +119,14 @@ struct CounterpartyView: View {
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()
                 .environment(SettingsViewModel())
+        }
+        .fullScreenCover(item: $fullscreenAsset) { displayAsset in
+            if let index = viewModel.filteredAssets.firstIndex(where: { $0.id == displayAsset.id }) {
+                CounterpartyAssetSlideshowView(
+                    assets: viewModel.filteredAssets.map(\.asset),
+                    initialIndex: index
+                )
+            }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
             CounterpartyAssetSlideshowView(
@@ -256,6 +265,9 @@ struct CounterpartyView: View {
                             displayAsset: displayAsset,
                             onTap: {
                                 viewModel.selectedAsset = displayAsset
+                            },
+                            onLongPress: {
+                                fullscreenAsset = displayAsset
                             }
                         )
                     }
@@ -268,6 +280,9 @@ struct CounterpartyView: View {
                             displayAsset: displayAsset,
                             onTap: {
                                 viewModel.selectedAsset = displayAsset
+                            },
+                            onLongPress: {
+                                fullscreenAsset = displayAsset
                             },
                             viewMode: viewMode
                         )

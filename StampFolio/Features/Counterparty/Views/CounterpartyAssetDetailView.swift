@@ -81,11 +81,13 @@ struct CounterpartyAssetDetailView: View {
     // MARK: - Asset Image Header
 
     private var assetImageHeader: some View {
-        CounterpartyAssetImageView(asset: asset, size: CGSize(width: 400, height: 220))
-            .frame(maxWidth: .infinity)
-            .frame(height: 220)
+        // Sized to a portrait "trading card" ratio (matching the grid tile) since most
+        // Counterparty artwork is card-shaped rather than square like Stamps; square/icon
+        // artwork is still shown in full via CounterpartyAssetImageView's letterboxing.
+        CounterpartyAssetImageView(asset: asset, size: CGSize(width: 300, height: 420))
+            .frame(width: 300, height: 420)
             .clipShape(RoundedRectangle(cornerRadius: 20))
-            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
     }
 

@@ -32,21 +32,29 @@ struct CounterpartyAssetImageView: View {
     var body: some View {
         Group {
             if let resolvedImageURL, !imageLoadFailed {
-                KFImage(resolvedImageURL)
-                    .placeholder { placeholderIcon }
-                    .loadDiskFileSynchronously()
-                    .setProcessor(DownsamplingImageProcessor(size: size))
-                    .scaleFactor(UIScreen.main.scale)
-                    .retry(maxCount: 2, interval: .seconds(1))
-                    .fade(duration: 0.25)
-                    .cacheOriginalImage()
-                    .onFailure { _ in
-                        imageLoadFailed = true
-                    }
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: size.width, height: size.height)
-                    .clipped()
+                ZStack {
+                    // Many Counterparty assets use "card" (portrait, e.g. 5:7) artwork rather than
+                    // Stamps' square format, so the image is never cropped to fill the frame — this
+                    // tint fills any letterboxing around it instead.
+                    appColorScheme.primary.opacity(0.08)
+
+                    KFImage(resolvedImageURL)
+                        .placeholder { placeholderIcon }
+                        .loadDiskFileSynchronously()
+                        .setProcessor(DownsamplingImageProcessor(size: size))
+                        .scaleFactor(UIScreen.main.scale)
+                        .retry(maxCount: 2, interval: .seconds(1))
+                        .fade(duration: 0.25)
+                        .cacheOriginalImage()
+                        .onFailure { _ in
+                            imageLoadFailed = true
+                        }
+                        .resizable()
+                        .interpolation(.none) // Many manifests only have tiny (e.g. 48x48) icons; avoid blurring them when scaled up
+                        .aspectRatio(contentMode: .fit)
+                }
+                .frame(width: size.width, height: size.height)
+                .clipped()
             } else {
                 placeholderIcon
             }
@@ -72,7 +80,6 @@ struct CounterpartyAssetImageView: View {
     // MARK: - Image Resolution
 
     private func resolveImageIfNeeded() async {
-        guard asset.descriptionIsURL else { return }
         imageLoadFailed = false
         resolvedImageURL = await CounterpartyAssetImageResolver.shared.resolveImageURL(for: asset)
     }

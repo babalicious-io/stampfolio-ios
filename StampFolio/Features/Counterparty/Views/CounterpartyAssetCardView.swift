@@ -15,6 +15,7 @@ struct CounterpartyAssetCardView: View {
 
     let displayAsset: CounterpartyAssetDisplay
     let onTap: () -> Void
+    let onLongPress: () -> Void
     let viewMode: ViewMode
 
     private var asset: CounterpartyAsset { displayAsset.asset }
@@ -38,16 +39,16 @@ struct CounterpartyAssetCardView: View {
             .animation(.easeInOut(duration: 0.1), value: isPressed)
             .contentShape(Rectangle())
             .onTapGesture {
-                onTap()
+                onTap()  // Show metadata sheet
             }
             .onLongPressGesture(minimumDuration: 0.5, pressing: { pressing in
                 isPressed = pressing
             }, perform: {
-                onTap()
+                onLongPress()  // Show fullscreen viewer
             })
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(asset.displayName), Balance: \(displayAsset.formattedBalance)")
-            .accessibilityHint("Tap for details")
+            .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
 
@@ -57,7 +58,7 @@ struct CounterpartyAssetCardView: View {
         GeometryReader { geometry in
             ZStack {
                 CounterpartyAssetImageView(asset: asset, size: geometry.size)
-                    .frame(width: geometry.size.width, height: geometry.size.width)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
 
                 // Overlay: Wallet icon (top right), asset name (bottom left) and balance (bottom right)
                 // Hidden in dense grid mode for cleaner appearance
@@ -85,7 +86,10 @@ struct CounterpartyAssetCardView: View {
                 }
             }
         }
-        .aspectRatio(1, contentMode: .fit)
+        // Most Counterparty assets (unlike Stamps) use portrait "trading card" artwork rather
+        // than square pixel art, so the tile itself is card-shaped; CounterpartyAssetImageView
+        // still letterboxes anything that isn't exactly this ratio (e.g. square icons).
+        .aspectRatio(5 / 7, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 
@@ -146,8 +150,8 @@ struct CounterpartyAssetCardView: View {
 
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-        CounterpartyAssetCardView(displayAsset: .sample, onTap: {}, viewMode: .normalGrid)
-        CounterpartyAssetCardView(displayAsset: .sample, onTap: {}, viewMode: .normalGrid)
+        CounterpartyAssetCardView(displayAsset: .sample, onTap: {}, onLongPress: {}, viewMode: .normalGrid)
+        CounterpartyAssetCardView(displayAsset: .sample, onTap: {}, onLongPress: {}, viewMode: .normalGrid)
     }
     .padding()
 }

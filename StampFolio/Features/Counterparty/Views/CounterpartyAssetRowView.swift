@@ -15,6 +15,7 @@ struct CounterpartyAssetRowView: View {
 
     let displayAsset: CounterpartyAssetDisplay
     let onTap: () -> Void
+    let onLongPress: () -> Void
 
     private var asset: CounterpartyAsset { displayAsset.asset }
 
@@ -37,11 +38,16 @@ struct CounterpartyAssetRowView: View {
             .animation(.easeInOut(duration: 0.1), value: isPressed)
             .contentShape(Rectangle())
             .onTapGesture {
-                onTap()
+                onTap()  // Show metadata sheet
             }
+            .onLongPressGesture(minimumDuration: 0.5, pressing: { pressing in
+                isPressed = pressing
+            }, perform: {
+                onLongPress()  // Show fullscreen viewer
+            })
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(asset.displayName), Balance: \(displayAsset.formattedBalance)")
-            .accessibilityHint("Tap for details")
+            .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
 
@@ -146,7 +152,7 @@ struct CounterpartyAssetRowView: View {
 
 #Preview {
     VStack(spacing: 12) {
-        CounterpartyAssetRowView(displayAsset: .sample, onTap: {})
+        CounterpartyAssetRowView(displayAsset: .sample, onTap: {}, onLongPress: {})
     }
     .padding()
 }
