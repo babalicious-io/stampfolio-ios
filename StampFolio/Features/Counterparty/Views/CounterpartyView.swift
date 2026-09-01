@@ -89,9 +89,6 @@ struct CounterpartyView: View {
 
         NavigationStack {
             mainContent
-                .navigationTitle("Counterparty")
-                .navigationBarTitleDisplayMode(.inline)
-                .searchable(text: $viewModel.searchText, prompt: "Search assets")
                 .toolbar {
                     viewModeToolbarItem
                     slideshowToolbarItem
@@ -171,8 +168,6 @@ struct CounterpartyView: View {
             errorView
         } else if viewModel.assets.isEmpty {
             noAssetsView
-        } else if !viewModel.searchText.isEmpty && viewModel.filteredAssets.isEmpty {
-            noSearchResultsView
         } else if viewModel.hasActiveFilters && viewModel.filteredAssets.isEmpty {
             noFilterResultsView
         } else {
@@ -226,12 +221,6 @@ struct CounterpartyView: View {
         } description: {
             Text("Your wallets don't hold any other Counterparty assets")
         }
-    }
-
-    // MARK: - No Search Results View
-
-    private var noSearchResultsView: some View {
-        ContentUnavailableView.search(text: viewModel.searchText)
     }
 
     // MARK: - No Filter Results View

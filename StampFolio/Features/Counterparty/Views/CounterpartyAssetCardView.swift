@@ -22,6 +22,7 @@ struct CounterpartyAssetCardView: View {
 
     // MARK: - Environment
 
+    @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate) private var wallets: [WalletConfig]
 
     // MARK: - State
@@ -60,28 +61,29 @@ struct CounterpartyAssetCardView: View {
                 CounterpartyAssetImageView(asset: asset, size: geometry.size)
                     .frame(width: geometry.size.width, height: geometry.size.height)
 
-                // Overlay: Wallet icon (top right), asset name (bottom left) and balance (bottom right)
+                // Overlay: asset name (top left), wallet icon (top right) and balance (bottom right)
                 // Hidden in dense grid mode for cleaner appearance
                 if viewMode != .denseGrid {
                     VStack {
-                        if showWalletIcons, displayAsset.walletAddress != nil {
-                            HStack {
-                                Spacer()
-                                walletIcon
-                            }
-                            .padding(8)
-                        }
-
-                        Spacer()
-
-                        HStack(alignment: .bottom) {
+                        HStack(alignment: .top) {
                             assetNamePill
 
                             Spacer()
 
+                            if showWalletIcons, displayAsset.walletAddress != nil {
+                                walletIcon
+                            }
+                        }
+                        .padding(4)
+
+                        Spacer()
+
+                        HStack(alignment: .bottom) {
+                            Spacer()
+
                             balancePill
                         }
-                        .padding(8)
+                        .padding(4)
                     }
                 }
             }
@@ -116,7 +118,7 @@ struct CounterpartyAssetCardView: View {
         Text(displayAsset.formattedBalance)
             .font(.caption)
             .fontWeight(.bold)
-            .foregroundStyle(.primary)
+            .foregroundStyle(appColorScheme.primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(

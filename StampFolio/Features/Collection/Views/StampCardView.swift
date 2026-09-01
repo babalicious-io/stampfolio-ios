@@ -83,31 +83,32 @@ struct StampCardView: View {
                     StampPixelView(stamp: stamp, geometry: geometry.size, onFailure: { imageLoadFailed = true })
                 }
                 
-                // Overlay: Wallet icon (top right), Stamp number (bottom left) and Edition balance (bottom right)
+                // Overlay: Stamp number (top left), wallet icon (top right) and Edition balance (bottom right)
                 // Hidden in dense grid mode for cleaner appearance
                 if viewMode != .denseGrid {
                     VStack {
-                        // Wallet icon - top right
-                        if showWalletIcons, displayStamp.walletAddress != nil {
-                            HStack {
-                                Spacer()
+                        HStack(alignment: .top) {
+                            // Stamp number - top left
+                            stampNumber
+                            
+                            Spacer()
+                            
+                            // Wallet icon - top right
+                            if showWalletIcons, displayStamp.walletAddress != nil {
                                 walletIcon
                             }
-                            .padding(8)
                         }
+                        .padding(4)
                         
                         Spacer()
                         
                         HStack(alignment: .bottom) {
-                            // Stamp number - bottom left
-                            stampNumber
-                            
                             Spacer()
                             
                             // Edition balance - bottom right
                             stampEditions
                         }
-                        .padding(8)
+                        .padding(4)
                     }
                 }
             }
@@ -164,7 +165,7 @@ struct StampCardView: View {
         Text(displayStamp.formattedBalanceWithSupply)
             .font(.caption)
             .fontWeight(.bold)
-            .foregroundStyle(.primary)
+            .foregroundStyle(appColorScheme.primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(
