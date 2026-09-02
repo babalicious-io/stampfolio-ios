@@ -27,12 +27,6 @@ final class WalletConfig {
     /// User-selected color for the wallet icon (defaults to gray for existing wallets)
     var colorName: String?
     
-    /// Cached stamp count (updated on refresh)
-    var cachedStampCount: Int?
-    
-    /// Last time stamps were fetched for this wallet
-    var lastFetchDate: Date?
-    
     // MARK: - Initialization
     
     init(address: String, label: String? = nil, colorName: String? = WalletColor.gray.rawValue) {
@@ -40,8 +34,6 @@ final class WalletConfig {
         self.addedDate = Date()
         self.label = label
         self.colorName = colorName
-        self.cachedStampCount = nil
-        self.lastFetchDate = nil
     }
     
     // MARK: - Computed Properties

@@ -127,14 +127,14 @@ struct StampView: View {
         .fullScreenCover(item: $selectedStamp) { displayAsset in
             if let index = viewModel.assets.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
-                    stamps: viewModel.assets.map(\.asset),
+                    assets: viewModel.assets.map(\.asset),
                     initialIndex: index
                 )
             }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
             StampAssetFullscreenView(
-                stamps: viewModel.assets.map(\.asset),
+                assets: viewModel.assets.map(\.asset),
                 initialIndex: 0,
                 isSlideshow: true
             )

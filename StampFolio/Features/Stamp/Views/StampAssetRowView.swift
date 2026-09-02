@@ -50,7 +50,7 @@ struct StampAssetRowView: View {
                 onLongPress()  // Show detail view
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(asset.formattedStampId), \(artistName), Balance: \(displayAsset.formattedQuantity)")
+            .accessibilityLabel("\(asset.formattedStampId), \(artistName), Balance: \(displayAsset.formattedBalance)")
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
@@ -79,7 +79,7 @@ struct StampAssetRowView: View {
                     .lineLimit(1)
                 
                 // Edition balance
-                Text("Balance: \(displayAsset.formattedQuantity)")
+                Text("Balance: \(displayAsset.formattedBalance)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

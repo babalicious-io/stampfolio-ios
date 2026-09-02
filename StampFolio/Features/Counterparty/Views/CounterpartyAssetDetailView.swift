@@ -62,7 +62,7 @@ struct CounterpartyAssetDetailView: View {
                 }
             }
             .listSectionSpacing(16)
-            .navigationTitle("Asset Details")
+            .navigationTitle("Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

@@ -50,12 +50,6 @@ final class StampViewModel {
     /// Error message (if any)
     private(set) var errorMessage: String?
     
-    /// Currently selected asset for detail view
-    var selectedAsset: StampDisplay?
-    
-    /// Stamp for metadata popup
-    var metadataStamp: StampDisplay?
-    
     /// Whether refresh is in progress
     private(set) var isRefreshing: Bool = false
     
@@ -432,8 +426,6 @@ final class StampViewModel {
     func clear() {
         assets = []
         errorMessage = nil
-        selectedAsset = nil
-        metadataStamp = nil
     }
     
     /// Sort assets by the given option
@@ -506,10 +498,10 @@ final class StampViewModel {
             }
             
         case .balanceAscending:
-            return assets.sorted { ($0.balance ?? 0) < ($1.balance ?? 0) }
+            return assets.sorted { $0.balance < $1.balance }
             
         case .balanceDescending:
-            return assets.sorted { ($0.balance ?? 0) > ($1.balance ?? 0) }
+            return assets.sorted { $0.balance > $1.balance }
             
         case .walletAscending:
             return assets.sorted { asset1, asset2 in

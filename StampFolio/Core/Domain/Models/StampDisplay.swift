@@ -10,7 +10,7 @@ import Foundation
 /// Wrapper for displaying stamps with their balance information
 struct StampDisplay: Identifiable {
     let asset: StampAsset
-    let balance: Double?
+    let balance: Double
     let divisible: Bool
     let walletAddress: String?
     
@@ -29,13 +29,11 @@ struct StampDisplay: Identifiable {
         marketData?.floorPriceBTC
     }
     
-    /// Formatted quantity for display
-    var formattedQuantity: String {
-        let quantity = balance ?? Double(asset.editionsSupply)
-        
+    /// Formatted balance for display
+    var formattedBalance: String {
         // If divisible, convert from satoshi-like units (100,000,000 = 1)
         if divisible {
-            let actualAmount = quantity / 100_000_000.0
+            let actualAmount = balance / 100_000_000.0
             // Remove decimals if it's a whole number
             if actualAmount.truncatingRemainder(dividingBy: 1) == 0 {
                 return String(format: "%.0f", actualAmount)
@@ -44,13 +42,13 @@ struct StampDisplay: Identifiable {
             }
         } else {
             // Non-divisible stamps - show as integer
-            return String(format: "%.0f", quantity)
+            return String(format: "%.0f", balance)
         }
     }
     
     /// Formatted balance with total supply (e.g., "2/69")
     var formattedBalanceWithSupply: String {
-        let userBalance = balance ?? 0.0
+        let userBalance = balance
         let totalSupply = Double(asset.editionsSupply)
         
         if divisible {
@@ -83,7 +81,7 @@ struct StampDisplay: Identifiable {
     /// Memberwise initializer
     init(
         asset: StampAsset,
-        balance: Double? = nil,
+        balance: Double,
         divisible: Bool,
         walletAddress: String? = nil,
         marketData: StampAssetMarketData? = nil,
@@ -127,7 +125,7 @@ struct StampDisplay: Identifiable {
     /// Create from StampAsset (no balance info)
     init(from asset: StampAsset) {
         self.asset = asset
-        self.balance = nil
+        self.balance = 0
         self.divisible = asset.divisible
         self.walletAddress = nil
     }

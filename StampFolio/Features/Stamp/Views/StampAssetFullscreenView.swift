@@ -16,7 +16,7 @@ struct StampAssetFullscreenView: View {
     
     // MARK: - Properties
     
-    let stamps: [StampAsset]
+    let assets: [StampAsset]
     let initialIndex: Int
     let isSlideshow: Bool
     
@@ -38,16 +38,16 @@ struct StampAssetFullscreenView: View {
     
     // MARK: - Computed Properties
     
-    private var currentStamp: StampAsset {
-        stamps[currentIndex]
+    private var currentAsset: StampAsset {
+        assets[currentIndex]
     }
     
     private let swipeThreshold: CGFloat = 100
     
     // MARK: - Initialization
     
-    init(stamps: [StampAsset], initialIndex: Int, isSlideshow: Bool = false) {
-        self.stamps = stamps
+    init(assets: [StampAsset], initialIndex: Int, isSlideshow: Bool = false) {
+        self.assets = assets
         self.initialIndex = initialIndex
         self.isSlideshow = isSlideshow
         _currentIndex = State(initialValue: initialIndex)
@@ -94,13 +94,13 @@ struct StampAssetFullscreenView: View {
         .persistentSystemOverlays(.hidden)
         .statusBarHidden(true)
         .task(id: isSlideshow ? currentIndex : -1) {
-            guard isSlideshow, !stamps.isEmpty else { return }
+            guard isSlideshow, !assets.isEmpty else { return }
             try? await Task.sleep(for: .seconds(slideshowInterval))
             guard !Task.isCancelled else { return }
             navigateToNextSlideshow()
         }
         .accessibilityAddTraits(.isImage)
-        .accessibilityLabel("\(currentStamp.formattedStampId), \(currentIndex + 1) of \(stamps.count)")
+        .accessibilityLabel("\(currentAsset.formattedStampId), \(currentIndex + 1) of \(assets.count)")
         .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
     }
     
@@ -108,21 +108,21 @@ struct StampAssetFullscreenView: View {
     
     @ViewBuilder
     private var contentView: some View {
-        if currentStamp.isText {
+        if currentAsset.isText {
             // Plain text content
-            TextContentView(url: currentStamp.imageURL)
-        } else if currentStamp.isAudio {
+            TextContentView(url: currentAsset.imageURL)
+        } else if currentAsset.isAudio {
             // Audio content
-            AudioContentView(url: currentStamp.imageURL)
-        } else if currentStamp.isVideo {
+            AudioContentView(url: currentAsset.imageURL)
+        } else if currentAsset.isVideo {
             // Video content
-            VideoContentView(url: currentStamp.imageURL)
-        } else if currentStamp.isSVG || currentStamp.isHTML {
+            VideoContentView(url: currentAsset.imageURL)
+        } else if currentAsset.isSVG || currentAsset.isHTML {
             // WebView for SVG/HTML content
-            WebContentView(url: currentStamp.imageURL)
-        } else if currentStamp.isGIF {
+            WebContentView(url: currentAsset.imageURL)
+        } else if currentAsset.isGIF {
             // KFAnimatedImage for animated GIFs - full resolution (no downsampling)
-            KFAnimatedImage(currentStamp.imageURL)
+            KFAnimatedImage(currentAsset.imageURL)
                 .placeholder {
                     ProgressView()
                         .tint(appColorScheme.primary)
@@ -134,7 +134,7 @@ struct StampAssetFullscreenView: View {
                 .allowsHitTesting(false)
         } else {
             // KFImage for static images (jpg, png, webp) - full resolution (no downsampling)
-            KFImage(currentStamp.imageURL)
+            KFImage(currentAsset.imageURL)
                 .placeholder {
                     ProgressView()
                         .tint(appColorScheme.primary)
@@ -242,7 +242,7 @@ struct StampAssetFullscreenView: View {
     // MARK: - Navigation Methods
     
     private func navigateToNext() {
-        guard currentIndex < stamps.count - 1 else {
+        guard currentIndex < assets.count - 1 else {
             withAnimation(.spring(response: 0.3)) {
                 horizontalDragOffset = .zero
             }
@@ -273,7 +273,7 @@ struct StampAssetFullscreenView: View {
     
     private func navigateToNextSlideshow() {
         withAnimation(.spring(response: 0.3)) {
-            currentIndex = currentIndex < stamps.count - 1 ? currentIndex + 1 : 0
+            currentIndex = currentIndex < assets.count - 1 ? currentIndex + 1 : 0
             horizontalDragOffset = .zero
             resetZoom()
         }
@@ -511,5 +511,5 @@ struct VideoContentView: View {
 // MARK: - Preview
 
 #Preview {
-    StampAssetFullscreenView(stamps: [StampAsset.sample], initialIndex: 0)
+    StampAssetFullscreenView(assets: [StampAsset.sample], initialIndex: 0)
 }
