@@ -20,6 +20,7 @@ struct StampAssetPixelView: View {
     // MARK: - Environment
     
     @Environment(\.appColorScheme) private var appColorScheme
+    @Environment(\.displayScale) private var displayScale
     
     /// User preference: animated GIF previews or static downsampled thumbnails
     @AppStorage("performancePreview") private var performancePreview = true
@@ -58,7 +59,7 @@ struct StampAssetPixelView: View {
                 }
                 .loadDiskFileSynchronously()
                 .setProcessor(DownsamplingImageProcessor(size: Self.thumbnailSize))
-                .scaleFactor(UIScreen.main.scale)
+                .scaleFactor(displayScale)
                 .retry(maxCount: 3, interval: .seconds(1))
                 .fade(duration: 0.3)
                 .cacheOriginalImage()

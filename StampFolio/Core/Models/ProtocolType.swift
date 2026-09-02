@@ -34,4 +34,16 @@ enum ProtocolType: String, Identifiable, Codable, CaseIterable, Hashable {
         case .counterparty: return "showCounterparty"
         }
     }
+
+    /// Default tab order when the user hasn't customized it
+    static let defaultOrder: [ProtocolType] = [.ordinals, .counterparty, .stamps]
+
+    /// Persisted protocol tab order, falling back to `defaultOrder`
+    static func loadSavedOrder() -> [ProtocolType] {
+        if let data = UserDefaults.standard.data(forKey: "protocolOrder"),
+           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
+            return decoded
+        }
+        return defaultOrder
+    }
 }

@@ -129,4 +129,17 @@ struct StampDisplay: Identifiable {
         self.divisible = asset.divisible
         self.walletAddress = nil
     }
+
+    /// Whether this stamp matches a free-text search query
+    func matchesSearch(_ query: String) -> Bool {
+        let asset = self.asset
+        if asset.formattedStampId.localizedCaseInsensitiveContains(query) { return true }
+        if "\(asset.stampId)".localizedCaseInsensitiveContains(query) { return true }
+        if asset.counterpartyId.localizedCaseInsensitiveContains(query) { return true }
+        if asset.txHash.localizedCaseInsensitiveContains(query) { return true }
+        if asset.creatorAddy.localizedCaseInsensitiveContains(query) { return true }
+        if let creatorName = asset.creatorName, creatorName.localizedCaseInsensitiveContains(query) { return true }
+        if let ident = asset.ident, ident.localizedCaseInsensitiveContains(query) { return true }
+        return false
+    }
 }

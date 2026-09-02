@@ -53,9 +53,6 @@ final class StampViewModel {
     /// Current sort option
     var currentSortOption: StampSortOption = .stampDescending
     
-    /// Search text for filtering stamps
-    var searchText: String = ""
-    
     /// Filter state: Active ident filters (e.g., "STAMP", "POSH")
     var activeIdentFilters: Set<String> = []
     
@@ -75,45 +72,9 @@ final class StampViewModel {
         !activeIdentFilters.isEmpty || !activeFileFormatFilters.isEmpty || !activeEditionFilters.isEmpty
     }
     
-    /// Filtered assets based on search text and filters
+    /// Filtered assets based on active collection filters
     var filteredAssets: [StampDisplay] {
         var result = assets
-        
-        // Apply search filter
-        if !searchText.isEmpty {
-            let searchLower = searchText.lowercased()
-            result = result.filter { display in
-                let asset = display.asset
-                
-                // Search by stamp ID
-                if "\(asset.id)".contains(searchLower) {
-                    return true
-                }
-                
-                // Search by CPID
-                if asset.counterpartyId.localizedCaseInsensitiveContains(searchText) {
-                    return true
-                }
-                
-                // Search by transaction hash
-                if asset.txHash.localizedCaseInsensitiveContains(searchText) {
-                    return true
-                }
-                
-                // Search by creator address
-                if asset.creatorAddy.localizedCaseInsensitiveContains(searchText) {
-                    return true
-                }
-                
-                // Search by creator name
-                if let creatorName = asset.creatorName,
-                   creatorName.localizedCaseInsensitiveContains(searchText) {
-                    return true
-                }
-                
-                return false
-            }
-        }
         
         // Apply ident filters
         if !activeIdentFilters.isEmpty {
@@ -160,6 +121,13 @@ final class StampViewModel {
         }
         
         return result
+    }
+
+    /// Assets matching a free-text query (ignores collection-tab filters)
+    func assets(matching query: String) -> [StampDisplay] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        return assets.filter { $0.matchesSearch(trimmed) }
     }
     
     // MARK: - Private Properties

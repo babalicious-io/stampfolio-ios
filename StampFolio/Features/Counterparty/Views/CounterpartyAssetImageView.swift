@@ -21,6 +21,7 @@ struct CounterpartyAssetImageView: View {
     // MARK: - Environment
 
     @Environment(\.appColorScheme) private var appColorScheme
+    @Environment(\.displayScale) private var displayScale
 
     // MARK: - State
 
@@ -42,7 +43,7 @@ struct CounterpartyAssetImageView: View {
                         .placeholder { placeholderIcon }
                         .loadDiskFileSynchronously()
                         .setProcessor(DownsamplingImageProcessor(size: size))
-                        .scaleFactor(UIScreen.main.scale)
+                        .scaleFactor(displayScale)
                         .retry(maxCount: 2, interval: .seconds(1))
                         .fade(duration: 0.25)
                         .cacheOriginalImage()

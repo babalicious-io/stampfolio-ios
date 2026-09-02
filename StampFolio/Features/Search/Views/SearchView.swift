@@ -2,39 +2,81 @@
 //  SearchView.swift
 //  StampFolio
 //
-//  Dedicated search view for filtering stamps
+//  Unified search across enabled protocol collections
 //
 
 import SwiftUI
 import SwiftData
 
-/// Full-screen search view for stamps
+/// Full-screen search view querying every enabled protocol
 struct SearchView: View {
-    
+
     // MARK: - Environment
-    
-    @Environment(StampViewModel.self) private var viewModel
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    @Environment(StampViewModel.self) private var stampViewModel
+    @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
     @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
-    
+
     // MARK: - State
-    
-    @FocusState private var isSearchFieldFocused: Bool
-    @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @State private var fullscreenAsset: StampDisplay?
-    @State private var detailAsset: StampDisplay?
-    
+
+    @State private var searchText = ""
+    @State private var protocolOrder: [ProtocolType] = ProtocolType.loadSavedOrder()
+    @State private var stampDetailAsset: StampDisplay?
+    @State private var stampFullscreenAsset: StampDisplay?
+    @State private var counterpartyDetailAsset: CounterpartyDisplay?
+    @State private var counterpartyFullscreenAsset: CounterpartyDisplay?
+
+    @AppStorage("showStamps") private var showStamps = true
+    @AppStorage("showOrdinals") private var showOrdinals = true
+    @AppStorage("showCounterparty") private var showCounterparty = true
+
+    // MARK: - Computed Properties
+
+    private var trimmedQuery: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var hasQuery: Bool {
+        !trimmedQuery.isEmpty
+    }
+
+    private var enabledProtocols: [ProtocolType] {
+        protocolOrder.filter { isEnabled($0) }
+    }
+
+    private var stampResults: [StampDisplay] {
+        guard showStamps, hasQuery else { return [] }
+        return stampViewModel.assets(matching: trimmedQuery)
+    }
+
+    private var counterpartyResults: [CounterpartyDisplay] {
+        guard showCounterparty, hasQuery else { return [] }
+        return counterpartyViewModel.assets(matching: trimmedQuery)
+    }
+
+    private var hasResults: Bool {
+        !stampResults.isEmpty || !counterpartyResults.isEmpty
+    }
+
+    private var searchableProtocolNames: [String] {
+        enabledProtocols.compactMap { protocolType in
+            switch protocolType {
+            case .stamps: return "Stamps"
+            case .counterparty: return "Counterparty"
+            case .ordinals: return nil
+            }
+        }
+    }
+
     // MARK: - Body
-    
+
     var body: some View {
-        @Bindable var viewModel = viewModel
-        
         NavigationStack {
             Group {
-                if viewModel.searchText.isEmpty && !viewModel.hasActiveFilters {
+                if !hasQuery {
                     searchEmptyState
-                } else if viewModel.filteredAssets.isEmpty {
+                } else if !hasResults {
                     noResultsView
                 } else {
                     searchResults
@@ -42,23 +84,47 @@ struct SearchView: View {
             }
             .tint(appColorScheme.primary)
         }
-        .searchable(text: $viewModel.searchText, prompt: "Search")
-        .fullScreenCover(item: $fullscreenAsset) { displayAsset in
-            if let index = viewModel.filteredAssets.firstIndex(where: { $0.id == displayAsset.id }) {
+        .searchable(text: $searchText, prompt: "Search")
+        .task {
+            await loadDataIfNeeded()
+        }
+        .onAppear {
+            protocolOrder = ProtocolType.loadSavedOrder()
+        }
+        .onChange(of: showStamps) { _, _ in protocolOrder = ProtocolType.loadSavedOrder() }
+        .onChange(of: showOrdinals) { _, _ in protocolOrder = ProtocolType.loadSavedOrder() }
+        .onChange(of: showCounterparty) { _, _ in protocolOrder = ProtocolType.loadSavedOrder() }
+        .onReceive(NotificationCenter.default.publisher(for: .protocolOrderDidChange)) { _ in
+            protocolOrder = ProtocolType.loadSavedOrder()
+        }
+        .fullScreenCover(item: $stampFullscreenAsset) { displayAsset in
+            if let index = stampResults.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
-                    assets: viewModel.filteredAssets.map(\.asset),
+                    assets: stampResults.map(\.asset),
                     initialIndex: index
                 )
             }
         }
-        .sheet(item: $detailAsset) { displayAsset in
-            StampAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
+        .sheet(item: $stampDetailAsset) { displayAsset in
+            StampAssetDetailView(displayAsset: displayAsset, viewModel: stampViewModel)
+                .presentationDetents([.medium, .large])
+        }
+        .fullScreenCover(item: $counterpartyFullscreenAsset) { displayAsset in
+            if let index = counterpartyResults.firstIndex(where: { $0.id == displayAsset.id }) {
+                CounterpartyAssetFullscreenView(
+                    assets: counterpartyResults.map(\.asset),
+                    initialIndex: index
+                )
+            }
+        }
+        .sheet(item: $counterpartyDetailAsset) { displayAsset in
+            CounterpartyAssetDetailView(displayAsset: displayAsset, viewModel: counterpartyViewModel)
                 .presentationDetents([.medium, .large])
         }
     }
-    
-    // MARK: - Search Empty State
-    
+
+    // MARK: - Empty State
+
     private var searchEmptyState: some View {
         ContentUnavailableView {
             Label {
@@ -69,53 +135,122 @@ struct SearchView: View {
                     .foregroundStyle(appColorScheme.secondary)
             }
         } description: {
-            Text("Search by stamp or ordinals number, CPID, txHash, creator or genesis addy, or artist name.")
+            Text(emptyStateDescription)
         }
     }
-    
+
+    private var emptyStateDescription: String {
+        if searchableProtocolNames.isEmpty {
+            if showOrdinals && enabledProtocols == [.ordinals] {
+                return "Ordinals search isn't available yet."
+            }
+            return "Turn on a collection in Settings to search."
+        }
+        return "Search \(joinedList(searchableProtocolNames)) by stamp number, CPID, artist, asset name, issuer, or transaction hash."
+    }
+
     // MARK: - No Results
-    
+
     private var noResultsView: some View {
         ContentUnavailableView {
             Label {
                 Text("No Results")
                     .foregroundStyle(appColorScheme.primary)
             } icon: {
-                Image(systemName: viewModel.hasActiveFilters ? "line.3.horizontal.decrease.circle" : "magnifyingglass")
+                Image(systemName: "magnifyingglass")
                     .foregroundStyle(appColorScheme.secondary)
             }
         } description: {
-            if !viewModel.searchText.isEmpty && viewModel.hasActiveFilters {
-                Text("No stamps match '\(viewModel.searchText)' with the active filters")
-            } else if !viewModel.searchText.isEmpty {
-                Text("No stamps match '\(viewModel.searchText)'")
-            } else if viewModel.hasActiveFilters {
-                Text("No stamps match the active filters")
-            }
+            Text("No assets match '\(trimmedQuery)'")
         }
     }
-    
-    // MARK: - Search Results
-    
+
+    // MARK: - Results
+
     private var searchResults: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(viewModel.filteredAssets) { displayAsset in
-                    StampAssetRowView(
-                        displayAsset: displayAsset,
-                        onTap: {
-                            detailAsset = displayAsset
-                        },
-                        onLongPress: {
-                            fullscreenAsset = displayAsset
+            LazyVStack(alignment: .leading, spacing: 20) {
+                ForEach(enabledProtocols) { protocolType in
+                    switch protocolType {
+                    case .stamps:
+                        if !stampResults.isEmpty {
+                            protocolSection(protocolType) {
+                                ForEach(stampResults) { displayAsset in
+                                    StampAssetRowView(
+                                        displayAsset: displayAsset,
+                                        onTap: { stampDetailAsset = displayAsset },
+                                        onLongPress: { stampFullscreenAsset = displayAsset }
+                                    )
+                                }
+                            }
                         }
-                    )
+                    case .counterparty:
+                        if !counterpartyResults.isEmpty {
+                            protocolSection(protocolType) {
+                                ForEach(counterpartyResults) { displayAsset in
+                                    CounterpartyAssetRowView(
+                                        displayAsset: displayAsset,
+                                        onTap: { counterpartyDetailAsset = displayAsset },
+                                        onLongPress: { counterpartyFullscreenAsset = displayAsset }
+                                    )
+                                }
+                            }
+                        }
+                    case .ordinals:
+                        EmptyView()
+                    }
                 }
             }
             .padding()
         }
     }
-    
+
+    @ViewBuilder
+    private func protocolSection<Content: View>(
+        _ protocolType: ProtocolType,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(protocolType.rawValue, systemImage: protocolType.icon)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+
+            content()
+        }
+    }
+
+    // MARK: - Data Loading
+
+    /// Load collection data if Search is opened before visiting a protocol tab
+    private func loadDataIfNeeded() async {
+        if showStamps || showCounterparty, stampViewModel.assets.isEmpty {
+            await stampViewModel.fetchAssetsMetadata(for: wallets)
+        }
+
+        if showCounterparty, counterpartyViewModel.assets.isEmpty {
+            let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
+            await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
+        }
+    }
+
+    private func isEnabled(_ protocolType: ProtocolType) -> Bool {
+        switch protocolType {
+        case .stamps: return showStamps
+        case .ordinals: return showOrdinals
+        case .counterparty: return showCounterparty
+        }
+    }
+
+    private func joinedList(_ names: [String]) -> String {
+        switch names.count {
+        case 0: return ""
+        case 1: return names[0]
+        case 2: return "\(names[0]) and \(names[1])"
+        default:
+            return names.dropLast().joined(separator: ", ") + ", and \(names.last!)"
+        }
+    }
 }
 
 // MARK: - Preview
@@ -123,5 +258,6 @@ struct SearchView: View {
 #Preview {
     SearchView()
         .environment(StampViewModel())
+        .environment(CounterpartyViewModel())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

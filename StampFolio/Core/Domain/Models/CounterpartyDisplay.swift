@@ -77,4 +77,15 @@ struct CounterpartyDisplay: Identifiable {
         self.divisible = balance.assetInfo?.divisible ?? false
         self.walletAddress = balance.address
     }
+
+    /// Whether this asset matches a free-text search query
+    func matchesSearch(_ query: String) -> Bool {
+        let asset = self.asset
+        if asset.asset.localizedCaseInsensitiveContains(query) { return true }
+        if asset.displayName.localizedCaseInsensitiveContains(query) { return true }
+        if let longname = asset.assetLongname, longname.localizedCaseInsensitiveContains(query) { return true }
+        if let issuer = asset.issuer, issuer.localizedCaseInsensitiveContains(query) { return true }
+        if let owner = asset.owner, owner.localizedCaseInsensitiveContains(query) { return true }
+        return false
+    }
 }

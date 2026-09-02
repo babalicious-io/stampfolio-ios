@@ -48,9 +48,6 @@ final class CounterpartyViewModel {
     /// Current sort option
     var currentSortOption: CounterpartySortOption = .balanceDescending
 
-    /// Search text for filtering assets
-    var searchText: String = ""
-
     /// Filter state: Active divisibility filters ("divisible" or "non_divisible")
     var activeDivisibleFilters: Set<String> = []
 
@@ -70,27 +67,9 @@ final class CounterpartyViewModel {
         !activeDivisibleFilters.isEmpty || !activeLockedFilters.isEmpty || !activeAssetTypeFilters.isEmpty
     }
 
-    /// Filtered assets based on search text and active filters
+    /// Filtered assets based on active collection filters
     var filteredAssets: [CounterpartyDisplay] {
         var result = assets
-
-        if !searchText.isEmpty {
-            let searchLower = searchText.lowercased()
-            result = result.filter { display in
-                let asset = display.asset
-
-                if asset.asset.lowercased().contains(searchLower) {
-                    return true
-                }
-                if let longname = asset.assetLongname, longname.lowercased().contains(searchLower) {
-                    return true
-                }
-                if let issuer = asset.issuer, issuer.localizedCaseInsensitiveContains(searchText) {
-                    return true
-                }
-                return false
-            }
-        }
 
         if !activeDivisibleFilters.isEmpty {
             result = result.filter { display in
@@ -114,6 +93,13 @@ final class CounterpartyViewModel {
         }
 
         return result
+    }
+
+    /// Assets matching a free-text query (ignores collection-tab filters)
+    func assets(matching query: String) -> [CounterpartyDisplay] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        return assets.filter { $0.matchesSearch(trimmed) }
     }
 
     /// Check if we should show error state

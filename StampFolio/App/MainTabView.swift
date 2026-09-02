@@ -107,12 +107,7 @@ struct MainTabView: View {
     }
     
     private func loadProtocolOrder() {
-        if let data = UserDefaults.standard.data(forKey: "protocolOrder"),
-           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
-            protocolOrder = decoded
-        } else {
-            protocolOrder = [.ordinals, .counterparty, .stamps]
-        }
+        protocolOrder = ProtocolType.loadSavedOrder()
     }
     
 }
