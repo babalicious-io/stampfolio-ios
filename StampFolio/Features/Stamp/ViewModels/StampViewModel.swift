@@ -50,9 +50,6 @@ final class StampViewModel {
     /// Error message (if any)
     private(set) var errorMessage: String?
     
-    /// Whether refresh is in progress
-    private(set) var isRefreshing: Bool = false
-    
     /// Current sort option
     var currentSortOption: StampSortOption = .stampDescending
     
@@ -165,9 +162,6 @@ final class StampViewModel {
         return result
     }
     
-    /// Image prefetch progress (completed, total)
-    private(set) var fetchStampsProgress: (completed: Int, total: Int)?
-    
     // MARK: - Private Properties
     
     private let apiClient = StampchainAPIClient()
@@ -256,14 +250,13 @@ final class StampViewModel {
         }
     }
     
-    /// Fetch metadata for a single stamp (used by per-wallet refresh)
+    /// Fetch metadata for a single wallet (used by per-wallet refresh)
     /// - Parameters:
     ///   - wallet: The wallet to fetch stamps for
     ///   - allWallets: All wallets for dedup and sorting context
     ///   - forceRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStampMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceRefresh: Bool = false) async {
-        isRefreshing = true
+    func fetchAssetMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceRefresh: Bool = false) async {
         errorMessage = nil
         
         do {
@@ -294,8 +287,6 @@ final class StampViewModel {
             print("❌ Refresh error for \(wallet.displayName): \(error.localizedDescription)")
             errorMessage = "Failed to refresh \(wallet.displayName): \(error.localizedDescription)"
         }
-        
-        isRefreshing = false
     }
     
     /// Prefetch all stamp images in background
@@ -332,9 +323,6 @@ final class StampViewModel {
         
         print("📦 Prefetching \(pixelURLs.count) pixel + \(vectorURLs.count) vector + \(textURLs.count) text stamp images")
         
-        fetchStampsProgress = (completed: 0, total: totalCount)
-        var completedCount = 0
-        
         // Prefetch pixel stamps with Kingfisher
         if !pixelURLs.isEmpty {
             let prefetcher = ImagePrefetcher(
@@ -343,20 +331,8 @@ final class StampViewModel {
                     .cacheOriginalImage,
                     .diskCacheExpiration(.never)
                 ],
-                progressBlock: { [weak self] skippedResources, failedResources, completedResources in
-                    let pixelCompleted = skippedResources.count + failedResources.count + completedResources.count
-                    Task { @MainActor in
-                        completedCount = pixelCompleted
-                        self?.fetchStampsProgress = (completed: completedCount, total: totalCount)
-                    }
-                },
-                completionHandler: { [weak self] skippedResources, failedResources, completedResources in
+                completionHandler: { skippedResources, failedResources, completedResources in
                     print("✅ Pixel prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
-                    Task { @MainActor in
-                        if contentURLCount == 0 {
-                            self?.fetchStampsProgress = nil
-                        }
-                    }
                 }
             )
             imagePrefetcher = prefetcher
@@ -507,16 +483,6 @@ final class StampViewModel {
         }
     }
     
-    /// Check if there are assets to display
-    var hasAssets: Bool {
-        !assets.isEmpty
-    }
-    
-    /// Check if we should show empty state
-    var showEmptyState: Bool {
-        !isLoading && assets.isEmpty && errorMessage == nil
-    }
-    
     /// Check if we should show error state
     var showError: Bool {
         !isLoading && errorMessage != nil
@@ -568,67 +534,6 @@ final class StampViewModel {
             // Mark as not loading on error
             if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
                 assets[index].isLoadingMarketData = false
-            }
-        }
-    }
-    
-    /// Fetch market data for multiple stamps concurrently
-    @MainActor
-    func fetchMarketDataForVisibleStamps(_ visibleStamps: [StampDisplay]) async {
-        // Filter stamps that need market data
-        let stampsToFetch = visibleStamps.filter { 
-            marketDataCache[$0.asset.stampId] == nil && !$0.isLoadingMarketData
-        }
-        
-        guard !stampsToFetch.isEmpty else { return }
-        
-        // Mark all as loading
-        for displayAsset in stampsToFetch {
-            if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
-                assets[index].isLoadingMarketData = true
-            }
-        }
-        
-        // Fetch concurrently
-        await withTaskGroup(of: (Int, StampAsset?).self) { group in
-            for displayAsset in stampsToFetch {
-                group.addTask {
-                    do {
-                        let stampData = try await self.apiClient.fetchStamp(displayAsset.asset.stampId)
-                        return (displayAsset.asset.stampId, stampData)
-                    } catch {
-                        print("❌ Failed to fetch market data for stamp \(displayAsset.asset.stampId): \(error)")
-                        return (displayAsset.asset.stampId, nil)
-                    }
-                }
-            }
-            
-            // Collect all results on main actor
-            for await (stampId, stampData) in group {
-                if let stampData = stampData {
-                    // Update cache
-                    if let marketData = stampData.marketData {
-                        marketDataCache[stampId] = marketData
-                    }
-                    
-                    // Update display stamps on main actor - replace entire StampDisplay with updated stamp
-                    if let index = assets.firstIndex(where: { $0.asset.stampId == stampId }) {
-                        let oldDisplay = assets[index]
-                        assets[index] = StampDisplay(
-                            asset: stampData,
-                            balance: oldDisplay.balance,
-                            divisible: stampData.divisible,
-                            walletAddress: oldDisplay.walletAddress
-                        )
-                        assets[index].marketData = stampData.marketData
-                        assets[index].isLoadingMarketData = false
-                    }
-                } else {
-                    // Mark as not loading on error
-                    if let index = assets.firstIndex(where: { $0.asset.stampId == stampId }) {
-                        assets[index].isLoadingMarketData = false
-                    }
-                }
             }
         }
     }

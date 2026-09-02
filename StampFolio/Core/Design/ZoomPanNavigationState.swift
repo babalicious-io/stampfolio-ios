@@ -30,6 +30,16 @@ final class ZoomPanNavigationState {
         lastOffset = .zero
     }
 
+    /// Double-tap: zoom in to `zoomedScale` if currently at 1.0, otherwise reset
+    func toggleZoom(zoomedScale: CGFloat = 2.5) {
+        if scale > 1.0 {
+            resetZoom()
+        } else {
+            scale = zoomedScale
+            lastScale = zoomedScale
+        }
+    }
+
     // MARK: - Gestures
 
     func magnificationGesture() -> some Gesture {

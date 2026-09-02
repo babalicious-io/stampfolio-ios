@@ -116,16 +116,6 @@ final class CounterpartyViewModel {
         return result
     }
 
-    /// Check if there are assets to display
-    var hasAssets: Bool {
-        !assets.isEmpty
-    }
-
-    /// Check if we should show empty state
-    var showEmptyState: Bool {
-        !isLoading && assets.isEmpty && errorMessage == nil
-    }
-
     /// Check if we should show error state
     var showError: Bool {
         !isLoading && errorMessage != nil

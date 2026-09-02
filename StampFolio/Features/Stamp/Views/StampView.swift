@@ -15,20 +15,17 @@ struct StampView: View {
     
     @Environment(StampViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
     // MARK: - State
     
     @State private var showOfflineBanner = false
-    @State private var viewSize: CGSize = .zero
     @State private var showAddWallet = false
     @State private var showSlideshow = false
-    @State private var selectedStamp: StampDisplay?
-    @State private var metadataStamp: StampDisplay?
+    @State private var fullscreenAsset: StampDisplay?
+    @State private var detailAsset: StampDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("stampViewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -100,7 +97,7 @@ struct StampView: View {
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             showOfflineBanner = !isConnected
         }
-        .fullScreenCover(item: $selectedStamp) { displayAsset in
+        .fullScreenCover(item: $fullscreenAsset) { displayAsset in
             if let index = viewModel.filteredAssets.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
                     assets: viewModel.filteredAssets.map(\.asset),
@@ -115,7 +112,7 @@ struct StampView: View {
                 isSlideshow: true
             )
         }
-        .sheet(item: $metadataStamp) { displayAsset in
+        .sheet(item: $detailAsset) { displayAsset in
             StampAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
@@ -128,22 +125,13 @@ struct StampView: View {
     // MARK: - Main Content
     
     private var mainContent: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Background
-                Color(uiColor: .systemBackground)
-                    .ignoresSafeArea()
-                
-                content
-            }
-            .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
-            .onAppear {
-                viewSize = geometry.size
-            }
-            .onChange(of: geometry.size) { _, newSize in
-                viewSize = newSize
-            }
+        ZStack {
+            Color(uiColor: .systemBackground)
+                .ignoresSafeArea()
+            
+            content
         }
+        .emptyWalletOverlay(walletCount: wallets.count, showAddWallet: $showAddWallet)
     }
     
     // MARK: - Toolbar Items
@@ -166,7 +154,7 @@ struct StampView: View {
     private var slideshowToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                guard !viewModel.assets.isEmpty else { return }
+                guard !viewModel.filteredAssets.isEmpty else { return }
                 showSlideshow = true
             } label: {
                 Image(systemName: "play.square.stack")
@@ -418,10 +406,10 @@ struct StampView: View {
                         StampAssetRowView(
                             displayAsset: displayAsset,
                             onTap: {
-                                metadataStamp = displayAsset
+                                detailAsset = displayAsset
                             },
                             onLongPress: {
-                                selectedStamp = displayAsset
+                                fullscreenAsset = displayAsset
                             }
                         )
                         .onAppear {
@@ -441,10 +429,10 @@ struct StampView: View {
                         StampAssetCardView(
                             displayAsset: displayAsset,
                             onTap: {
-                                metadataStamp = displayAsset
+                                detailAsset = displayAsset
                             },
                             onLongPress: {
-                                selectedStamp = displayAsset
+                                fullscreenAsset = displayAsset
                             },
                             viewMode: viewMode
                         )

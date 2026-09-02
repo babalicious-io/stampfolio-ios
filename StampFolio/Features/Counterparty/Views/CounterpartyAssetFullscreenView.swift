@@ -22,7 +22,6 @@ struct CounterpartyAssetFullscreenView: View {
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.appColorScheme) private var appColorScheme
 
     // MARK: - State
 
@@ -57,9 +56,7 @@ struct CounterpartyAssetFullscreenView: View {
                         dismiss()
                     }
 
-                if assets.isEmpty {
-                    emptyView
-                } else {
+                if !assets.isEmpty {
                     VStack(spacing: 24) {
                         Spacer(minLength: 0)
 
@@ -94,19 +91,9 @@ struct CounterpartyAssetFullscreenView: View {
                     .gesture(unifiedDragGesture)
                     .onTapGesture(count: 2) {
                         withAnimation(.spring(response: 0.3)) {
-                            if gestureState.scale > 1.0 {
-                                gestureState.scale = 1.0
-                                gestureState.lastScale = 1.0
-                                gestureState.offset = .zero
-                                gestureState.lastOffset = .zero
-                            } else {
-                                gestureState.scale = 2.5
-                                gestureState.lastScale = 2.5
-                            }
+                            gestureState.toggleZoom()
                         }
                     }
-
-                    overlayControls
                 }
             }
         }
@@ -172,62 +159,6 @@ struct CounterpartyAssetFullscreenView: View {
             currentIndex = currentIndex < assets.count - 1 ? currentIndex + 1 : 0
             gestureState.horizontalDragOffset = .zero
             gestureState.resetZoom()
-        }
-    }
-
-    // MARK: - Overlay Controls
-
-    private var overlayControls: some View {
-        VStack {
-            HStack {
-                Spacer()
-                closeButton
-            }
-
-            Spacer()
-
-            if assets.count > 1 {
-                Text("\(currentIndex + 1) of \(assets.count)")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .padding(.bottom, 8)
-            }
-        }
-        .padding()
-    }
-
-    private var closeButton: some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 28))
-                .foregroundStyle(.white.opacity(0.85))
-        }
-        .accessibilityLabel("Close")
-        .accessibilityHint("Dismisses the slideshow")
-    }
-
-    // MARK: - Empty View
-
-    private var emptyView: some View {
-        ZStack {
-            LinearGradient.fullscreenBackground(color: appColorScheme.primary)
-                .ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                Image(systemName: "xmark.triangle.circle.square.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(.white.opacity(0.6))
-
-                Text("No assets to display")
-                    .foregroundStyle(.white.opacity(0.8))
-
-                Button("Close") {
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-            }
         }
     }
 }

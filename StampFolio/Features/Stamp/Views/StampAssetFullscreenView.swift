@@ -75,10 +75,8 @@ struct StampAssetFullscreenView: View {
                 .gesture(gestureState.magnificationGesture())
                 .gesture(unifiedDragGesture)
                 .onTapGesture(count: 2) {
-                    // Double tap to reset zoom
                     withAnimation(.spring(response: 0.3)) {
-                        gestureState.scale = 1.0
-                        gestureState.offset = .zero
+                        gestureState.toggleZoom()
                     }
                 }
             }
@@ -87,7 +85,7 @@ struct StampAssetFullscreenView: View {
         .persistentSystemOverlays(.hidden)
         .statusBarHidden(true)
         .task(id: isSlideshow ? currentIndex : -1) {
-            guard isSlideshow, !assets.isEmpty else { return }
+            guard isSlideshow, assets.count > 1 else { return }
             try? await Task.sleep(for: .seconds(slideshowInterval))
             guard !Task.isCancelled else { return }
             navigateToNextSlideshow()

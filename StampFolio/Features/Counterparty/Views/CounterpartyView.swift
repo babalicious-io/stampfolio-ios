@@ -26,8 +26,9 @@ struct CounterpartyView: View {
     @State private var showAddWallet = false
     @State private var showOfflineBanner = false
     @State private var showSlideshow = false
-    @State private var selectedAsset: CounterpartyDisplay?
+    @State private var detailAsset: CounterpartyDisplay?
     @State private var fullscreenAsset: CounterpartyDisplay?
+    @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("counterpartyViewMode") private var viewMode: ViewMode = .normalGrid
 
     // MARK: - Computed Properties
@@ -95,7 +96,7 @@ struct CounterpartyView: View {
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             showOfflineBanner = !isConnected
         }
-        .sheet(item: $selectedAsset) { displayAsset in
+        .sheet(item: $detailAsset) { displayAsset in
             CounterpartyAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
@@ -229,7 +230,7 @@ struct CounterpartyView: View {
                         CounterpartyAssetRowView(
                             displayAsset: displayAsset,
                             onTap: {
-                                selectedAsset = displayAsset
+                                detailAsset = displayAsset
                             },
                             onLongPress: {
                                 fullscreenAsset = displayAsset
@@ -244,7 +245,7 @@ struct CounterpartyView: View {
                         CounterpartyAssetCardView(
                             displayAsset: displayAsset,
                             onTap: {
-                                selectedAsset = displayAsset
+                                detailAsset = displayAsset
                             },
                             onLongPress: {
                                 fullscreenAsset = displayAsset
@@ -364,16 +365,18 @@ struct CounterpartyView: View {
                         ))
                     }
 
-                    Section {
-                        Toggle("Wallet - asc", isOn: Binding(
-                            get: { viewModel.currentSortOption == .walletAscending },
-                            set: { _ in viewModel.sortAssets(by: .walletAscending, wallets: wallets) }
-                        ))
+                    if showWalletIcons {
+                        Section {
+                            Toggle("Wallet - asc", isOn: Binding(
+                                get: { viewModel.currentSortOption == .walletAscending },
+                                set: { _ in viewModel.sortAssets(by: .walletAscending, wallets: wallets) }
+                            ))
 
-                        Toggle("Wallet - desc", isOn: Binding(
-                            get: { viewModel.currentSortOption == .walletDescending },
-                            set: { _ in viewModel.sortAssets(by: .walletDescending, wallets: wallets) }
-                        ))
+                            Toggle("Wallet - desc", isOn: Binding(
+                                get: { viewModel.currentSortOption == .walletDescending },
+                                set: { _ in viewModel.sortAssets(by: .walletDescending, wallets: wallets) }
+                            ))
+                        }
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")

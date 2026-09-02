@@ -22,8 +22,8 @@ struct SearchView: View {
     
     @FocusState private var isSearchFieldFocused: Bool
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @State private var selectedStamp: StampDisplay?
-    @State private var metadataStamp: StampDisplay?
+    @State private var fullscreenAsset: StampDisplay?
+    @State private var detailAsset: StampDisplay?
     
     // MARK: - Body
     
@@ -43,7 +43,7 @@ struct SearchView: View {
             .tint(appColorScheme.primary)
         }
         .searchable(text: $viewModel.searchText, prompt: "Search")
-        .fullScreenCover(item: $selectedStamp) { displayAsset in
+        .fullScreenCover(item: $fullscreenAsset) { displayAsset in
             if let index = viewModel.filteredAssets.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
                     assets: viewModel.filteredAssets.map(\.asset),
@@ -51,7 +51,7 @@ struct SearchView: View {
                 )
             }
         }
-        .sheet(item: $metadataStamp) { displayAsset in
+        .sheet(item: $detailAsset) { displayAsset in
             StampAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
@@ -104,10 +104,10 @@ struct SearchView: View {
                     StampAssetRowView(
                         displayAsset: displayAsset,
                         onTap: {
-                            metadataStamp = displayAsset
+                            detailAsset = displayAsset
                         },
                         onLongPress: {
-                            selectedStamp = displayAsset
+                            fullscreenAsset = displayAsset
                         }
                     )
                 }

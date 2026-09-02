@@ -74,7 +74,7 @@ struct SettingsView: View {
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
                                         Task {
-                                            await stampViewModel.fetchStampMetadata(for: wallet, allWallets: wallets, forceRefresh: true)
+                                            await stampViewModel.fetchAssetMetadata(for: wallet, allWallets: wallets, forceRefresh: true)
                                             let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
                                             await counterpartyViewModel.fetchAssetMetadata(
                                                 for: wallet,
@@ -317,7 +317,7 @@ struct SettingsView: View {
         }
         .padding(.vertical, 4)
         .accessibilityLabel("Slideshow interval")
-        .accessibilityHint("Choose how long each stamp is displayed during a slideshow")
+        .accessibilityHint("Choose how long each asset is displayed during a slideshow")
     }
     
     // MARK: - Animated Preview Toggle
@@ -351,7 +351,7 @@ struct SettingsView: View {
         .padding(.vertical, 4)
         .accessibilityLabel(showWalletIcons ? "Display wallet icon toggle" : "Hide wallet icon toggle")
         .accessibilityValue(showWalletIcons ? "On" : "Off")
-        .accessibilityHint(showWalletIcons ? "Double tap to toggle wallet icon display on stamp cards" : "Double tap to toggle wallet icon hide on stamp cards")
+        .accessibilityHint(showWalletIcons ? "Double tap to toggle wallet icon display on asset cards" : "Double tap to toggle wallet icon hide on asset cards")
     }
     
     // MARK: - About Row
@@ -367,9 +367,20 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             
-            Text("A portfolio viewer for Bitcoin Stamps")
+            Text("A portfolio viewer for Bitcoin Stamps, Counterparty assets, and Ordinals")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            Link(destination: URL(string: "https://orangino.io")!) {
+                HStack(spacing: 14) {
+                    Text("Created by Orangino")
+                        .font(.caption)
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.caption)
+                }
+                .foregroundStyle(appColorScheme.primary)
+            }
+            .accessibilityLabel("Visit Orangino")
             
             Link(destination: URL(string: "https://stampchain.io")!) {
                 HStack(spacing: 14) {
