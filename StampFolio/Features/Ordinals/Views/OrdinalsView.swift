@@ -13,7 +13,6 @@ struct OrdinalsView: View {
     
     // MARK: - Environment
     
-    @Environment(\.showSettingsBinding) private var showSettings
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
     // MARK: - State
@@ -32,29 +31,12 @@ struct OrdinalsView: View {
             .navigationTitle("Ordinals")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                settingsToolbarItem
+                SettingsToolbarItem()
             }
         }
         .sheet(isPresented: $showAddWallet) {
             AddWalletView()
                 .environment(SettingsViewModel())
-        }
-    }
-    
-    // MARK: - Toolbar Items
-    
-    private var settingsToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSettings.wrappedValue = true
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.primary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Settings")
-            .accessibilityHint("Open app settings")
         }
     }
 }

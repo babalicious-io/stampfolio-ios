@@ -176,19 +176,7 @@ struct CounterpartyAssetDetailView: View {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
             }
         } else if currentDisplayAsset.isLoadingMarketData {
-            HStack {
-                Text("Market Data")
-                    .font(.callout)
-                    .fontWeight(.light)
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .frame(width: 100, alignment: .leading)
-
-                ProgressView()
-                    .controlSize(.small)
-
-                Spacer()
-            }
+            MetadataLoadingRow()
         }
     }
 

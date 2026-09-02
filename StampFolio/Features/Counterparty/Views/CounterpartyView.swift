@@ -17,7 +17,6 @@ struct CounterpartyView: View {
     @Environment(CounterpartyViewModel.self) private var viewModel
     @Environment(StampViewModel.self) private var stampViewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
-    @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.appColorScheme) private var appColorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
@@ -68,19 +67,7 @@ struct CounterpartyView: View {
 
     /// Dynamic grid columns using native adaptive sizing with device awareness, mirroring `StampView`
     private var columns: [GridItem] {
-        if viewMode == .list {
-            return [GridItem(.flexible(), spacing: 16)]
-        }
-
-        let isIPad = horizontalSizeClass == .regular
-        let minSize: CGFloat
-        if isIPad {
-            minSize = viewMode == .denseGrid ? 130 : 180
-        } else {
-            minSize = viewMode == .denseGrid ? 110 : 170
-        }
-
-        return [GridItem(.adaptive(minimum: minSize, maximum: 300), spacing: 16)]
+        gridColumns(viewMode: viewMode, horizontalSizeClass: horizontalSizeClass)
     }
 
     // MARK: - Body
@@ -92,7 +79,7 @@ struct CounterpartyView: View {
                     viewModeToolbarItem
                     slideshowToolbarItem
                     filterAndSortGroupToolbarItem
-                    settingsToolbarItem
+                    SettingsToolbarItem()
                 }
         }
         .task {
@@ -162,7 +149,7 @@ struct CounterpartyView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.assets.isEmpty {
-            loadingView
+            CollectionLoadingView()
         } else if viewModel.showError {
             errorView
         } else if viewModel.assets.isEmpty {
@@ -171,16 +158,6 @@ struct CounterpartyView: View {
             noFilterResultsView
         } else {
             assetsList
-        }
-    }
-
-    // MARK: - Loading View
-
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1)
-                .tint(appColorScheme.primary)
         }
     }
 
@@ -243,7 +220,7 @@ struct CounterpartyView: View {
     private var assetsList: some View {
         ScrollView {
             if showOfflineBanner {
-                offlineBanner
+                OfflineBannerView()
             }
 
             if viewMode == .list {
@@ -279,21 +256,6 @@ struct CounterpartyView: View {
                 .padding()
             }
         }
-    }
-
-    // MARK: - Offline Banner
-
-    private var offlineBanner: some View {
-        HStack {
-            Image(systemName: "wifi.slash")
-            Text("You're offline. Showing cached content.")
-        }
-        .font(.caption)
-        .foregroundStyle(.primary)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .rect(cornerRadius: 8))
-        .padding()
     }
 
     // MARK: - Toolbar Items
@@ -424,20 +386,6 @@ struct CounterpartyView: View {
         }
     }
 
-    private var settingsToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSettings.wrappedValue = true
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.primary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Settings")
-            .accessibilityHint("Open app settings")
-        }
-    }
 }
 
 // MARK: - Preview

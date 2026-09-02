@@ -29,20 +29,13 @@ struct StampAssetFullscreenView: View {
     
     @State private var currentIndex: Int
     @AppStorage("slideshowInterval") private var slideshowInterval = 5
-    @State private var scale: CGFloat = 1.0
-    @State private var lastScale: CGFloat = 1.0
-    @State private var offset: CGSize = .zero
-    @State private var lastOffset: CGSize = .zero
-    @State private var dragOffset: CGSize = .zero
-    @State private var horizontalDragOffset: CGSize = .zero
+    @State private var gestureState = ZoomPanNavigationState()
     
     // MARK: - Computed Properties
     
     private var currentAsset: StampAsset {
         assets[currentIndex]
     }
-    
-    private let swipeThreshold: CGFloat = 100
     
     // MARK: - Initialization
     
@@ -69,23 +62,23 @@ struct StampAssetFullscreenView: View {
                 // Content based on type
                 ZStack {
                     contentView
-                        .scaleEffect(scale)
-                        .offset(offset)
-                        .offset(y: dragOffset.height)
-                        .offset(x: horizontalDragOffset.width)
-                        .opacity(1.0 - Double(abs(dragOffset.height)) / 500.0)
+                        .scaleEffect(gestureState.scale)
+                        .offset(gestureState.offset)
+                        .offset(y: gestureState.dragOffset.height)
+                        .offset(x: gestureState.horizontalDragOffset.width)
+                        .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
                     
                     // Invisible overlay to capture gestures (especially for GIFs)
                     Color.clear
                         .contentShape(Rectangle())
                 }
-                .gesture(magnificationGesture)
+                .gesture(gestureState.magnificationGesture())
                 .gesture(unifiedDragGesture)
                 .onTapGesture(count: 2) {
                     // Double tap to reset zoom
                     withAnimation(.spring(response: 0.3)) {
-                        scale = 1.0
-                        offset = .zero
+                        gestureState.scale = 1.0
+                        gestureState.offset = .zero
                     }
                 }
             }
@@ -151,92 +144,13 @@ struct StampAssetFullscreenView: View {
     
     // MARK: - Gestures
     
-    private var magnificationGesture: some Gesture {
-        MagnificationGesture()
-            .onChanged { value in
-                let newScale = lastScale * value
-                scale = min(max(newScale, 1.0), 5.0)
-            }
-            .onEnded { _ in
-                lastScale = scale
-                
-                // Reset if zoomed out too much
-                if scale < 1.0 {
-                    withAnimation(.spring(response: 0.3)) {
-                        scale = 1.0
-                        lastScale = 1.0
-                    }
-                }
-            }
-    }
-    
     // Unified drag gesture - handles pan when zoomed, navigation and dismiss when not zoomed
     private var unifiedDragGesture: some Gesture {
-        DragGesture()
-            .onChanged { value in
-                if scale > 1.0 {
-                    // Pan when zoomed in
-                    offset = CGSize(
-                        width: lastOffset.width + value.translation.width,
-                        height: lastOffset.height + value.translation.height
-                    )
-                } else {
-                    // Determine drag direction when not zoomed
-                    let horizontalAmount = abs(value.translation.width)
-                    let verticalAmount = abs(value.translation.height)
-                    
-                    if horizontalAmount > verticalAmount {
-                        // Horizontal drag - navigation
-                        horizontalDragOffset = CGSize(width: value.translation.width, height: 0)
-                        dragOffset = .zero
-                    } else {
-                        // Vertical drag - dismiss
-                        dragOffset = CGSize(width: 0, height: value.translation.height)
-                        horizontalDragOffset = .zero
-                    }
-                }
-            }
-            .onEnded { value in
-                if scale > 1.0 {
-                    // Save pan offset when zoomed
-                    lastOffset = offset
-                } else {
-                    // Determine drag direction when not zoomed
-                    let horizontalAmount = abs(value.translation.width)
-                    let verticalAmount = abs(value.translation.height)
-                    
-                    if horizontalAmount > verticalAmount {
-                        // Horizontal swipe - navigation
-                        let swipeDistance = value.translation.width
-                        let swipeVelocity = value.velocity.width
-                        
-                        // Swipe left (next stamp)
-                        if swipeDistance < -swipeThreshold || swipeVelocity < -500 {
-                            navigateToNext()
-                        }
-                        // Swipe right (previous stamp)
-                        else if swipeDistance > swipeThreshold || swipeVelocity > 500 {
-                            navigateToPrevious()
-                        }
-                        else {
-                            // Snap back
-                            withAnimation(.spring(response: 0.3)) {
-                                horizontalDragOffset = .zero
-                            }
-                        }
-                    } else {
-                        // Vertical swipe - dismiss
-                        if abs(value.translation.height) > 100 || abs(value.velocity.height) > 500 {
-                            dismiss()
-                        } else {
-                            // Snap back
-                            withAnimation(.spring(response: 0.3)) {
-                                dragOffset = .zero
-                            }
-                        }
-                    }
-                }
-            }
+        gestureState.dragGesture(
+            onNavigateNext: navigateToNext,
+            onNavigatePrevious: navigateToPrevious,
+            onDismiss: { dismiss() }
+        )
     }
     
     // MARK: - Navigation Methods
@@ -244,46 +158,39 @@ struct StampAssetFullscreenView: View {
     private func navigateToNext() {
         guard currentIndex < assets.count - 1 else {
             withAnimation(.spring(response: 0.3)) {
-                horizontalDragOffset = .zero
+                gestureState.horizontalDragOffset = .zero
             }
             return
         }
         
         withAnimation(.spring(response: 0.3)) {
             currentIndex += 1
-            horizontalDragOffset = .zero
-            resetZoom()
+            gestureState.horizontalDragOffset = .zero
+            gestureState.resetZoom()
         }
     }
     
     private func navigateToPrevious() {
         guard currentIndex > 0 else {
             withAnimation(.spring(response: 0.3)) {
-                horizontalDragOffset = .zero
+                gestureState.horizontalDragOffset = .zero
             }
             return
         }
         
         withAnimation(.spring(response: 0.3)) {
             currentIndex -= 1
-            horizontalDragOffset = .zero
-            resetZoom()
+            gestureState.horizontalDragOffset = .zero
+            gestureState.resetZoom()
         }
     }
     
     private func navigateToNextSlideshow() {
         withAnimation(.spring(response: 0.3)) {
             currentIndex = currentIndex < assets.count - 1 ? currentIndex + 1 : 0
-            horizontalDragOffset = .zero
-            resetZoom()
+            gestureState.horizontalDragOffset = .zero
+            gestureState.resetZoom()
         }
-    }
-    
-    private func resetZoom() {
-        scale = 1.0
-        lastScale = 1.0
-        offset = .zero
-        lastOffset = .zero
     }
 }
 

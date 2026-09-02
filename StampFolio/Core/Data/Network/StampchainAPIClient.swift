@@ -13,27 +13,12 @@ actor StampchainAPIClient {
     // MARK: - Properties
     
     private let baseURL = "https://stampchain.io/api/v2"
-    private let session: URLSession
+    private let executor = NetworkRequestExecutor(cacheName: "stampchain_cache", memoryCapacityMB: 10, diskCapacityMB: 50)
     private let decoder: JSONDecoder
     
     // MARK: - Initialization
     
     init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 60
-        config.waitsForConnectivity = true
-        
-        // Enable caching
-        config.urlCache = URLCache(
-            memoryCapacity: 10 * 1024 * 1024,  // 10 MB
-            diskCapacity: 50 * 1024 * 1024,     // 50 MB
-            diskPath: "stampchain_cache"
-        )
-        config.requestCachePolicy = .returnCacheDataElseLoad
-        
-        self.session = URLSession(configuration: config)
-        
         self.decoder = JSONDecoder()
         self.decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
@@ -75,7 +60,7 @@ actor StampchainAPIClient {
         
         print("🌐 Fetching stamps from: \(endpoint)\(forceRefresh ? " (force refresh)" : "")")
         
-        let (data, _) = try await performRequest(url, forceRefresh: forceRefresh)
+        let (data, _) = try await executor.perform(url, forceRefresh: forceRefresh)
         
         print("✅ Received \(data.count) bytes")
         
@@ -121,7 +106,7 @@ actor StampchainAPIClient {
             throw NetworkError.invalidURL
         }
         
-        let (data, _) = try await performRequest(url)
+        let (data, _) = try await executor.perform(url)
         
         // Parse the response
         let apiResponse = try decoder.decode(StampDetailResponse.self, from: data)
@@ -155,42 +140,13 @@ actor StampchainAPIClient {
             throw NetworkError.invalidURL
         }
         
-        let (data, _) = try await performRequest(url)
+        let (data, _) = try await executor.perform(url)
         
         // Parse the response
         let apiResponse = try decoder.decode(StampsListResponse.self, from: data)
         return apiResponse.data
     }
     
-    // MARK: - Private Methods
-    
-    private func performRequest(_ url: URL, forceRefresh: Bool = false) async throws -> (Data, URLResponse) {
-        var request = URLRequest(url: url)
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        
-        if forceRefresh {
-            request.cachePolicy = .reloadIgnoringLocalCacheData
-        }
-        
-        let (data, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-        
-        switch httpResponse.statusCode {
-        case 200...299:
-            return (data, response)
-        case 404:
-            throw NetworkError.notFound
-        case 429:
-            throw NetworkError.rateLimited
-        case 500...599:
-            throw NetworkError.serverError(httpResponse.statusCode)
-        default:
-            throw NetworkError.httpError(httpResponse.statusCode)
-        }
-    }
 }
 
 // MARK: - API Response Models
@@ -224,40 +180,5 @@ private struct StampsListResponse: Decodable {
     enum CodingKeys: String, CodingKey {
         case data
         case lastBlock = "last_block"
-    }
-}
-
-// MARK: - Network Error
-
-/// Network-related errors
-enum NetworkError: LocalizedError {
-    case invalidURL
-    case invalidResponse
-    case notFound
-    case rateLimited
-    case serverError(Int)
-    case httpError(Int)
-    case decodingError(Error)
-    case noConnection
-    
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL:
-            return "Invalid URL"
-        case .invalidResponse:
-            return "Invalid response from server"
-        case .notFound:
-            return "Resource not found"
-        case .rateLimited:
-            return "Too many requests. Please try again later."
-        case .serverError(let code):
-            return "Server error (\(code))"
-        case .httpError(let code):
-            return "HTTP error (\(code))"
-        case .decodingError(let error):
-            return "Failed to parse response: \(error.localizedDescription)"
-        case .noConnection:
-            return "No internet connection"
-        }
     }
 }

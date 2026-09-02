@@ -131,20 +131,7 @@ struct CounterpartyAssetCardView: View {
     // MARK: - Wallet Icon Pill
 
     private var walletIcon: some View {
-        let wallet = wallets.first { $0.address == displayAsset.walletAddress }
-        let walletColor = wallet?.walletColor.color ?? .gray
-
-        return Image(systemName: "wallet.bifold.fill")
-            .font(.caption)
-            .fontWeight(.regular)
-            .foregroundStyle(walletColor)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(
-                Capsule()
-                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
-            )
-            .accessibilityLabel("Wallet indicator")
+        WalletIndicatorView(walletAddress: displayAsset.walletAddress, wallets: wallets, style: .pill)
     }
 }
 

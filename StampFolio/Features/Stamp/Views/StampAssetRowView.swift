@@ -149,20 +149,12 @@ struct StampAssetRowView: View {
     // MARK: - Wallet Icon
     
     private var walletIcon: some View {
-        let wallet = wallets.first { $0.address == displayAsset.walletAddress }
-        let walletColor = wallet?.walletColor.color ?? .gray
-        
-        return Image(systemName: "wallet.bifold.fill")
-            .font(.caption)
-            .fontWeight(.regular)
-            .foregroundStyle(walletColor)
-            .padding(8)
-            .background(
-                Circle()
-                    .fill(Color(uiColor: .systemBackground).opacity(0.5))
-            )
-            .accessibilityLabel("Wallet indicator")
-            .accessibilityHint("Shows which wallet owns this stamp")
+        WalletIndicatorView(
+            walletAddress: displayAsset.walletAddress,
+            wallets: wallets,
+            style: .circleBackground,
+            accessibilityHint: "Shows which wallet owns this stamp"
+        )
     }
 }
 

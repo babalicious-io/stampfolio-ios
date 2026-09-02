@@ -145,20 +145,7 @@ struct StampAssetDetailView: View {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
             }
         } else if currentDisplayAsset.isLoadingMarketData {
-            // Show loading state
-            HStack {
-                Text("Market Data")
-                    .font(.callout)
-                    .fontWeight(.light)
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .frame(width: 100, alignment: .leading)
-                
-                ProgressView()
-                    .controlSize(.small)
-                
-                Spacer()
-            }
+            MetadataLoadingRow()
         }
     }
     
@@ -218,61 +205,6 @@ struct StampAssetDetailView: View {
         .tint(.secondary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
-    }
-}
-
-// MARK: - Metadata Row
-
-/// Individual row in the metadata display
-struct MetadataRow: View {
-    let label: String
-    let value: String
-    var fullValue: String?
-    
-    @State private var showCopied = false
-    
-    var body: some View {
-        HStack(alignment: .top) {
-            Text(label)
-                .font(.callout)
-                .fontWeight(.light)
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-                .frame(width: 100, alignment: .leading)
-            
-            Text(value)
-                .font(.callout)
-                .fontWeight(.bold)
-                .foregroundStyle(.primary)
-                .textSelection(.enabled)
-            
-            Spacer()
-            
-            // Copy button for values with full value
-            if let fullValue = fullValue {
-                Button {
-                    UIPasteboard.general.string = fullValue
-                    showCopied = true
-                    
-                    // Hide "Copied" after 2 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        showCopied = false
-                    }
-                } label: {
-                    if showCopied {
-                        Image(systemName: "checkmark")
-                            .foregroundStyle(.green)
-                    } else {
-                        Image(systemName: "doc.on.doc")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .font(.caption)
-                .accessibilityLabel("Copy \(label)")
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(fullValue ?? value)")
     }
 }
 

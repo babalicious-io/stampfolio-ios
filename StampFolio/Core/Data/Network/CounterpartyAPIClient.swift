@@ -9,14 +9,14 @@ import Foundation
 
 /// API client for interacting with the Counterparty Core API (`https://api.counterparty.io:4000/v2`)
 ///
-/// Reuses `NetworkError` (defined in `StampchainAPIClient.swift`) for consistent error handling
+/// Reuses `NetworkError` (defined in `NetworkError.swift`) for consistent error handling
 /// across API clients.
 actor CounterpartyAPIClient {
 
     // MARK: - Properties
 
     private let baseURL = "https://api.counterparty.io:4000/v2"
-    private let session: URLSession
+    private let executor = NetworkRequestExecutor(cacheName: "counterparty_cache", memoryCapacityMB: 5, diskCapacityMB: 25)
     private let decoder: JSONDecoder
 
     /// Maximum number of pages to follow when paginating a wallet's balances.
@@ -27,20 +27,6 @@ actor CounterpartyAPIClient {
     // MARK: - Initialization
 
     init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 60
-        config.waitsForConnectivity = true
-
-        // Enable caching (separate from Stampchain's cache)
-        config.urlCache = URLCache(
-            memoryCapacity: 5 * 1024 * 1024,   // 5 MB
-            diskCapacity: 25 * 1024 * 1024,    // 25 MB
-            diskPath: "counterparty_cache"
-        )
-        config.requestCachePolicy = .returnCacheDataElseLoad
-
-        self.session = URLSession(configuration: config)
         self.decoder = JSONDecoder()
     }
 
@@ -65,7 +51,7 @@ actor CounterpartyAPIClient {
                 throw NetworkError.invalidURL
             }
 
-            let (data, _) = try await performRequest(url, forceRefresh: forceRefresh)
+            let (data, _) = try await executor.perform(url, forceRefresh: forceRefresh)
             let response = try decoder.decode(CounterpartyBalancesResponse.self, from: data)
 
             allBalances.append(contentsOf: response.result)
@@ -97,7 +83,7 @@ actor CounterpartyAPIClient {
             throw NetworkError.invalidURL
         }
 
-        let (data, _) = try await performRequest(url)
+        let (data, _) = try await executor.perform(url)
         let response = try decoder.decode(CounterpartyAssetResponse.self, from: data)
         return response.result
     }
@@ -142,7 +128,7 @@ actor CounterpartyAPIClient {
             throw NetworkError.invalidURL
         }
 
-        let (data, _) = try await performRequest(url)
+        let (data, _) = try await executor.perform(url)
         let response = try decoder.decode(CounterpartyCountResponse.self, from: data)
         return response.resultCount ?? 0
     }
@@ -155,39 +141,12 @@ actor CounterpartyAPIClient {
             throw NetworkError.invalidURL
         }
 
-        let (data, _) = try await performRequest(url)
+        let (data, _) = try await executor.perform(url)
         let response = try decoder.decode(CounterpartyDispensersResponse.self, from: data)
         let floorPrice = response.result.first.flatMap { Decimal(string: $0.satoshirateNormalized ?? "") }
         return (response.resultCount ?? response.result.count, floorPrice)
     }
 
-    private func performRequest(_ url: URL, forceRefresh: Bool = false) async throws -> (Data, URLResponse) {
-        var request = URLRequest(url: url)
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        if forceRefresh {
-            request.cachePolicy = .reloadIgnoringLocalCacheData
-        }
-
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-
-        switch httpResponse.statusCode {
-        case 200...299:
-            return (data, response)
-        case 404:
-            throw NetworkError.notFound
-        case 429:
-            throw NetworkError.rateLimited
-        case 500...599:
-            throw NetworkError.serverError(httpResponse.statusCode)
-        default:
-            throw NetworkError.httpError(httpResponse.statusCode)
-        }
-    }
 }
 
 // MARK: - API Response Models

@@ -255,29 +255,17 @@ final class CounterpartyViewModel {
 
     /// Toggle a divisibility filter ("divisible" or "non_divisible")
     func toggleDivisibleFilter(_ value: String) {
-        if activeDivisibleFilters.contains(value) {
-            activeDivisibleFilters.remove(value)
-        } else {
-            activeDivisibleFilters.insert(value)
-        }
+        activeDivisibleFilters.toggleMembership(of: value)
     }
 
     /// Toggle a lock-status filter ("locked" or "unlocked")
     func toggleLockedFilter(_ value: String) {
-        if activeLockedFilters.contains(value) {
-            activeLockedFilters.remove(value)
-        } else {
-            activeLockedFilters.insert(value)
-        }
+        activeLockedFilters.toggleMembership(of: value)
     }
 
     /// Toggle an asset-type filter ("named" or "numeric")
     func toggleAssetTypeFilter(_ value: String) {
-        if activeAssetTypeFilters.contains(value) {
-            activeAssetTypeFilters.remove(value)
-        } else {
-            activeAssetTypeFilters.insert(value)
-        }
+        activeAssetTypeFilters.toggleMembership(of: value)
     }
 
     /// Sort assets by the given option
@@ -356,20 +344,10 @@ final class CounterpartyViewModel {
             return assets.sorted { $0.balance > $1.balance }
 
         case .walletAscending:
-            return assets.sorted { walletDisplayName(for: $0.walletAddress, in: wallets).localizedCaseInsensitiveCompare(walletDisplayName(for: $1.walletAddress, in: wallets)) == .orderedAscending }
+            return assets.sorted { wallets.displayName(for: $0.walletAddress).localizedCaseInsensitiveCompare(wallets.displayName(for: $1.walletAddress)) == .orderedAscending }
 
         case .walletDescending:
-            return assets.sorted { walletDisplayName(for: $0.walletAddress, in: wallets).localizedCaseInsensitiveCompare(walletDisplayName(for: $1.walletAddress, in: wallets)) == .orderedDescending }
+            return assets.sorted { wallets.displayName(for: $0.walletAddress).localizedCaseInsensitiveCompare(wallets.displayName(for: $1.walletAddress)) == .orderedDescending }
         }
-    }
-
-    private func walletDisplayName(for address: String?, in wallets: [WalletConfig]) -> String {
-        guard let address = address else { return "" }
-
-        if let wallet = wallets.first(where: { $0.address == address }) {
-            return wallet.displayName
-        }
-
-        return address
     }
 }

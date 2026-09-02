@@ -122,6 +122,18 @@ enum WalletColor: String, CaseIterable, Identifiable, Equatable {
     }
 }
 
+// MARK: - Wallet Display Name Lookup
+
+extension Array where Element == WalletConfig {
+
+    /// Display name for a wallet address, falling back to the raw address if the wallet
+    /// isn't found (e.g. was deleted) and to an empty string if `address` is nil
+    func displayName(for address: String?) -> String {
+        guard let address else { return "" }
+        return first(where: { $0.address == address })?.displayName ?? address
+    }
+}
+
 // MARK: - String Extension for Truncation
 
 extension String {

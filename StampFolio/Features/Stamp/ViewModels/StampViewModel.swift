@@ -442,31 +442,19 @@ final class StampViewModel {
     /// Toggle an ident filter (e.g., "STAMP", "POSH")
     /// - Parameter ident: The ident type to toggle
     func toggleIdentFilter(_ ident: String) {
-        if activeIdentFilters.contains(ident) {
-            activeIdentFilters.remove(ident)
-        } else {
-            activeIdentFilters.insert(ident)
-        }
+        activeIdentFilters.toggleMembership(of: ident)
     }
     
     /// Toggle a file format filter (e.g., "jpg", "png", "gif", "webp", "avif", "svg", "html", "text", "mp3")
     /// - Parameter format: The format key to toggle
     func toggleFileFormatFilter(_ format: String) {
-        if activeFileFormatFilters.contains(format) {
-            activeFileFormatFilters.remove(format)
-        } else {
-            activeFileFormatFilters.insert(format)
-        }
+        activeFileFormatFilters.toggleMembership(of: format)
     }
     
     /// Toggle an edition filter ("single" or "multiple")
     /// - Parameter edition: The edition type to toggle
     func toggleEditionFilter(_ edition: String) {
-        if activeEditionFilters.contains(edition) {
-            activeEditionFilters.remove(edition)
-        } else {
-            activeEditionFilters.insert(edition)
-        }
+        activeEditionFilters.toggleMembership(of: edition)
     }
     
     /// Returns sorted assets based on the given option
@@ -505,33 +493,18 @@ final class StampViewModel {
             
         case .walletAscending:
             return assets.sorted { asset1, asset2 in
-                let wallet1Name = walletDisplayName(for: asset1.walletAddress, in: wallets)
-                let wallet2Name = walletDisplayName(for: asset2.walletAddress, in: wallets)
+                let wallet1Name = wallets.displayName(for: asset1.walletAddress)
+                let wallet2Name = wallets.displayName(for: asset2.walletAddress)
                 return wallet1Name.localizedCaseInsensitiveCompare(wallet2Name) == .orderedAscending
             }
             
         case .walletDescending:
             return assets.sorted { asset1, asset2 in
-                let wallet1Name = walletDisplayName(for: asset1.walletAddress, in: wallets)
-                let wallet2Name = walletDisplayName(for: asset2.walletAddress, in: wallets)
+                let wallet1Name = wallets.displayName(for: asset1.walletAddress)
+                let wallet2Name = wallets.displayName(for: asset2.walletAddress)
                 return wallet1Name.localizedCaseInsensitiveCompare(wallet2Name) == .orderedDescending
             }
         }
-    }
-    
-    /// Get display name for a wallet address
-    /// - Parameters:
-    ///   - address: The wallet address
-    ///   - wallets: Array of wallets to search
-    /// - Returns: Display name or address
-    private func walletDisplayName(for address: String?, in wallets: [WalletConfig]) -> String {
-        guard let address = address else { return "" }
-        
-        if let wallet = wallets.first(where: { $0.address == address }) {
-            return wallet.displayName
-        }
-        
-        return address
     }
     
     /// Check if there are assets to display

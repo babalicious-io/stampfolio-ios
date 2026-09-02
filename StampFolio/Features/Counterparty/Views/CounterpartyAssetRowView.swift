@@ -137,14 +137,12 @@ struct CounterpartyAssetRowView: View {
     // MARK: - Wallet Icon
 
     private var walletIcon: some View {
-        let wallet = wallets.first { $0.address == displayAsset.walletAddress }
-        let walletColor = wallet?.walletColor.color ?? .gray
-
-        return Image(systemName: "wallet.bifold.fill")
-            .font(.caption2)
-            .foregroundStyle(walletColor)
-            .accessibilityLabel("Wallet indicator")
-            .accessibilityHint("Shows which wallet holds this asset")
+        WalletIndicatorView(
+            walletAddress: displayAsset.walletAddress,
+            wallets: wallets,
+            style: .plain,
+            accessibilityHint: "Shows which wallet holds this asset"
+        )
     }
 }
 

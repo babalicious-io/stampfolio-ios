@@ -8,13 +8,6 @@
 import SwiftUI
 import SwiftData
 
-/// View mode for displaying stamps
-enum ViewMode: String, Codable {
-    case normalGrid = "normal_grid"
-    case denseGrid = "dense_grid"
-    case list = "list"
-}
-
 /// Main collection view showing stamps from all wallets
 struct StampView: View {
     
@@ -25,7 +18,6 @@ struct StampView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @Environment(\.showSettingsBinding) private var showSettings
     @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
     
@@ -46,23 +38,7 @@ struct StampView: View {
     /// iPhone: 2 columns (normal) / 3 columns (dense)
     /// iPad: 3-4 columns (normal) / 4-5 columns (dense)
     private var columns: [GridItem] {
-        // List mode uses single flexible column
-        if viewMode == .list {
-            return [GridItem(.flexible(), spacing: 16)]
-        }
-        
-        // Simple device detection for optimal column counts
-        let isIPad = horizontalSizeClass == .regular
-        
-        // Set minimums that achieve desired column counts while remaining adaptive
-        let minSize: CGFloat
-        if isIPad {
-            minSize = viewMode == .denseGrid ? 130 : 180  // iPad: 4-5 columns dense, 3-4 normal
-        } else {
-            minSize = viewMode == .denseGrid ? 110 : 170  // iPhone: 3 columns dense, 2 normal
-        }
-        
-        return [GridItem(.adaptive(minimum: minSize, maximum: 300), spacing: 16)]
+        gridColumns(viewMode: viewMode, horizontalSizeClass: horizontalSizeClass)
     }
     
     // MARK: - Computed Properties
@@ -105,7 +81,7 @@ struct StampView: View {
                     viewModeToolbarItem
                     slideshowToolbarItem
                     filterAndSortGroupToolbarItem
-                    settingsToolbarItem
+                    SettingsToolbarItem()
                 }
         }
         .task {
@@ -354,27 +330,12 @@ struct StampView: View {
         }
     }
     
-    private var settingsToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                showSettings.wrappedValue = true
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.primary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Settings")
-            .accessibilityHint("Open app settings")
-        }
-    }
-    
     // MARK: - Content
     
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.assets.isEmpty {
-            loadingView
+            CollectionLoadingView()
         } else if viewModel.showError {
             errorView
         } else if viewModel.assets.isEmpty {
@@ -386,16 +347,6 @@ struct StampView: View {
         }
     }
     
-    
-    // MARK: - Loading View
-    
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1)
-                .tint(appColorScheme.primary)
-        }
-    }
     
     // MARK: - Error View
     
@@ -457,7 +408,7 @@ struct StampView: View {
         ScrollView {
             // Offline banner
             if showOfflineBanner {
-                offlineBanner
+                OfflineBannerView()
             }
             
             if viewMode == .list {
@@ -502,21 +453,6 @@ struct StampView: View {
                 .padding()
             }
         }
-    }
-    
-    // MARK: - Offline Banner
-    
-    private var offlineBanner: some View {
-        HStack {
-            Image(systemName: "wifi.slash")
-            Text("You're offline. Showing cached content.")
-        }
-        .font(.caption)
-        .foregroundStyle(.primary)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .rect(cornerRadius: 8))
-        .padding()
     }
     
 }
