@@ -39,8 +39,6 @@ final class SettingsViewModel {
     // MARK: - Private Properties
     
     private let addressValidator = BitcoinAddressValidator()
-    private let apiClient = StampchainAPIClient()
-    private let counterpartyAPIClient = CounterpartyAPIClient()
     
     // MARK: - Initialization
     
@@ -48,23 +46,17 @@ final class SettingsViewModel {
     
     // MARK: - Public Methods
     
-    /// Validate and add a wallet address
-    /// - Parameters:
-    ///   - address: The Bitcoin address to add
-    ///   - label: Optional custom name for the wallet
-    ///   - colorName: Color name for the wallet icon
-    ///   - context: SwiftData model context
+    /// Validate locally and save a wallet. Asset loading happens after the add sheet dismisses.
+    /// - Returns: The saved wallet, or `nil` when validation or save failed
     @MainActor
-    func addWallet(address: String, label: String? = nil, colorName: String = WalletColor.gray.rawValue, context: ModelContext) async {
+    func addWallet(address: String, label: String? = nil, colorName: String = WalletColor.gray.rawValue, context: ModelContext) -> WalletConfig? {
         let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Local validation first
         guard addressValidator.isValid(trimmedAddress) else {
             validationError = "Invalid Bitcoin address format"
-            return
+            return nil
         }
         
-        // Check if wallet already exists
         let descriptor = FetchDescriptor<WalletConfig>(
             predicate: #Predicate { $0.address == trimmedAddress }
         )
@@ -73,32 +65,16 @@ final class SettingsViewModel {
             let existingWallets = try context.fetch(descriptor)
             if !existingWallets.isEmpty {
                 validationError = "This wallet has already been added"
-                return
+                return nil
             }
         } catch {
             validationError = "Error checking existing wallets"
-            return
+            return nil
         }
         
         isValidating = true
         validationError = nil
         
-        // Verify wallet has stamps and/or Counterparty assets via API (optional enhancement).
-        // Failed checks resolve to `nil` (unknown) rather than throwing, so the wallet is still
-        // added even if one or both APIs are unreachable.
-        async let hasStampsTask: Bool? = try? await apiClient.validateWalletHasStamps(trimmedAddress)
-        async let hasCounterpartyAssetsTask: Bool? = try? await counterpartyAPIClient.validateWalletHasCounterpartyAssets(trimmedAddress)
-        
-        let hasStamps = await hasStampsTask
-        let hasCounterpartyAssets = await hasCounterpartyAssetsTask
-        
-        // Only warn if both checks succeeded and both came back empty
-        if hasStamps == false && hasCounterpartyAssets == false {
-            alertMessage = "This wallet doesn't appear to have any stamps or Counterparty assets yet. It has been added anyway."
-            showAlert = true
-        }
-        
-        // Create and save wallet
         let wallet = WalletConfig(address: trimmedAddress, label: label, colorName: colorName)
         context.insert(wallet)
         
@@ -106,11 +82,20 @@ final class SettingsViewModel {
             try context.save()
             walletAddressInput = ""
             showAddWallet = false
+            isValidating = false
+            return wallet
         } catch {
             validationError = "Failed to save wallet"
+            isValidating = false
+            return nil
         }
-        
-        isValidating = false
+    }
+    
+    /// Warn after load if the new wallet has no Stamps and no Counterparty assets
+    func notifyIfWalletEmpty(stampCount: Int, counterpartyCount: Int) {
+        guard stampCount == 0 && counterpartyCount == 0 else { return }
+        alertMessage = "This wallet doesn't appear to have any stamps or Counterparty assets yet. It has been added anyway."
+        showAlert = true
     }
     
     /// Handle QR code scan result

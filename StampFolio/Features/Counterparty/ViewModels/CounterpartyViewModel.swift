@@ -185,20 +185,33 @@ final class CounterpartyViewModel {
         isLoading = false
     }
 
-    /// Fetch Counterparty assets for a single wallet (used by per-wallet refresh)
+    /// Show collection loading when the first wallet is added
+    @MainActor
+    func prepareToLoadNewWallet() {
+        guard assets.isEmpty else { return }
+        isLoading = true
+        errorMessage = nil
+    }
+
+    /// Fetch Counterparty assets for a single wallet (add-wallet and per-wallet refresh)
     /// - Parameters:
     ///   - wallet: The wallet to fetch assets for
     ///   - allWallets: All wallets for dedup and sorting context
     ///   - excludingCPIDs: Asset names already shown as Bitcoin Stamps elsewhere in the app
     ///   - forceRefresh: When true, bypasses cache and fetches from network
+    /// - Returns: Number of non-Stamp Counterparty assets returned for this wallet, or `nil` if the fetch failed
     @MainActor
+    @discardableResult
     func fetchAssetMetadata(
         for wallet: WalletConfig,
         allWallets: [WalletConfig],
         excludingCPIDs: Set<String> = [],
         forceRefresh: Bool = false
-    ) async {
+    ) async -> Int? {
+        let showLoading = assets.isEmpty
+        if showLoading { isLoading = true }
         errorMessage = nil
+        defer { if showLoading { isLoading = false } }
 
         do {
             let balances = try await apiClient.fetchBalances(for: wallet.address, forceRefresh: forceRefresh)
@@ -218,8 +231,10 @@ final class CounterpartyViewModel {
             }
 
             assets = sortedAssets(uniqueAssets, by: currentSortOption, wallets: allWallets)
+            return newDisplayAssets.count
         } catch {
             errorMessage = "Failed to refresh \(wallet.displayName): \(error.localizedDescription)"
+            return nil
         }
     }
 

@@ -134,6 +134,7 @@ final class StampViewModel {
     
     private let apiClient = StampchainAPIClient()
     private var imagePrefetcher: ImagePrefetcher?
+    private var incrementalImagePrefetchers: [ImagePrefetcher] = []
     
     // MARK: - Initialization
     
@@ -218,14 +219,27 @@ final class StampViewModel {
         }
     }
     
-    /// Fetch metadata for a single wallet (used by per-wallet refresh)
+    /// Show collection loading when the first wallet is added
+    @MainActor
+    func prepareToLoadNewWallet() {
+        guard assets.isEmpty else { return }
+        isLoading = true
+        errorMessage = nil
+    }
+    
+    /// Fetch metadata for a single wallet (add-wallet and per-wallet refresh)
     /// - Parameters:
     ///   - wallet: The wallet to fetch stamps for
     ///   - allWallets: All wallets for dedup and sorting context
     ///   - forceRefresh: When true, bypasses cache and fetches from network
+    /// - Returns: Number of stamps returned for this wallet, or `nil` if the fetch failed
     @MainActor
-    func fetchAssetMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceRefresh: Bool = false) async {
+    @discardableResult
+    func fetchAssetMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceRefresh: Bool = false) async -> Int? {
+        let showLoading = assets.isEmpty
+        if showLoading { isLoading = true }
         errorMessage = nil
+        defer { if showLoading { isLoading = false } }
         
         do {
             let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceRefresh: forceRefresh)
@@ -247,28 +261,41 @@ final class StampViewModel {
             
             print("✅ Refreshed wallet \(wallet.displayName): \(newDisplayAssets.count) stamps")
             
-            // Prefetch images for the refreshed stamps
             if !newDisplayAssets.isEmpty {
-                fetchStampsImages()
+                fetchStampsImages(from: newDisplayAssets, cancelExisting: false)
             }
+            
+            return newDisplayAssets.count
         } catch {
             print("❌ Refresh error for \(wallet.displayName): \(error.localizedDescription)")
             errorMessage = "Failed to refresh \(wallet.displayName): \(error.localizedDescription)"
+            return nil
         }
     }
     
     /// Prefetch all stamp images in background
     /// Pixel stamps use Kingfisher ImagePrefetcher, vector/text use URLSession
     func fetchStampsImages() {
-        // Cancel any existing prefetch
-        imagePrefetcher?.stop()
+        fetchStampsImages(from: assets, cancelExisting: true)
+    }
+    
+    /// Prefetch stamp images for a subset of the collection
+    /// - Parameters:
+    ///   - displays: Stamps whose image URLs should be prefetched
+    ///   - cancelExisting: When true, stop in-flight prefetch of the full collection
+    func fetchStampsImages(from displays: [StampDisplay], cancelExisting: Bool) {
+        if cancelExisting {
+            imagePrefetcher?.stop()
+            incrementalImagePrefetchers.forEach { $0.stop() }
+            incrementalImagePrefetchers.removeAll()
+        }
         
         // Separate URLs by stamp type
         var pixelURLs: [URL] = []
         var vectorURLs: [URL] = []  // HTML/SVG - need viewport injection
         var textURLs: [URL] = []    // Plain text - cache as-is
         
-        for display in assets {
+        for display in displays {
             let asset = display.asset
             guard let url = asset.imageURL else { continue }
             
@@ -303,7 +330,11 @@ final class StampViewModel {
                     print("✅ Pixel prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
                 }
             )
-            imagePrefetcher = prefetcher
+            if cancelExisting {
+                imagePrefetcher = prefetcher
+            } else {
+                incrementalImagePrefetchers.append(prefetcher)
+            }
             prefetcher.start()
         }
         

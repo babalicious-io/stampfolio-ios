@@ -145,29 +145,7 @@ struct AddWalletView: View {
                 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        Task {
-                            let trimmedName = walletName.trimmingCharacters(in: .whitespacesAndNewlines)
-                            let label = trimmedName.isEmpty ? nil : trimmedName
-                            await viewModel.addWallet(
-                                address: viewModel.walletAddressInput,
-                                label: label,
-                                colorName: selectedColor.rawValue,
-                                context: modelContext
-                            )
-                            // Check if wallet was successfully added (input cleared, no validation error)
-                            if viewModel.walletAddressInput.isEmpty && viewModel.validationError == nil {
-                                // Fetch Stamps first (so Counterparty's CPID exclusion is accurate),
-                                // then fetch Counterparty assets for all wallets
-                                await stampViewModel.fetchAssetsMetadata(for: wallets)
-                                let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
-                                await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
-                                
-                                // Reset wallet name and color if successfully added
-                                walletName = ""
-                                selectedColor = .gray
-                                dismiss()
-                            }
-                        }
+                        addWallet()
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -176,11 +154,6 @@ struct AddWalletView: View {
                     .disabled(viewModel.walletAddressInput.isEmpty || viewModel.isValidating)
                     .fontWeight(.semibold)
                     .accessibilityLabel("Add wallet")
-                }
-            }
-            .overlay {
-                if viewModel.isValidating {
-                    validatingOverlay
                 }
             }
             .onAppear {
@@ -233,25 +206,54 @@ struct AddWalletView: View {
         }
     }
     
-    // MARK: - Validating Overlay
+    // MARK: - Add Wallet
     
-    private var validatingOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.3)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .tint(appColorScheme.primary)
-                
-                Text("Validating wallet...")
-                    .font(.body)
-                    .foregroundStyle(.primary)
+    /// Save locally, dismiss immediately, then load only the new wallet in the background
+    private func addWallet() {
+        let trimmedName = walletName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let label = trimmedName.isEmpty ? nil : trimmedName
+        
+        guard let wallet = viewModel.addWallet(
+            address: viewModel.walletAddressInput,
+            label: label,
+            colorName: selectedColor.rawValue,
+            context: modelContext
+        ) else { return }
+        
+        let allWallets = walletsIncluding(wallet)
+        let stampVM = stampViewModel
+        let counterpartyVM = counterpartyViewModel
+        let settingsVM = viewModel
+        
+        // Show collection loading before the sheet goes away (first wallet only)
+        stampVM.prepareToLoadNewWallet()
+        counterpartyVM.prepareToLoadNewWallet()
+        
+        // Unstructured task survives dismissing this view
+        Task { @MainActor in
+            let stampCount = await stampVM.fetchAssetMetadata(for: wallet, allWallets: allWallets)
+            let stampCPIDs = Set(stampVM.assets.map { $0.asset.counterpartyId })
+            let counterpartyCount = await counterpartyVM.fetchAssetMetadata(
+                for: wallet,
+                allWallets: allWallets,
+                excludingCPIDs: stampCPIDs
+            )
+            if let stampCount, let counterpartyCount {
+                settingsVM.notifyIfWalletEmpty(stampCount: stampCount, counterpartyCount: counterpartyCount)
             }
-            .padding(32)
-            .glassEffect(in: .rect(cornerRadius: 24))
         }
+        
+        walletName = ""
+        selectedColor = .gray
+        dismiss()
+    }
+    
+    /// `@Query` may not include the just-saved wallet yet; pass it explicitly for fetch/sort
+    private func walletsIncluding(_ wallet: WalletConfig) -> [WalletConfig] {
+        if wallets.contains(where: { $0.address == wallet.address }) {
+            return wallets
+        }
+        return wallets + [wallet]
     }
 }
 

@@ -224,11 +224,11 @@ struct SearchView: View {
 
     /// Load collection data if Search is opened before visiting a protocol tab
     private func loadDataIfNeeded() async {
-        if showStamps || showCounterparty, stampViewModel.assets.isEmpty {
+        if showStamps || showCounterparty, stampViewModel.assets.isEmpty && !stampViewModel.isLoading {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
 
-        if showCounterparty, counterpartyViewModel.assets.isEmpty {
+        if showCounterparty, counterpartyViewModel.assets.isEmpty && !counterpartyViewModel.isLoading {
             let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
             await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
         }
