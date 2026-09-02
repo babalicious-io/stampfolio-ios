@@ -77,8 +77,7 @@ struct CounterpartyView: View {
         NavigationStack {
             mainContent
                 .toolbar {
-                    viewModeToolbarItem
-                    slideshowToolbarItem
+                    leadingToolbarItems
                     filterAndSortGroupToolbarItem
                     SettingsToolbarItem()
                 }
@@ -125,10 +124,10 @@ struct CounterpartyView: View {
 
     /// Ensure Stamps are loaded first (so CPID exclusion is accurate), then fetch Counterparty assets
     private func loadData() async {
-        if stampViewModel.assets.isEmpty {
+        if stampViewModel.assets.isEmpty && !stampViewModel.isLoading {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
-        if viewModel.assets.isEmpty {
+        if viewModel.assets.isEmpty && !viewModel.isLoading {
             await viewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
         }
     }
@@ -261,8 +260,8 @@ struct CounterpartyView: View {
 
     // MARK: - Toolbar Items
 
-    private var viewModeToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
+    private var leadingToolbarItems: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
             Button {
                 cycleViewMode()
             } label: {
@@ -273,11 +272,7 @@ struct CounterpartyView: View {
             .accessibilityLabel("View mode")
             .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
             .accessibilityHint("Tap to cycle through view modes")
-        }
-    }
 
-    private var slideshowToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
             Button {
                 guard !viewModel.filteredAssets.isEmpty else { return }
                 showSlideshow = true

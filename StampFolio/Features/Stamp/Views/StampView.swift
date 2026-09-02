@@ -75,14 +75,13 @@ struct StampView: View {
         NavigationStack {
             mainContent
                 .toolbar {
-                    viewModeToolbarItem
-                    slideshowToolbarItem
+                    leadingToolbarItems
                     filterAndSortGroupToolbarItem
                     SettingsToolbarItem()
                 }
         }
         .task {
-            if viewModel.assets.isEmpty {
+            if viewModel.assets.isEmpty && !viewModel.isLoading {
                 await viewModel.fetchAssetsMetadata(for: wallets)
             }
         }
@@ -136,8 +135,8 @@ struct StampView: View {
     
     // MARK: - Toolbar Items
     
-    private var viewModeToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
+    private var leadingToolbarItems: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarLeading) {
             Button {
                 cycleViewMode()
             } label: {
@@ -148,11 +147,7 @@ struct StampView: View {
             .accessibilityLabel("View mode")
             .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
             .accessibilityHint("Tap to cycle through view modes")
-        }
-    }
-    
-    private var slideshowToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
+
             Button {
                 guard !viewModel.filteredAssets.isEmpty else { return }
                 showSlideshow = true
