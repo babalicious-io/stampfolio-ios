@@ -152,7 +152,11 @@ struct CounterpartyAssetRowView: View {
 
 #Preview {
     VStack(spacing: 12) {
-        CounterpartyAssetRowView(displayAsset: .sample, onTap: {}, onLongPress: {})
+        CounterpartyAssetRowView(
+            displayAsset: CounterpartyDisplay(asset: .sample, balance: 31_000_000, divisible: true),
+            onTap: {},
+            onLongPress: {}
+        )
     }
     .padding()
 }

@@ -68,7 +68,7 @@ struct CounterpartyAssetImageView: View {
 
     private var placeholderIcon: some View {
         ZStack {
-            appColorScheme.primary.opacity(0.15)
+            LinearGradient.cardBackground(color: appColorScheme.primary)
 
             Image(systemName: asset.isNumericAsset ? "number" : "xmark.triangle.circle.square.fill")
                 .font(.system(size: min(size.width, size.height) * 0.35, weight: .semibold))

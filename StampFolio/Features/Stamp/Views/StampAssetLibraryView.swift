@@ -34,6 +34,6 @@ struct StampAssetLibraryView: View {
     // MARK: - Gradient Background
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primary)
+        LinearGradient.cardBackground(color: appColorScheme.primary)
     }
 }

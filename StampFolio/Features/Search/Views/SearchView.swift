@@ -44,9 +44,9 @@ struct SearchView: View {
         }
         .searchable(text: $viewModel.searchText, prompt: "Search")
         .fullScreenCover(item: $selectedStamp) { displayAsset in
-            if let index = viewModel.assets.firstIndex(where: { $0.id == displayAsset.id }) {
+            if let index = viewModel.filteredAssets.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
-                    assets: viewModel.assets.map(\.asset),
+                    assets: viewModel.filteredAssets.map(\.asset),
                     initialIndex: index
                 )
             }

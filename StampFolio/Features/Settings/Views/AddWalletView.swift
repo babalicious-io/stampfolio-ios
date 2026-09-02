@@ -15,6 +15,7 @@ struct AddWalletView: View {
     
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(StampViewModel.self) private var stampViewModel
+    @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appColorScheme) private var appColorScheme
@@ -155,8 +156,11 @@ struct AddWalletView: View {
                             )
                             // Check if wallet was successfully added (input cleared, no validation error)
                             if viewModel.walletAddressInput.isEmpty && viewModel.validationError == nil {
-                                // Immediately fetch stamps metadata + images for all wallets
+                                // Fetch Stamps first (so Counterparty's CPID exclusion is accurate),
+                                // then fetch Counterparty assets for all wallets
                                 await stampViewModel.fetchAssetsMetadata(for: wallets)
+                                let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
+                                await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
                                 
                                 // Reset wallet name and color if successfully added
                                 walletName = ""
@@ -257,5 +261,6 @@ struct AddWalletView: View {
     AddWalletView()
         .environment(SettingsViewModel())
         .environment(StampViewModel())
+        .environment(CounterpartyViewModel())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

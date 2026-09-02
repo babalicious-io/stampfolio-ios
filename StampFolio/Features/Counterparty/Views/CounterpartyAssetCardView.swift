@@ -152,8 +152,18 @@ struct CounterpartyAssetCardView: View {
 
 #Preview {
     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-        CounterpartyAssetCardView(displayAsset: .sample, onTap: {}, onLongPress: {}, viewMode: .normalGrid)
-        CounterpartyAssetCardView(displayAsset: .sample, onTap: {}, onLongPress: {}, viewMode: .normalGrid)
+        CounterpartyAssetCardView(
+            displayAsset: CounterpartyDisplay(asset: .sample, balance: 31_000_000, divisible: true),
+            onTap: {},
+            onLongPress: {},
+            viewMode: .normalGrid
+        )
+        CounterpartyAssetCardView(
+            displayAsset: CounterpartyDisplay(asset: .sample, balance: 31_000_000, divisible: true),
+            onTap: {},
+            onLongPress: {},
+            viewMode: .normalGrid
+        )
     }
     .padding()
 }

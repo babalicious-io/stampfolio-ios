@@ -238,6 +238,9 @@ struct CounterpartyAssetDetailView: View {
 // MARK: - Preview
 
 #Preview {
-    CounterpartyAssetDetailView(displayAsset: .sample, viewModel: CounterpartyViewModel())
-        .presentationDetents([.medium, .large])
+    CounterpartyAssetDetailView(
+        displayAsset: CounterpartyDisplay(asset: .sample, balance: 31_000_000, divisible: true),
+        viewModel: CounterpartyViewModel()
+    )
+    .presentationDetents([.medium, .large])
 }

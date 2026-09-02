@@ -22,6 +22,7 @@ struct CounterpartyAssetFullscreenView: View {
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appColorScheme) private var appColorScheme
 
     // MARK: - State
 
@@ -303,18 +304,23 @@ struct CounterpartyAssetFullscreenView: View {
     // MARK: - Empty View
 
     private var emptyView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "xmark.triangle.circle.square.fill")
-                .font(.system(size: 44))
-                .foregroundStyle(.white.opacity(0.6))
+        ZStack {
+            LinearGradient.fullscreenBackground(color: appColorScheme.primary)
+                .ignoresSafeArea()
 
-            Text("No assets to display")
-                .foregroundStyle(.white.opacity(0.8))
+            VStack(spacing: 16) {
+                Image(systemName: "xmark.triangle.circle.square.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.white.opacity(0.6))
 
-            Button("Close") {
-                dismiss()
+                Text("No assets to display")
+                    .foregroundStyle(.white.opacity(0.8))
+
+                Button("Close") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
         }
     }
 }

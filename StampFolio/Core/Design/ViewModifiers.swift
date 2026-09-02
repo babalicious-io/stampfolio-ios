@@ -105,8 +105,9 @@ struct ScaledSpacing {
 // MARK: - Reusable Gradients
 
 extension LinearGradient {
-    /// Standard stamp card background gradient with custom accent color
-    static func stampCardBackground(color: Color) -> LinearGradient {
+    /// Standard card-sized background gradient with custom accent color, used behind
+    /// non-image content placeholders (e.g. text/audio/video stamps, missing-artwork icons)
+    static func cardBackground(color: Color) -> LinearGradient {
         LinearGradient(
             stops: [
                 Gradient.Stop(color: color, location: 0),
@@ -119,8 +120,9 @@ extension LinearGradient {
         )
     }
     
-    /// Fullscreen background gradient with custom accent color
-    static func stampFullscreenBackground(color: Color) -> LinearGradient {
+    /// Fullscreen-sized background gradient with custom accent color, used behind
+    /// non-image content placeholders (e.g. text/audio/video stamps, empty states)
+    static func fullscreenBackground(color: Color) -> LinearGradient {
         LinearGradient(
             stops: [
                 Gradient.Stop(color: color, location: 0),
@@ -132,12 +134,4 @@ extension LinearGradient {
             endPoint: .topTrailing
         )
     }
-    
-    /// Legacy support - orange card background gradient
-    @available(*, deprecated, message: "Use stampCardBackground(color:) instead")
-    static let stampCardBackgroundGradient = LinearGradient.stampCardBackground(color: .orange)
-    
-    /// Legacy support - orange fullscreen background gradient
-    @available(*, deprecated, message: "Use stampFullscreenBackground(color:) instead")
-    static let stampFullscreenBackgroundGradient = LinearGradient.stampFullscreenBackground(color: .orange)
 }

@@ -40,6 +40,7 @@ final class SettingsViewModel {
     
     private let addressValidator = BitcoinAddressValidator()
     private let apiClient = StampchainAPIClient()
+    private let counterpartyAPIClient = CounterpartyAPIClient()
     
     // MARK: - Initialization
     
@@ -82,37 +83,31 @@ final class SettingsViewModel {
         isValidating = true
         validationError = nil
         
-        // Verify wallet has stamps via API (optional enhancement)
+        // Verify wallet has stamps and/or Counterparty assets via API (optional enhancement).
+        // Failed checks resolve to `nil` (unknown) rather than throwing, so the wallet is still
+        // added even if one or both APIs are unreachable.
+        async let hasStampsTask: Bool? = try? await apiClient.validateWalletHasStamps(trimmedAddress)
+        async let hasCounterpartyAssetsTask: Bool? = try? await counterpartyAPIClient.validateWalletHasCounterpartyAssets(trimmedAddress)
+        
+        let hasStamps = await hasStampsTask
+        let hasCounterpartyAssets = await hasCounterpartyAssetsTask
+        
+        // Only warn if both checks succeeded and both came back empty
+        if hasStamps == false && hasCounterpartyAssets == false {
+            alertMessage = "This wallet doesn't appear to have any stamps or Counterparty assets yet. It has been added anyway."
+            showAlert = true
+        }
+        
+        // Create and save wallet
+        let wallet = WalletConfig(address: trimmedAddress, label: label, colorName: colorName)
+        context.insert(wallet)
+        
         do {
-            let hasStamps = try await apiClient.validateWalletHasStamps(trimmedAddress)
-            
-            if !hasStamps {
-                // Still allow adding, but show a warning
-                alertMessage = "This wallet doesn't appear to have any stamps yet. It has been added anyway."
-                showAlert = true
-            }
-            
-            // Create and save wallet
-            let wallet = WalletConfig(address: trimmedAddress, label: label, colorName: colorName)
-            context.insert(wallet)
             try context.save()
-            
-            // Reset input state
             walletAddressInput = ""
             showAddWallet = false
-            
         } catch {
-            // If API validation fails, still add the wallet
-            let wallet = WalletConfig(address: trimmedAddress, label: label, colorName: colorName)
-            context.insert(wallet)
-            
-            do {
-                try context.save()
-                walletAddressInput = ""
-                showAddWallet = false
-            } catch {
-                validationError = "Failed to save wallet"
-            }
+            validationError = "Failed to save wallet"
         }
         
         isValidating = false

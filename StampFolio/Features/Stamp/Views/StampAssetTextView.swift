@@ -25,7 +25,7 @@ struct StampAssetTextView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampCardBackground(color: appColorScheme.primary)
+        LinearGradient.cardBackground(color: appColorScheme.primary)
     }
     
     // MARK: - Body

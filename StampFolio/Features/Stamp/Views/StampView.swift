@@ -125,16 +125,16 @@ struct StampView: View {
             showOfflineBanner = !isConnected
         }
         .fullScreenCover(item: $selectedStamp) { displayAsset in
-            if let index = viewModel.assets.firstIndex(where: { $0.id == displayAsset.id }) {
+            if let index = viewModel.filteredAssets.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
-                    assets: viewModel.assets.map(\.asset),
+                    assets: viewModel.filteredAssets.map(\.asset),
                     initialIndex: index
                 )
             }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
             StampAssetFullscreenView(
-                assets: viewModel.assets.map(\.asset),
+                assets: viewModel.filteredAssets.map(\.asset),
                 initialIndex: 0,
                 isSlideshow: true
             )

@@ -27,6 +27,7 @@ struct CounterpartyView: View {
     @State private var showAddWallet = false
     @State private var showOfflineBanner = false
     @State private var showSlideshow = false
+    @State private var selectedAsset: CounterpartyDisplay?
     @State private var fullscreenAsset: CounterpartyDisplay?
     @AppStorage("counterpartyViewMode") private var viewMode: ViewMode = .normalGrid
 
@@ -85,8 +86,6 @@ struct CounterpartyView: View {
     // MARK: - Body
 
     var body: some View {
-        @Bindable var viewModel = viewModel
-
         NavigationStack {
             mainContent
                 .toolbar {
@@ -109,7 +108,7 @@ struct CounterpartyView: View {
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             showOfflineBanner = !isConnected
         }
-        .sheet(item: $viewModel.selectedAsset) { displayAsset in
+        .sheet(item: $selectedAsset) { displayAsset in
             CounterpartyAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
                 .presentationDetents([.medium, .large])
         }
@@ -253,7 +252,7 @@ struct CounterpartyView: View {
                         CounterpartyAssetRowView(
                             displayAsset: displayAsset,
                             onTap: {
-                                viewModel.selectedAsset = displayAsset
+                                selectedAsset = displayAsset
                             },
                             onLongPress: {
                                 fullscreenAsset = displayAsset
@@ -268,7 +267,7 @@ struct CounterpartyView: View {
                         CounterpartyAssetCardView(
                             displayAsset: displayAsset,
                             onTap: {
-                                viewModel.selectedAsset = displayAsset
+                                selectedAsset = displayAsset
                             },
                             onLongPress: {
                                 fullscreenAsset = displayAsset

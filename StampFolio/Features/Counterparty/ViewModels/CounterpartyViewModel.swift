@@ -45,9 +45,6 @@ final class CounterpartyViewModel {
     /// Error message (if any)
     private(set) var errorMessage: String?
 
-    /// Currently selected asset for the detail sheet
-    var selectedAsset: CounterpartyDisplay?
-
     /// Current sort option
     var currentSortOption: CounterpartySortOption = .balanceDescending
 
@@ -212,11 +209,48 @@ final class CounterpartyViewModel {
         isLoading = false
     }
 
+    /// Fetch Counterparty assets for a single wallet (used by per-wallet refresh)
+    /// - Parameters:
+    ///   - wallet: The wallet to fetch assets for
+    ///   - allWallets: All wallets for dedup and sorting context
+    ///   - excludingCPIDs: Asset names already shown as Bitcoin Stamps elsewhere in the app
+    ///   - forceRefresh: When true, bypasses cache and fetches from network
+    @MainActor
+    func fetchAssetMetadata(
+        for wallet: WalletConfig,
+        allWallets: [WalletConfig],
+        excludingCPIDs: Set<String> = [],
+        forceRefresh: Bool = false
+    ) async {
+        errorMessage = nil
+
+        do {
+            let balances = try await apiClient.fetchBalances(for: wallet.address, forceRefresh: forceRefresh)
+            let nonStampBalances = balances.filter { !excludingCPIDs.contains($0.asset) }
+            let newDisplayAssets = nonStampBalances.map { CounterpartyDisplay(from: $0) }
+
+            // Remove existing assets from this wallet, then add fresh ones
+            var updatedAssets = assets.filter { $0.walletAddress != wallet.address }
+            updatedAssets.append(contentsOf: newDisplayAssets)
+
+            // Deduplicate by asset name
+            var seen = Set<String>()
+            let uniqueAssets = updatedAssets.filter { display in
+                if seen.contains(display.id) { return false }
+                seen.insert(display.id)
+                return true
+            }
+
+            assets = sortedAssets(uniqueAssets, by: currentSortOption, wallets: allWallets)
+        } catch {
+            errorMessage = "Failed to refresh \(wallet.displayName): \(error.localizedDescription)"
+        }
+    }
+
     /// Clear all assets and errors
     func clear() {
         assets = []
         errorMessage = nil
-        selectedAsset = nil
     }
 
     /// Toggle a divisibility filter ("divisible" or "non_divisible")

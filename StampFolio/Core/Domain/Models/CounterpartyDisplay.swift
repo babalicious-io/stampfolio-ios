@@ -78,16 +78,3 @@ struct CounterpartyDisplay: Identifiable {
         self.walletAddress = balance.address
     }
 }
-
-// MARK: - Sample Data
-
-extension CounterpartyDisplay {
-
-    /// Sample display asset for previews
-    static let sample = CounterpartyDisplay(
-        asset: .sample,
-        balance: 31_000_000,
-        divisible: true,
-        walletAddress: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4"
-    )
-}

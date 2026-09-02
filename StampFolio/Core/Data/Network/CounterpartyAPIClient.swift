@@ -79,6 +79,14 @@ actor CounterpartyAPIClient {
         return allBalances
     }
 
+    /// Check whether a wallet address holds any Counterparty assets
+    /// - Parameter address: Bitcoin wallet address
+    /// - Returns: Whether the wallet has at least one asset balance
+    func validateWalletHasCounterpartyAssets(_ address: String) async throws -> Bool {
+        let balances = try await fetchBalances(for: address)
+        return !balances.isEmpty
+    }
+
     /// Fetch full detail for a single asset (supply, description, issuance dates)
     /// - Parameter asset: The asset name (e.g. "XCP", "A95428956980101314")
     /// - Returns: Asset detail without market data

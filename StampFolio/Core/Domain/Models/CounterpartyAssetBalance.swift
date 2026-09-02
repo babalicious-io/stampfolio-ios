@@ -87,25 +87,3 @@ struct CounterpartyAssetInfo: Codable, Hashable, Sendable {
         case owner
     }
 }
-
-// MARK: - Sample Data
-
-extension CounterpartyAssetBalance {
-
-    /// Sample balance for previews and testing
-    static let sample = CounterpartyAssetBalance(
-        address: "bc1qkqqre5xuqk60xtt93j297zgg7t6x0ul7gwjmv4",
-        asset: "XCPIANS",
-        assetLongname: nil,
-        quantity: 3_100_000_000_000_000,
-        quantityNormalized: "31000000.00000000",
-        assetInfo: CounterpartyAssetInfo(
-            assetLongname: nil,
-            description: "https://xcp.fun/XCPIANS.json",
-            issuer: "1GG5F8DrvQ5TAcroB5WQPjCUxPXzZxEhp4",
-            divisible: true,
-            locked: false,
-            owner: "1GG5F8DrvQ5TAcroB5WQPjCUxPXzZxEhp4"
-        )
-    )
-}

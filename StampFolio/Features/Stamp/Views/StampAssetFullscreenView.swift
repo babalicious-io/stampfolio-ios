@@ -352,7 +352,7 @@ struct TextContentView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackground(color: appColorScheme.primary)
+        LinearGradient.fullscreenBackground(color: appColorScheme.primary)
     }
     
     var body: some View {
@@ -416,7 +416,7 @@ struct AudioContentView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackground(color: appColorScheme.primary)
+        LinearGradient.fullscreenBackground(color: appColorScheme.primary)
     }
     
     var body: some View {
@@ -481,7 +481,7 @@ struct VideoContentView: View {
     @Environment(\.appColorScheme) private var appColorScheme
     
     private var gradientBackground: LinearGradient {
-        LinearGradient.stampFullscreenBackground(color: appColorScheme.primary)
+        LinearGradient.fullscreenBackground(color: appColorScheme.primary)
     }
     
     var body: some View {
