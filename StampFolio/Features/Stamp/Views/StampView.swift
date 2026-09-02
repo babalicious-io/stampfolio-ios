@@ -75,7 +75,9 @@ struct StampView: View {
         NavigationStack {
             mainContent
                 .toolbar {
-                    leadingToolbarItems
+                    viewModeToolbarItem
+                    ToolbarSpacer(.fixed, placement: .topBarLeading)
+                    slideshowToolbarItem
                     filterAndSortGroupToolbarItem
                     SettingsToolbarItem()
                 }
@@ -135,8 +137,8 @@ struct StampView: View {
     
     // MARK: - Toolbar Items
     
-    private var leadingToolbarItems: some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
+    private var viewModeToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
             Button {
                 cycleViewMode()
             } label: {
@@ -147,7 +149,11 @@ struct StampView: View {
             .accessibilityLabel("View mode")
             .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
             .accessibilityHint("Tap to cycle through view modes")
+        }
+    }
 
+    private var slideshowToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
             Button {
                 guard !viewModel.filteredAssets.isEmpty else { return }
                 showSlideshow = true
