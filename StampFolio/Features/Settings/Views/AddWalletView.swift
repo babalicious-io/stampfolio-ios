@@ -156,7 +156,7 @@ struct AddWalletView: View {
                             // Check if wallet was successfully added (input cleared, no validation error)
                             if viewModel.walletAddressInput.isEmpty && viewModel.validationError == nil {
                                 // Immediately fetch stamps metadata + images for all wallets
-                                await stampViewModel.fetchStampsMetadata(for: wallets)
+                                await stampViewModel.fetchAssetsMetadata(for: wallets)
                                 
                                 // Reset wallet name and color if successfully added
                                 walletName = ""

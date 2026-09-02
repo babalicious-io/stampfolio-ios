@@ -74,7 +74,7 @@ struct SettingsView: View {
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
                                         Task {
-                                            await stampViewModel.fetchStampMetadata(for: wallet, allWallets: wallets, forceStampsRefresh: true)
+                                            await stampViewModel.fetchStampMetadata(for: wallet, allWallets: wallets, forceRefresh: true)
                                         }
                                     } label: {
                                         Label("Refresh", systemImage: "arrow.clockwise")

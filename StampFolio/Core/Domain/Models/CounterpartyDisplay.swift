@@ -17,8 +17,8 @@ struct CounterpartyDisplay: Identifiable {
     let divisible: Bool
     let walletAddress: String?
 
-    // Loading state for on-demand asset detail (holders, dispensers, floor price)
-    var isLoadingDetail: Bool = false
+    // Loading state for on-demand market data (holders, dispensers, floor price)
+    var isLoadingMarketData: Bool = false
 
     // MARK: - Computed Properties
 
@@ -48,13 +48,13 @@ struct CounterpartyDisplay: Identifiable {
         balance: Double,
         divisible: Bool,
         walletAddress: String? = nil,
-        isLoadingDetail: Bool = false
+        isLoadingMarketData: Bool = false
     ) {
         self.asset = asset
         self.balance = balance
         self.divisible = divisible
         self.walletAddress = walletAddress
-        self.isLoadingDetail = isLoadingDetail
+        self.isLoadingMarketData = isLoadingMarketData
     }
 
     /// Create from a `CounterpartyAssetBalance` (API response row)

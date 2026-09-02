@@ -17,7 +17,7 @@ struct StampAssetDetailView: View {
     
     // Get current stamp from viewModel (updates when market data fetched)
     private var currentDisplayAsset: StampDisplay {
-        viewModel.stamps.first(where: { $0.id == displayAsset.id }) ?? displayAsset
+        viewModel.assets.first(where: { $0.id == displayAsset.id }) ?? displayAsset
     }
     
     // Convenience accessor for the underlying stamp (always use current data)

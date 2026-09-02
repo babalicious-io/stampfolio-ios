@@ -10,16 +10,8 @@ import SwiftData
 import Observation
 import Kingfisher
 
-/// Sort categories for toggle behavior
-enum SortCategory {
-    case stamp
-    case artist
-    case balance
-    case wallet
-}
-
 /// Sorting options for stamp collection
-enum SortOption: String, CaseIterable, Codable {
+enum StampSortOption: String, CaseIterable, Codable {
     case stampAscending = "stamp_asc"
     case stampDescending = "stamp_desc"
     case artistAscending = "artist_asc"
@@ -49,8 +41,8 @@ final class StampViewModel {
     
     // MARK: - Properties
     
-    /// All stamps from all wallets with display information
-    private(set) var stamps: [StampDisplay] = []
+    /// All assets from all wallets with display information
+    private(set) var assets: [StampDisplay] = []
     
     /// Loading state
     private(set) var isLoading: Bool = false
@@ -58,8 +50,8 @@ final class StampViewModel {
     /// Error message (if any)
     private(set) var errorMessage: String?
     
-    /// Currently selected stamp for detail view
-    var selectedStamp: StampDisplay?
+    /// Currently selected asset for detail view
+    var selectedAsset: StampDisplay?
     
     /// Stamp for metadata popup
     var metadataStamp: StampDisplay?
@@ -68,7 +60,7 @@ final class StampViewModel {
     private(set) var isRefreshing: Bool = false
     
     /// Current sort option
-    var currentSortOption: SortOption = .stampDescending
+    var currentSortOption: StampSortOption = .stampDescending
     
     /// Search text for filtering stamps
     var searchText: String = ""
@@ -92,9 +84,9 @@ final class StampViewModel {
         !activeIdentFilters.isEmpty || !activeFileFormatFilters.isEmpty || !activeEditionFilters.isEmpty
     }
     
-    /// Filtered stamps based on search text and filters
-    var filteredStamps: [StampDisplay] {
-        var result = stamps
+    /// Filtered assets based on search text and filters
+    var filteredAssets: [StampDisplay] {
+        var result = assets
         
         // Apply search filter
         if !searchText.isEmpty {
@@ -196,15 +188,15 @@ final class StampViewModel {
     /// Fetch stamp metadata for all wallets, then prefetch images
     /// - Parameters:
     ///   - wallets: Array of wallet addresses to fetch stamps for
-    ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
+    ///   - forceRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStampsMetadata(for wallets: [WalletConfig], forceStampsRefresh: Bool = false) async {
+    func fetchAssetsMetadata(for wallets: [WalletConfig], forceRefresh: Bool = false) async {
         guard !wallets.isEmpty else {
-            stamps = []
+            assets = []
             return
         }
         
-        isLoading = stamps.isEmpty
+        isLoading = assets.isEmpty
         errorMessage = nil
         
         var allStamps: [StampDisplay] = []
@@ -215,7 +207,7 @@ final class StampViewModel {
             for wallet in wallets {
                 group.addTask {
                     do {
-                        let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
+                        let walletBalances = try await self.apiClient.fetchStampsByWallet(wallet.address, forceRefresh: forceRefresh)
                         // Convert StampAssetBalance to StampDisplay
                         let displayAssets = walletBalances.map { StampDisplay(from: $0) }
                         return .success(displayAssets)
@@ -252,12 +244,12 @@ final class StampViewModel {
         }
         
         // Apply current sort option
-        stamps = sortedStamps(uniqueStamps, by: currentSortOption, wallets: wallets)
+        assets = sortedAssets(uniqueStamps, by: currentSortOption, wallets: wallets)
         
-        print("✅ Loaded \(stamps.count) unique stamps")
+        print("✅ Loaded \(assets.count) unique stamps")
         
         // Set error if all fetches failed
-        if stamps.isEmpty && !fetchErrors.isEmpty {
+        if assets.isEmpty && !fetchErrors.isEmpty {
             errorMessage = "Unable to load stamps: \(fetchErrors.first ?? "Unknown error")"
             print("❌ Error message: \(errorMessage ?? "")")
         }
@@ -265,7 +257,7 @@ final class StampViewModel {
         isLoading = false
         
         // Prefetch all stamp images in background
-        if !stamps.isEmpty {
+        if !assets.isEmpty {
             fetchStampsImages()
         }
     }
@@ -274,18 +266,18 @@ final class StampViewModel {
     /// - Parameters:
     ///   - wallet: The wallet to fetch stamps for
     ///   - allWallets: All wallets for dedup and sorting context
-    ///   - forceStampsRefresh: When true, bypasses cache and fetches from network
+    ///   - forceRefresh: When true, bypasses cache and fetches from network
     @MainActor
-    func fetchStampMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceStampsRefresh: Bool = false) async {
+    func fetchStampMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceRefresh: Bool = false) async {
         isRefreshing = true
         errorMessage = nil
         
         do {
-            let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceStampsRefresh: forceStampsRefresh)
+            let walletBalances = try await apiClient.fetchStampsByWallet(wallet.address, forceRefresh: forceRefresh)
             let newDisplayAssets = walletBalances.map { StampDisplay(from: $0) }
             
             // Remove existing stamps from this wallet, then add fresh ones
-            var updatedStamps = stamps.filter { $0.walletAddress != wallet.address }
+            var updatedStamps = assets.filter { $0.walletAddress != wallet.address }
             updatedStamps.append(contentsOf: newDisplayAssets)
             
             // Deduplicate
@@ -296,7 +288,7 @@ final class StampViewModel {
                 return true
             }
             
-            stamps = sortedStamps(uniqueStamps, by: currentSortOption, wallets: allWallets)
+            assets = sortedAssets(uniqueStamps, by: currentSortOption, wallets: allWallets)
             
             print("✅ Refreshed wallet \(wallet.displayName): \(newDisplayAssets.count) stamps")
             
@@ -323,7 +315,7 @@ final class StampViewModel {
         var vectorURLs: [URL] = []  // HTML/SVG - need viewport injection
         var textURLs: [URL] = []    // Plain text - cache as-is
         
-        for display in stamps {
+        for display in assets {
             let asset = display.asset
             guard let url = asset.imageURL else { continue }
             
@@ -436,40 +428,21 @@ final class StampViewModel {
         }
     }
     
-    /// Clear all stamps and errors
+    /// Clear all assets and errors
     func clear() {
-        stamps = []
+        assets = []
         errorMessage = nil
-        selectedStamp = nil
+        selectedAsset = nil
         metadataStamp = nil
     }
     
-    /// Sort stamps by the given option
+    /// Sort assets by the given option
     /// - Parameters:
     ///   - option: The sort option to apply
     ///   - wallets: Array of wallets for mapping wallet addresses to display names
-    func sortStamps(by option: SortOption, wallets: [WalletConfig]) {
+    func sortAssets(by option: StampSortOption, wallets: [WalletConfig]) {
         currentSortOption = option
-        stamps = sortedStamps(stamps, by: option, wallets: wallets)
-    }
-    
-    /// Toggle sort for a specific category (Stamp, Artist, Balance, WalletConfig)
-    /// - Parameter wallets: Array of wallets for mapping wallet addresses to display names
-    func toggleSort(for category: SortCategory, wallets: [WalletConfig]) {
-        let newOption: SortOption
-        
-        switch category {
-        case .stamp:
-            newOption = currentSortOption == .stampAscending ? .stampDescending : .stampAscending
-        case .artist:
-            newOption = currentSortOption == .artistAscending ? .artistDescending : .artistAscending
-        case .balance:
-            newOption = currentSortOption == .balanceAscending ? .balanceDescending : .balanceAscending
-        case .wallet:
-            newOption = currentSortOption == .walletAscending ? .walletDescending : .walletAscending
-        }
-        
-        sortStamps(by: newOption, wallets: wallets)
+        assets = sortedAssets(assets, by: option, wallets: wallets)
     }
     
     // MARK: - Filter Methods
@@ -504,51 +477,51 @@ final class StampViewModel {
         }
     }
     
-    /// Returns sorted stamps based on the given option
+    /// Returns sorted assets based on the given option
     /// - Parameters:
-    ///   - stamps: The stamps to sort
+    ///   - assets: The assets to sort
     ///   - option: The sort option to apply
     ///   - wallets: Array of wallets for mapping wallet addresses to display names
-    /// - Returns: Sorted array of stamps
-    private func sortedStamps(_ stamps: [StampDisplay], by option: SortOption, wallets: [WalletConfig]) -> [StampDisplay] {
+    /// - Returns: Sorted array of assets
+    private func sortedAssets(_ assets: [StampDisplay], by option: StampSortOption, wallets: [WalletConfig]) -> [StampDisplay] {
         switch option {
         case .stampAscending:
-            return stamps.sorted { $0.id < $1.id }
+            return assets.sorted { $0.id < $1.id }
             
         case .stampDescending:
-            return stamps.sorted { $0.id > $1.id }
+            return assets.sorted { $0.id > $1.id }
             
         case .artistAscending:
-            return stamps.sorted { stamp1, stamp2 in
-                let artist1 = stamp1.asset.creatorName ?? stamp1.asset.creatorAddy
-                let artist2 = stamp2.asset.creatorName ?? stamp2.asset.creatorAddy
+            return assets.sorted { asset1, asset2 in
+                let artist1 = asset1.asset.creatorName ?? asset1.asset.creatorAddy
+                let artist2 = asset2.asset.creatorName ?? asset2.asset.creatorAddy
                 return artist1.localizedCaseInsensitiveCompare(artist2) == .orderedAscending
             }
             
         case .artistDescending:
-            return stamps.sorted { stamp1, stamp2 in
-                let artist1 = stamp1.asset.creatorName ?? stamp1.asset.creatorAddy
-                let artist2 = stamp2.asset.creatorName ?? stamp2.asset.creatorAddy
+            return assets.sorted { asset1, asset2 in
+                let artist1 = asset1.asset.creatorName ?? asset1.asset.creatorAddy
+                let artist2 = asset2.asset.creatorName ?? asset2.asset.creatorAddy
                 return artist1.localizedCaseInsensitiveCompare(artist2) == .orderedDescending
             }
             
         case .balanceAscending:
-            return stamps.sorted { ($0.balance ?? 0) < ($1.balance ?? 0) }
+            return assets.sorted { ($0.balance ?? 0) < ($1.balance ?? 0) }
             
         case .balanceDescending:
-            return stamps.sorted { ($0.balance ?? 0) > ($1.balance ?? 0) }
+            return assets.sorted { ($0.balance ?? 0) > ($1.balance ?? 0) }
             
         case .walletAscending:
-            return stamps.sorted { stamp1, stamp2 in
-                let wallet1Name = walletDisplayName(for: stamp1.walletAddress, in: wallets)
-                let wallet2Name = walletDisplayName(for: stamp2.walletAddress, in: wallets)
+            return assets.sorted { asset1, asset2 in
+                let wallet1Name = walletDisplayName(for: asset1.walletAddress, in: wallets)
+                let wallet2Name = walletDisplayName(for: asset2.walletAddress, in: wallets)
                 return wallet1Name.localizedCaseInsensitiveCompare(wallet2Name) == .orderedAscending
             }
             
         case .walletDescending:
-            return stamps.sorted { stamp1, stamp2 in
-                let wallet1Name = walletDisplayName(for: stamp1.walletAddress, in: wallets)
-                let wallet2Name = walletDisplayName(for: stamp2.walletAddress, in: wallets)
+            return assets.sorted { asset1, asset2 in
+                let wallet1Name = walletDisplayName(for: asset1.walletAddress, in: wallets)
+                let wallet2Name = walletDisplayName(for: asset2.walletAddress, in: wallets)
                 return wallet1Name.localizedCaseInsensitiveCompare(wallet2Name) == .orderedDescending
             }
         }
@@ -569,14 +542,14 @@ final class StampViewModel {
         return address
     }
     
-    /// Check if there are stamps to display
-    var hasStamps: Bool {
-        !stamps.isEmpty
+    /// Check if there are assets to display
+    var hasAssets: Bool {
+        !assets.isEmpty
     }
     
     /// Check if we should show empty state
     var showEmptyState: Bool {
-        !isLoading && stamps.isEmpty && errorMessage == nil
+        !isLoading && assets.isEmpty && errorMessage == nil
     }
     
     /// Check if we should show error state
@@ -598,8 +571,8 @@ final class StampViewModel {
         }
         
         // Mark as loading
-        if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
-            stamps[index].isLoadingMarketData = true
+        if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
+            assets[index].isLoadingMarketData = true
         }
         
         // Fetch individual stamp data
@@ -613,23 +586,23 @@ final class StampViewModel {
             }
             
             // Update display stamp on main actor - replace entire StampDisplay with updated stamp
-            if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
-                let oldDisplay = stamps[index]
-                stamps[index] = StampDisplay(
+            if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
+                let oldDisplay = assets[index]
+                assets[index] = StampDisplay(
                     asset: stampData,
                     balance: oldDisplay.balance,
                     divisible: stampData.divisible,
                     walletAddress: oldDisplay.walletAddress
                 )
-                stamps[index].marketData = marketData
-                stamps[index].isLoadingMarketData = false
+                assets[index].marketData = marketData
+                assets[index].isLoadingMarketData = false
             }
         } catch {
             print("❌ Failed to fetch market data for stamp \(stampId): \(error)")
             
             // Mark as not loading on error
-            if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
-                stamps[index].isLoadingMarketData = false
+            if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
+                assets[index].isLoadingMarketData = false
             }
         }
     }
@@ -646,8 +619,8 @@ final class StampViewModel {
         
         // Mark all as loading
         for displayAsset in stampsToFetch {
-            if let index = stamps.firstIndex(where: { $0.id == displayAsset.id }) {
-                stamps[index].isLoadingMarketData = true
+            if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
+                assets[index].isLoadingMarketData = true
             }
         }
         
@@ -674,21 +647,21 @@ final class StampViewModel {
                     }
                     
                     // Update display stamps on main actor - replace entire StampDisplay with updated stamp
-                    if let index = stamps.firstIndex(where: { $0.asset.stampId == stampId }) {
-                        let oldDisplay = stamps[index]
-                        stamps[index] = StampDisplay(
+                    if let index = assets.firstIndex(where: { $0.asset.stampId == stampId }) {
+                        let oldDisplay = assets[index]
+                        assets[index] = StampDisplay(
                             asset: stampData,
                             balance: oldDisplay.balance,
                             divisible: stampData.divisible,
                             walletAddress: oldDisplay.walletAddress
                         )
-                        stamps[index].marketData = stampData.marketData
-                        stamps[index].isLoadingMarketData = false
+                        assets[index].marketData = stampData.marketData
+                        assets[index].isLoadingMarketData = false
                     }
                 } else {
                     // Mark as not loading on error
-                    if let index = stamps.firstIndex(where: { $0.asset.stampId == stampId }) {
-                        stamps[index].isLoadingMarketData = false
+                    if let index = assets.firstIndex(where: { $0.asset.stampId == stampId }) {
+                        assets[index].isLoadingMarketData = false
                     }
                 }
             }
@@ -701,9 +674,9 @@ final class StampViewModel {
         marketDataCache.removeAll()
         
         // Clear market data from display stamps
-        for index in stamps.indices {
-            stamps[index].marketData = nil
-            stamps[index].isLoadingMarketData = false
+        for index in assets.indices {
+            assets[index].marketData = nil
+            assets[index].isLoadingMarketData = false
         }
     }
 }

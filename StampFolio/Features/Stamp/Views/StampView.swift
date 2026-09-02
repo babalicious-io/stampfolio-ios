@@ -38,7 +38,7 @@ struct StampView: View {
     @State private var selectedStamp: StampDisplay?
     @State private var metadataStamp: StampDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
-    @AppStorage("viewMode") private var viewMode: ViewMode = .normalGrid
+    @AppStorage("stampViewMode") private var viewMode: ViewMode = .normalGrid
     
     // MARK: - Layout
     
@@ -109,15 +109,15 @@ struct StampView: View {
                 }
         }
         .task {
-            if viewModel.stamps.isEmpty {
-                await viewModel.fetchStampsMetadata(for: wallets)
+            if viewModel.assets.isEmpty {
+                await viewModel.fetchAssetsMetadata(for: wallets)
             }
         }
         .onChange(of: wallets.count) { oldCount, newCount in
             // Only re-fetch on wallet deletion; additions are handled at the point of add wallet
             if newCount < oldCount {
                 Task {
-                    await viewModel.fetchStampsMetadata(for: wallets)
+                    await viewModel.fetchAssetsMetadata(for: wallets)
                 }
             }
         }
@@ -125,16 +125,16 @@ struct StampView: View {
             showOfflineBanner = !isConnected
         }
         .fullScreenCover(item: $selectedStamp) { displayAsset in
-            if let index = viewModel.stamps.firstIndex(where: { $0.id == displayAsset.id }) {
+            if let index = viewModel.assets.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
-                    stamps: viewModel.stamps.map(\.asset),
+                    stamps: viewModel.assets.map(\.asset),
                     initialIndex: index
                 )
             }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
             StampAssetFullscreenView(
-                stamps: viewModel.stamps.map(\.asset),
+                stamps: viewModel.assets.map(\.asset),
                 initialIndex: 0,
                 isSlideshow: true
             )
@@ -190,7 +190,7 @@ struct StampView: View {
     private var slideshowToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                guard !viewModel.stamps.isEmpty else { return }
+                guard !viewModel.assets.isEmpty else { return }
                 showSlideshow = true
             } label: {
                 Image(systemName: "play.square.stack")
@@ -297,36 +297,36 @@ struct StampView: View {
                     Section {
                         Toggle("Stamp # - asc", isOn: Binding(
                             get: { viewModel.currentSortOption == .stampAscending },
-                            set: { _ in viewModel.sortStamps(by: .stampAscending, wallets: wallets) }
+                            set: { _ in viewModel.sortAssets(by: .stampAscending, wallets: wallets) }
                         ))
                         
                         Toggle("Stamp # - desc", isOn: Binding(
                             get: { viewModel.currentSortOption == .stampDescending },
-                            set: { _ in viewModel.sortStamps(by: .stampDescending, wallets: wallets) }
+                            set: { _ in viewModel.sortAssets(by: .stampDescending, wallets: wallets) }
                         ))
                     }
                     
                     Section {
                         Toggle("Artist - asc", isOn: Binding(
                             get: { viewModel.currentSortOption == .artistAscending },
-                            set: { _ in viewModel.sortStamps(by: .artistAscending, wallets: wallets) }
+                            set: { _ in viewModel.sortAssets(by: .artistAscending, wallets: wallets) }
                         ))
                         
                         Toggle("Artist - desc", isOn: Binding(
                             get: { viewModel.currentSortOption == .artistDescending },
-                            set: { _ in viewModel.sortStamps(by: .artistDescending, wallets: wallets) }
+                            set: { _ in viewModel.sortAssets(by: .artistDescending, wallets: wallets) }
                         ))
                     }
                     
                     Section {
                         Toggle("Balance - asc", isOn: Binding(
                             get: { viewModel.currentSortOption == .balanceAscending },
-                            set: { _ in viewModel.sortStamps(by: .balanceAscending, wallets: wallets) }
+                            set: { _ in viewModel.sortAssets(by: .balanceAscending, wallets: wallets) }
                         ))
                         
                         Toggle("Balance - desc", isOn: Binding(
                             get: { viewModel.currentSortOption == .balanceDescending },
-                            set: { _ in viewModel.sortStamps(by: .balanceDescending, wallets: wallets) }
+                            set: { _ in viewModel.sortAssets(by: .balanceDescending, wallets: wallets) }
                         ))
                     }
                     
@@ -334,12 +334,12 @@ struct StampView: View {
                         Section {
                             Toggle("Wallet - asc", isOn: Binding(
                                 get: { viewModel.currentSortOption == .walletAscending },
-                                set: { _ in viewModel.sortStamps(by: .walletAscending, wallets: wallets) }
+                                set: { _ in viewModel.sortAssets(by: .walletAscending, wallets: wallets) }
                             ))
                             
                             Toggle("Wallet - desc", isOn: Binding(
                                 get: { viewModel.currentSortOption == .walletDescending },
-                                set: { _ in viewModel.sortStamps(by: .walletDescending, wallets: wallets) }
+                                set: { _ in viewModel.sortAssets(by: .walletDescending, wallets: wallets) }
                             ))
                         }
                     }
@@ -373,13 +373,13 @@ struct StampView: View {
     
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading && viewModel.stamps.isEmpty {
+        if viewModel.isLoading && viewModel.assets.isEmpty {
             loadingView
         } else if viewModel.showError {
             errorView
-        } else if viewModel.stamps.isEmpty {
+        } else if viewModel.assets.isEmpty {
             noStampsView
-        } else if viewModel.hasActiveFilters && viewModel.filteredStamps.isEmpty {
+        } else if viewModel.hasActiveFilters && viewModel.filteredAssets.isEmpty {
             noFilterResultsView
         } else {
             stampsGrid
@@ -410,7 +410,7 @@ struct StampView: View {
         } actions: {
             Button("Try Again") {
                 Task {
-                    await viewModel.fetchStampsMetadata(for: wallets, forceStampsRefresh: true)
+                    await viewModel.fetchAssetsMetadata(for: wallets, forceRefresh: true)
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -463,7 +463,7 @@ struct StampView: View {
             if viewMode == .list {
                 // List view mode
                 LazyVStack(spacing: 12) {
-                    ForEach(viewModel.filteredStamps) { displayAsset in
+                    ForEach(viewModel.filteredAssets) { displayAsset in
                         StampAssetRowView(
                             displayAsset: displayAsset,
                             onTap: {
@@ -486,7 +486,7 @@ struct StampView: View {
             } else {
                 // Grid view modes
                 LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(viewModel.filteredStamps) { displayAsset in
+                    ForEach(viewModel.filteredAssets) { displayAsset in
                         StampAssetCardView(
                             displayAsset: displayAsset,
                             onTap: {

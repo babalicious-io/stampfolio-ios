@@ -85,7 +85,7 @@ struct StampFolioApp: App {
                     if newPhase == .background || newPhase == .inactive {
                         Task { @MainActor in
                             stampViewModel.clearMarketDataCache()
-                            counterpartyViewModel.clearDetailCache()
+                            counterpartyViewModel.clearMarketDataCache()
                         }
                     }
                 }

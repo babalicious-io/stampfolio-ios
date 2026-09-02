@@ -74,7 +74,7 @@ struct CounterpartyAssetDetailView: View {
         }
         .tint(.primary)
         .task {
-            await viewModel.fetchAssetDetailIfNeeded(for: displayAsset)
+            await viewModel.fetchMarketDataIfNeeded(for: displayAsset)
         }
     }
 
@@ -175,7 +175,7 @@ struct CounterpartyAssetDetailView: View {
             if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
             }
-        } else if currentDisplayAsset.isLoadingDetail {
+        } else if currentDisplayAsset.isLoadingMarketData {
             HStack {
                 Text("Market Data")
                     .font(.callout)

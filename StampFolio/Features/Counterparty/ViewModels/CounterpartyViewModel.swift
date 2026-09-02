@@ -255,19 +255,19 @@ final class CounterpartyViewModel {
         assets = sortedAssets(assets, by: option, wallets: wallets)
     }
 
-    // MARK: - Detail Fetching
+    // MARK: - Market Data Fetching
 
-    /// Fetch on-demand detail (supply, holders, floor price) for a single asset if not already cached
+    /// Fetch on-demand market data (supply, holders, floor price) for a single asset if not already cached
     @MainActor
-    func fetchAssetDetailIfNeeded(for displayAsset: CounterpartyDisplay) async {
+    func fetchMarketDataIfNeeded(for displayAsset: CounterpartyDisplay) async {
         let assetName = displayAsset.asset.asset
 
-        guard detailCache[assetName] == nil, !displayAsset.isLoadingDetail else {
+        guard detailCache[assetName] == nil, !displayAsset.isLoadingMarketData else {
             return
         }
 
         if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
-            assets[index].isLoadingDetail = true
+            assets[index].isLoadingMarketData = true
         }
 
         do {
@@ -281,23 +281,23 @@ final class CounterpartyViewModel {
                     balance: old.balance,
                     divisible: detail.divisible,
                     walletAddress: old.walletAddress,
-                    isLoadingDetail: false
+                    isLoadingMarketData: false
                 )
             }
         } catch {
             if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
-                assets[index].isLoadingDetail = false
+                assets[index].isLoadingMarketData = false
             }
         }
     }
 
-    /// Clear the on-demand asset detail cache (call on app close or wallet deletion)
+    /// Clear the on-demand market data cache (call on app close or wallet deletion)
     @MainActor
-    func clearDetailCache() {
+    func clearMarketDataCache() {
         detailCache.removeAll()
 
         for index in assets.indices {
-            assets[index].isLoadingDetail = false
+            assets[index].isLoadingMarketData = false
         }
     }
 

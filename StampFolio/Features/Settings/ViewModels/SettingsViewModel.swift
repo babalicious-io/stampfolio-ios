@@ -160,7 +160,7 @@ final class SettingsViewModel {
         }
         if let viewModel = counterpartyViewModel {
             Task { @MainActor in
-                viewModel.clearDetailCache()
+                viewModel.clearMarketDataCache()
             }
         }
         

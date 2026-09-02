@@ -34,7 +34,7 @@ struct SearchView: View {
             Group {
                 if viewModel.searchText.isEmpty && !viewModel.hasActiveFilters {
                     searchEmptyState
-                } else if viewModel.filteredStamps.isEmpty {
+                } else if viewModel.filteredAssets.isEmpty {
                     noResultsView
                 } else {
                     searchResults
@@ -44,9 +44,9 @@ struct SearchView: View {
         }
         .searchable(text: $viewModel.searchText, prompt: "Search")
         .fullScreenCover(item: $selectedStamp) { displayAsset in
-            if let index = viewModel.stamps.firstIndex(where: { $0.id == displayAsset.id }) {
+            if let index = viewModel.assets.firstIndex(where: { $0.id == displayAsset.id }) {
                 StampAssetFullscreenView(
-                    stamps: viewModel.stamps.map(\.asset),
+                    stamps: viewModel.assets.map(\.asset),
                     initialIndex: index
                 )
             }
@@ -100,7 +100,7 @@ struct SearchView: View {
     private var searchResults: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(viewModel.filteredStamps) { displayAsset in
+                ForEach(viewModel.filteredAssets) { displayAsset in
                     StampAssetRowView(
                         displayAsset: displayAsset,
                         onTap: {
