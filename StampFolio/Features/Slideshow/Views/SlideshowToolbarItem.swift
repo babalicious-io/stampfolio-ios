@@ -154,16 +154,14 @@ private struct SlideshowMenuButton: View {
                 }
             }
 
-            Section {
-                Picker("Interval - \(slideshowInterval)s", selection: $slideshowInterval) {
-                    ForEach(Self.slideshowIntervals, id: \.self) { secs in
-                        Text("\(secs)s")
-                            .tag(secs)
-                    }
+            Picker("Interval - \(slideshowInterval)s", selection: $slideshowInterval) {
+                ForEach(Self.slideshowIntervals, id: \.self) { secs in
+                    Text("\(secs)s")
+                        .tag(secs)
                 }
-                .pickerStyle(.menu)
-                .menuActionDismissBehavior(.disabled)
             }
+            .pickerStyle(.inline)
+            .menuActionDismissBehavior(.disabled)
         } label: {
             Image(systemName: "play.square.stack")
                 .font(.system(size: 18))
