@@ -1,63 +1,59 @@
 # StampFolio Caching System
 
-Overview of the multi-tier caching architecture used to deliver instant, offline-capable stamp browsing. Bitcoin Stamps are immutable on-chain, so all cached content is permanent and never expires.
+Overview of the multi-tier caching architecture used to deliver instant, offline-capable browsing. Bitcoin Stamps are immutable on-chain, so stamp content is cached permanently and never expires. Counterparty artwork is treated the same once resolved (Kingfisher disk never expires); resolved URL mappings persist across launches and are re-fetched only on a manual wallet refresh.
 
 ## Architecture
 
-StampFolio uses four caching layers, each serving a different content type:
+StampFolio uses these caching layers:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        User Interface                       │
-│  StampAssetPixelView  StampAssetVectorView  StampAssetTextView  DetailView │
-└──────┬──────────────┬─────────────────┬─────────────┬───────┘
-       │              │                 │             │
-       ▼              ▼                 ▼             ▼
-┌──────────────┐ ┌────────────────────────────┐ ┌──────────────┐
-│  Kingfisher  │ │    StampContentCache       │ │   URLCache   │
-│              │ │  ┌────────┐ ┌───────────┐  │ │              │
-│  Memory      │ │  │NSCache │ │ Disk files│  │ │  Memory      │
-│  (100 MB)    │ │  │(50 max)│ │ (SHA-256) │  │ │  (10 MB)     │
-│              │ │  └────┬───┘ └─────┬─────┘  │ │              │
-│  Disk        │ │       └─────┬─────┘        │ │  Disk        │
-│  (unlimited) │ │         Two-tier           │ │  (50 MB)     │
-└──────────────┘ └────────────────────────────┘ └──────────────┘
-  Pixel images     HTML / SVG / Text content     API responses
-  (jpg,png,gif,    (viewport-injected HTML,      (stamp metadata
-   webp)            plain text strings)           JSON from
-                                                  Stampchain)
+┌──────────────────────────────────────────────────────────────────────────┐
+│                             User Interface                               │
+│  Stamp views          CounterpartyAssetImageView          Detail sheets  │
+└──────┬────────────────────────────┬────────────────────────────┬─────────┘
+       │                            │                            │
+       ▼                            ▼                            ▼
+┌──────────────┐         ┌─────────────────────┐         ┌──────────────┐
+│  Kingfisher  │         │ Resolved URL map    │         │   URLCache   │
+│  Memory      │         │ (CP artwork URLs)   │         │  Memory      │
+│  (100 MB)    │         │ memory + JSON disk  │         │              │
+│  Disk        │         │ Caches/...json      │         │  Disk        │
+│  (never)     │         └─────────────────────┘         │              │
+└──────────────┘                                         └──────────────┘
+  Stamp pixels +              description → image URL      API JSON
+  CP artwork                  (nil = no artwork)           Stampchain +
+                                                           Counterparty
+
+┌────────────────────────────┐
+│    StampContentCache       │
+│  NSCache + disk files      │
+│  HTML / SVG / Text stamps  │
+└────────────────────────────┘
 ```
+
+Counterparty holdings are image-only (no HTML/SVG/text viewer). `StampContentCache` is Stamps-only.
 
 ### Layer 1 -- URLCache (API Responses)
 
-Caches raw JSON responses from the Stampchain API. Configured in `StampchainAPIClient`.
+Caches raw JSON from Stampchain and Counterparty Core. Both clients share `NetworkRequestExecutor` with separate disk paths.
+
+| Client | Memory | Disk | Disk path |
+|--------|--------|------|-----------|
+| Stampchain | 10 MB | 50 MB | `stampchain_cache` |
+| Counterparty Core | 5 MB | 25 MB | `counterparty_cache` |
+| CP manifests / Horizon | 5 MB | 20 MB | `counterparty_manifest_cache` |
 
 | Property | Value |
 |----------|-------|
-| Memory capacity | 10 MB |
-| Disk capacity | 50 MB |
-| Disk path | `stampchain_cache` |
 | Default policy | `.returnCacheDataElseLoad` |
 | Force refresh policy | `.reloadIgnoringLocalCacheData` |
 
-```swift
-// StampchainAPIClient.swift
-let config = URLSessionConfiguration.default
-config.urlCache = URLCache(
-    memoryCapacity: 10 * 1024 * 1024,
-    diskCapacity: 50 * 1024 * 1024,
-    diskPath: "stampchain_cache"
-)
-config.requestCachePolicy = .returnCacheDataElseLoad
-```
-
-The `.returnCacheDataElseLoad` policy means the app serves cached API data whenever available, only hitting the network on a true cache miss. When the user triggers a manual refresh (per-wallet swipe in Settings), the policy switches to `.reloadIgnoringLocalCacheData` to bypass the cache.
+The default policy serves cached API data whenever available, and only hits the network on a cache miss. Settings per-wallet **Refresh** (and collection **Try Again**) pass `forceRefresh: true`, which switches the request to `.reloadIgnoringLocalCacheData`.
 
 ```swift
-// Force refresh bypasses URLCache
-func performRequest(_ url: URL, forceStampsRefresh: Bool = false) async throws -> (Data, URLResponse) {
+func perform(_ url: URL, forceRefresh: Bool = false) async throws -> (Data, URLResponse) {
     var request = URLRequest(url: url)
-    if forceStampsRefresh {
+    if forceRefresh {
         request.cachePolicy = .reloadIgnoringLocalCacheData
     }
     return try await session.data(for: request)
@@ -66,7 +62,7 @@ func performRequest(_ url: URL, forceStampsRefresh: Bool = false) async throws -
 
 ### Layer 2 -- Kingfisher (Pixel Images)
 
-Handles all raster image loading and caching: JPEG, PNG, WebP, GIF. Configured at app startup in `StampFolioApp`.
+Handles raster image loading and caching for **Stamps** (JPEG, PNG, WebP, GIF) and **Counterparty artwork**. Configured at app startup in `StampFolioApp`.
 
 | Property | Value |
 |----------|-------|
@@ -115,6 +111,8 @@ The detail view always plays animated GIFs at full resolution regardless of this
 #### Synchronous Disk Load
 
 `.loadDiskFileSynchronously()` is applied to all Kingfisher calls. When an image is already in the disk cache, Kingfisher loads it on the calling thread instead of dispatching to a background queue. This eliminates the brief placeholder flash for cached stamps.
+
+Counterparty uses the same Kingfisher options on `CounterpartyAssetImageView` (`.cacheOriginalImage()`, `.diskCacheExpiration(.never)`, `.loadDiskFileSynchronously()`). Wallet refresh re-resolves artwork URLs and re-prefetches; it does **not** delete existing Kingfisher files. A new URL downloads; the same URL is a cache hit.
 
 ### Layer 3 -- StampContentCache (HTML/SVG/Text)
 
@@ -165,7 +163,32 @@ The `NSCache` tier auto-evicts entries under iOS memory pressure with no manual 
 
 Vector stamps (HTML/SVG) fetched from the network have a `<meta viewport>` tag injected before caching. This pre-processing happens once during prefetch; subsequent loads serve the already-processed HTML directly to `WKWebView` via `loadHTMLString()`, avoiding both the network request and the string processing.
 
-### Layer 4 -- SwiftData (Wallet Persistence)
+### Layer 4 -- Counterparty resolved artwork URLs
+
+Counterparty assets do not include an image URL. `CounterpartyAssetImageResolver` maps asset name → artwork URL (or "none") from the on-chain `description` and, if needed, Horizon Market.
+
+| Property | Value |
+|----------|-------|
+| Memory | `[String: URL?]` on the resolver actor (`nil` = no artwork) |
+| Disk | `Caches/counterparty_resolved_urls.json` (empty string = no artwork) |
+| Manifest HTTP cache | `counterparty_manifest_cache` URLCache |
+| Expiration | Persists across launches; re-resolved only when `forceRefresh` is true |
+| Artwork bytes | Kingfisher disk, never expire (same as Stamps) |
+
+```
+fetchAssetsMetadata / fetchAssetMetadata
+       │
+       ▼
+fetchAssetsImages()  (not awaited)
+       │
+       ├── resolveImageURL (memory → JSON disk → network)
+       │
+       └── ImagePrefetcher (.cacheOriginalImage, .diskCacheExpiration(.never))
+```
+
+Full-collection loads cancel in-flight prefetch. Add-wallet and per-wallet refresh prefetch only that wallet's assets and do not cancel an existing full prefetch.
+
+### Layer 5 -- SwiftData (Wallet Persistence)
 
 Wallet addresses and metadata are persisted locally using SwiftData with `ModelContainer`. This is not a cache in the traditional sense but provides the persistent state that drives all cache operations.
 
@@ -183,19 +206,19 @@ var sharedModelContainer: ModelContainer = {
 ### Adding a New Wallet
 
 ```
-User taps "+"        addWallet() saves         fetchStampsMetadata()       fetchStampsImages()
-in AddWalletView  -> Wallet to SwiftData  ->   hits Stampchain API    ->   prefetches all content
-                                               (cached by URLCache)       in background
+User taps "+"        addWallet() saves         fetchAssetMetadata(new wallet)
+in AddWalletView  -> Wallet to SwiftData  ->   sheet dismisses immediately
+                                               fetch runs in background
                                                       │
-                                    ┌─────────────────┼──────────────────┐
-                                    ▼                  ▼                  ▼
-                              Pixel URLs         Vector URLs         Text URLs
-                              Kingfisher         URLSession +        URLSession +
-                              ImagePrefetcher    viewport inject     StampContentCache
-                              (.never expiry)    StampContentCache
+                                    ┌─────────────────┴──────────────────┐
+                                    ▼                                    ▼
+                              Stamps for that wallet              Counterparty for that wallet
+                              fetchStampsImages()                 fetchAssetsImages()
+                              (new URLs only,                     resolve URLs + Kingfisher
+                               does not cancel full prefetch)     (incremental)
 ```
 
-Fetching is triggered **immediately** when the wallet is added (in `AddWalletView`). The sheet dismisses only after the fetch completes.
+Fetching starts **on confirm**. Add Wallet dismisses as soon as the wallet is saved; collection loading shows on the tab if this is the first wallet.
 
 ### Displaying a Stamp (Cache-First)
 
@@ -257,20 +280,25 @@ StampContentCache.read(url)
 
 ## Manual Refresh
 
-Per-wallet refresh is available via a left swipe action in Settings:
+Per-wallet refresh is a leading swipe on the wallet row in Settings:
 
 ```
-Settings > Wallet row > Swipe right > "Refresh"
+Settings > Wallet row > Swipe from leading edge > "Refresh"
        │
        ▼
-fetchStampMetadata(for: wallet, forceStampsRefresh: true)
+fetchAssetMetadata(wallet, forceRefresh: true)   // Stamps, then Counterparty
        │
-       ▼
-URLCache bypassed (.reloadIgnoringLocalCacheData)
+       ├── API URLCache bypassed (.reloadIgnoringLocalCacheData)
        │
-       ▼
-Fresh API data -> re-sort stamps -> fetchStampsImages() (re-prefetch)
+       ├── Stamps: merge list, fetchStampsImages() for that wallet only
+       │         (Kingfisher skips URLs already on disk)
+       │
+       └── Counterparty: merge list, fetchAssetsImages(forceRefresh: true)
+                 re-resolve artwork URLs (skip memory + JSON disk)
+                 prefetch new/changed image URLs into Kingfisher
 ```
+
+Collection **Try Again** force-refreshes every wallet the same way. Kingfisher and `StampContentCache` are not cleared.
 
 ## Memory Management
 
@@ -280,8 +308,10 @@ Fresh API data -> re-sort stamps -> fetchStampsImages() (re-prefetch)
 | Kingfisher disk cache | Unlimited | Never expires |
 | StampContentCache NSCache | 50 entries | Auto-evicted by iOS under memory pressure |
 | StampContentCache disk | Unlimited | Never expires |
-| URLCache memory | 10 MB | Managed by system |
-| URLCache disk | 50 MB | Managed by system |
+| CP resolved URL map | One JSON file | Replaced on each resolve; bypassed on force refresh |
+| Stampchain URLCache memory/disk | 10 MB / 50 MB | Managed by system |
+| Counterparty URLCache memory/disk | 5 MB / 25 MB | Managed by system |
+| CP manifest URLCache memory/disk | 5 MB / 20 MB | Managed by system |
 | Downsampled thumbnails | 200pt | Cached separately from originals |
 
 Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMemoryWarningNotification`. The `NSCache` in `StampContentCache` is also Apple-managed and auto-evicts under memory pressure. Disk caches persist across app launches.
@@ -298,14 +328,19 @@ Located in Settings > Performance.
 
 | File | Role |
 |------|------|
-| `StampchainAPIClient.swift` | URLCache configuration, cache-first API policy, force refresh |
+| `NetworkRequestExecutor.swift` | Shared URLCache session, cache-first policy, force refresh |
+| `StampchainAPIClient.swift` | Stampchain cache path (10/50 MB) |
+| `CounterpartyAPIClient.swift` | Counterparty cache path (5/25 MB) |
+| `CounterpartyAssetImageResolver.swift` | Manifest URLCache, persisted asset→URL map, force re-resolve |
 | `StampFolioApp.swift` | Kingfisher memory cache limit (100 MB) |
-| `StampViewModel.swift` | `fetchStampsMetadata()`, `fetchStampsImages()` prefetch orchestration |
-| `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text content |
+| `StampViewModel.swift` | `fetchAssetsMetadata()`, `fetchStampsImages()` prefetch |
+| `CounterpartyViewModel.swift` | `fetchAssetsMetadata()`, `fetchAssetsImages()` resolve + prefetch |
+| `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text stamp content |
 | `StampAssetPixelView.swift` | Downsampled thumbnails, sync disk load, animated preview toggle |
 | `StampAssetFullscreenView.swift` | Full-resolution images, sync disk load |
 | `StampAssetVectorView.swift` | WKWebView with StampContentCache read/write |
 | `StampAssetTextView.swift` | Text content with StampContentCache read/write |
-| `AddWalletView.swift` | Immediate fetch trigger on wallet add |
+| `CounterpartyAssetImageView.swift` | KFImage never-expire disk cache, resolver-backed artwork |
+| `AddWalletView.swift` | Save, dismiss, fetch only the new wallet |
 | `StampView.swift` | Cache-first `.task`, deletion-only `.onChange` |
 | `SettingsView.swift` | Per-wallet refresh swipe, performance preview toggle |

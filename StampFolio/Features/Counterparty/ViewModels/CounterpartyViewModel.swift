@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 import Observation
+import Kingfisher
 
 /// Sorting options for the Counterparty asset list
 enum CounterpartySortOption: String, CaseIterable, Codable {
@@ -59,6 +60,12 @@ final class CounterpartyViewModel {
 
     /// On-demand asset detail cache (memory-only, cleared on app close/wallet delete)
     private var detailCache: [String: CounterpartyAsset] = [:]
+
+    /// Kingfisher prefetcher for a full-collection artwork warm
+    private var imagePrefetcher: ImagePrefetcher?
+
+    /// Prefetchers for add-wallet / per-wallet refresh; not cancelled by each other
+    private var incrementalImagePrefetchers: [ImagePrefetcher] = []
 
     // MARK: - Computed Properties
 
@@ -183,6 +190,10 @@ final class CounterpartyViewModel {
         }
 
         isLoading = false
+
+        if !assets.isEmpty {
+            fetchAssetsImages(forceRefresh: forceRefresh, cancelExisting: true)
+        }
     }
 
     /// Show collection loading when the first wallet is added
@@ -231,11 +242,76 @@ final class CounterpartyViewModel {
             }
 
             assets = sortedAssets(uniqueAssets, by: currentSortOption, wallets: allWallets)
+
+            if !newDisplayAssets.isEmpty {
+                fetchAssetsImages(from: newDisplayAssets, forceRefresh: forceRefresh, cancelExisting: false)
+            }
+
             return newDisplayAssets.count
         } catch {
             errorMessage = "Failed to refresh \(wallet.displayName): \(error.localizedDescription)"
             return nil
         }
+    }
+
+    /// Prefetch artwork for the full collection
+    func fetchAssetsImages(forceRefresh: Bool = false, cancelExisting: Bool = true) {
+        fetchAssetsImages(from: assets, forceRefresh: forceRefresh, cancelExisting: cancelExisting)
+    }
+
+    /// Resolve artwork URLs then prefetch images into Kingfisher (never-expire disk cache).
+    /// Full-collection loads cancel in-flight prefetch; add-wallet / per-wallet refresh does not.
+    func fetchAssetsImages(from displays: [CounterpartyDisplay], forceRefresh: Bool = false, cancelExisting: Bool = true) {
+        if cancelExisting {
+            imagePrefetcher?.stop()
+            incrementalImagePrefetchers.forEach { $0.stop() }
+            incrementalImagePrefetchers.removeAll()
+        }
+
+        let assetsToResolve = displays.map(\.asset)
+        guard !assetsToResolve.isEmpty else { return }
+
+        let incremental = !cancelExisting
+        let shouldForceRefresh = forceRefresh
+        Task { [weak self] in
+            var urls: [URL] = []
+            await withTaskGroup(of: URL?.self) { group in
+                for asset in assetsToResolve {
+                    group.addTask {
+                        await CounterpartyAssetImageResolver.shared.resolveImageURL(for: asset, forceRefresh: shouldForceRefresh)
+                    }
+                }
+                for await url in group {
+                    if let url { urls.append(url) }
+                }
+            }
+            await self?.startImagePrefetch(urls: urls, incremental: incremental)
+        }
+    }
+
+    @MainActor
+    private func startImagePrefetch(urls: [URL], incremental: Bool) {
+        guard !urls.isEmpty else { return }
+
+        print("📦 Prefetching \(urls.count) Counterparty artwork images")
+
+        let prefetcher = ImagePrefetcher(
+            urls: urls,
+            options: [
+                .cacheOriginalImage,
+                .diskCacheExpiration(.never)
+            ],
+            completionHandler: { skippedResources, failedResources, completedResources in
+                print("✅ Counterparty artwork prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
+            }
+        )
+
+        if incremental {
+            incrementalImagePrefetchers.append(prefetcher)
+        } else {
+            imagePrefetcher = prefetcher
+        }
+        prefetcher.start()
     }
 
     /// Clear all assets and errors

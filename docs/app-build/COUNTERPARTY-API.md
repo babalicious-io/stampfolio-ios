@@ -133,7 +133,8 @@ the image itself.
 It tries the on-chain `description` first: fetches it once, tries to decode it as a
 `CounterpartyAssetManifest`, and falls back to treating the `description` URL as a direct image
 link if the response's MIME type is `image/*`. Results (including "no artwork") are cached in
-memory per asset name.
+memory and persisted to `Caches/counterparty_resolved_urls.json` so cold launches skip Horizon
+and dead hosts. Settings wallet refresh passes `forceRefresh` to re-resolve from the network.
 
 Many `description` links date back to Counterparty's 2014-2016 "Rare Pepe" era and their hosts
 have since died, moved, or serve **plain HTTP only** (which iOS's App Transport Security blocks
@@ -151,12 +152,13 @@ Horizon's own catalog has no real artwork either (`image_is_placeholder: true`),
 caches `nil` — that asset genuinely has no recoverable artwork anywhere.
 
 `CounterpartyAssetImageView` (`Features/Counterparty/Views/`) wraps this resolver and renders the
-artwork with Kingfisher (`KFImage`, same downsampling/retry/fade pipeline as `StampAssetPixelView`),
-including `.interpolation(.none)` since many of these manifests only ever had tiny (e.g. 48×48)
-icons that would otherwise blur when scaled up to card/row size — the same fix `StampAssetPixelView`
-already applies for small pixel-art stamps. It falls back to the existing placeholder icon when
-there's no artwork or the load fails, and is shared by the row, card, detail, and slideshow views
-so each asset's image is only resolved once.
+artwork with Kingfisher (`KFImage`, same downsampling/retry/fade/`.diskCacheExpiration(.never)`
+pipeline as `StampAssetPixelView`), including `.interpolation(.none)` since many of these
+manifests only ever had tiny (e.g. 48×48) icons that would otherwise blur when scaled up to
+card/row size. It falls back to the existing placeholder icon when there's no artwork or the
+load fails, and is shared by the row, card, detail, and slideshow views so each asset's image
+is only resolved once. After balances load, `CounterpartyViewModel.fetchAssetsImages()` resolves
+URLs in the background and prefetches successful artwork into Kingfisher.
 
 ### Full toolbar and grid parity with Stamps
 

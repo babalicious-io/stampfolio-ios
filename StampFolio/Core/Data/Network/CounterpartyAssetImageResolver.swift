@@ -24,6 +24,10 @@ import Foundation
 /// on-chain `description` first (cheap, no third party involved, works for currently-alive
 /// hosts) and falls back to Horizon's pre-resolved artwork when that fails or the description
 /// isn't a URL at all. Most assets have no artwork anywhere, in which case this returns `nil`.
+///
+/// Resolved URLs (including "no artwork") are kept in memory and persisted under Caches so
+/// cold launches skip Horizon and dead hosts. Settings wallet refresh passes `forceRefresh`
+/// to re-resolve in case artwork was archived later.
 actor CounterpartyAssetImageResolver {
 
     // MARK: - Singleton
@@ -43,6 +47,7 @@ actor CounterpartyAssetImageResolver {
 
     private let session: URLSession
     private let decoder = JSONDecoder()
+    private let diskURL: URL
 
     // MARK: - Initialization
 
@@ -59,17 +64,25 @@ actor CounterpartyAssetImageResolver {
         config.requestCachePolicy = .returnCacheDataElseLoad
 
         self.session = URLSession(configuration: config)
+
+        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        self.diskURL = cachesDir.appendingPathComponent("counterparty_resolved_urls.json")
+        self.cache = Self.loadCache(from: diskURL)
     }
 
     // MARK: - Public Methods
 
     /// Resolve the artwork URL for a Counterparty asset, if any.
-    /// - Parameter asset: The asset to resolve artwork for
+    /// - Parameters:
+    ///   - asset: The asset to resolve artwork for
+    ///   - forceRefresh: When true, skip memory/disk and re-resolve from the network
     /// - Returns: The resolved image URL, or `nil` when the asset has no artwork or resolution failed
-    func resolveImageURL(for asset: CounterpartyAsset) async -> URL? {
+    func resolveImageURL(for asset: CounterpartyAsset, forceRefresh: Bool = false) async -> URL? {
         let assetName = asset.asset
 
-        if let cached = cache[assetName] {
+        if forceRefresh {
+            cache.removeValue(forKey: assetName)
+        } else if let cached = cache[assetName] {
             return cached
         }
 
@@ -78,34 +91,35 @@ actor CounterpartyAssetImageResolver {
         }
 
         let task = Task<URL?, Never> { [weak self] in
-            await self?.resolve(asset: asset) ?? nil
+            await self?.resolve(asset: asset, forceRefresh: forceRefresh) ?? nil
         }
         inFlightTasks[assetName] = task
 
         let resolved = await task.value
         cache.updateValue(resolved, forKey: assetName)
         inFlightTasks[assetName] = nil
+        persistCache()
         return resolved
     }
 
     // MARK: - Private Methods
 
-    private func resolve(asset: CounterpartyAsset) async -> URL? {
+    private func resolve(asset: CounterpartyAsset, forceRefresh: Bool) async -> URL? {
         if asset.descriptionIsURL,
            let description = asset.description,
            let descriptionURL = URL(string: description),
-           let resolved = await fetchImageURL(from: descriptionURL) {
+           let resolved = await fetchImageURL(from: descriptionURL, forceRefresh: forceRefresh) {
             return resolved
         }
 
         // On-chain description missing, non-URL, or its host is dead/broken — try Horizon
         // Market's pre-resolved archive before giving up.
-        return await fetchFromHorizonMarket(assetName: asset.displayName)
+        return await fetchFromHorizonMarket(assetName: asset.displayName, forceRefresh: forceRefresh)
     }
 
-    private func fetchImageURL(from descriptionURL: URL) async -> URL? {
+    private func fetchImageURL(from descriptionURL: URL, forceRefresh: Bool) async -> URL? {
         do {
-            let (data, response) = try await session.data(from: descriptionURL)
+            let (data, response) = try await data(from: descriptionURL, forceRefresh: forceRefresh)
 
             if let manifest = try? decoder.decode(CounterpartyAssetManifest.self, from: data),
                let urlString = manifest.resolvedImageURLString,
@@ -128,14 +142,14 @@ actor CounterpartyAssetImageResolver {
     /// Queries Horizon Market's public asset endpoint for artwork it has already resolved
     /// (and, for HTTP-only sources, proxied over HTTPS) for the given asset. Returns `nil`
     /// when Horizon doesn't recognize the asset or only has a generic placeholder for it.
-    private func fetchFromHorizonMarket(assetName: String) async -> URL? {
+    private func fetchFromHorizonMarket(assetName: String, forceRefresh: Bool) async -> URL? {
         guard let encodedName = assetName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let url = URL(string: "https://horizon.market/api/tokens/counterparty/\(encodedName)") else {
             return nil
         }
 
         do {
-            let (data, _) = try await session.data(from: url)
+            let (data, _) = try await data(from: url, forceRefresh: forceRefresh)
             let decoded = try decoder.decode(HorizonAssetResponse.self, from: data)
             let media = decoded.data.media
 
@@ -151,6 +165,31 @@ actor CounterpartyAssetImageResolver {
         } catch {
             return nil
         }
+    }
+
+    private func data(from url: URL, forceRefresh: Bool) async throws -> (Data, URLResponse) {
+        var request = URLRequest(url: url)
+        if forceRefresh {
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+        }
+        return try await session.data(for: request)
+    }
+
+    private static func loadCache(from diskURL: URL) -> [String: URL?] {
+        guard let data = try? Data(contentsOf: diskURL),
+              let decoded = try? JSONDecoder().decode([String: String].self, from: data) else {
+            return [:]
+        }
+        // Empty string is the on-disk sentinel for "no artwork"
+        return decoded.mapValues { $0.isEmpty ? nil : URL(string: $0) }
+    }
+
+    private func persistCache() {
+        let payload: [String: String] = Dictionary(uniqueKeysWithValues: cache.map { key, url in
+            (key, url?.absoluteString ?? "")
+        })
+        guard let data = try? JSONEncoder().encode(payload) else { return }
+        try? data.write(to: diskURL, options: .atomic)
     }
 }
 

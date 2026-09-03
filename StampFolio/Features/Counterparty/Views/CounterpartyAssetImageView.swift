@@ -47,6 +47,7 @@ struct CounterpartyAssetImageView: View {
                         .retry(maxCount: 2, interval: .seconds(1))
                         .fade(duration: 0.25)
                         .cacheOriginalImage()
+                        .diskCacheExpiration(.never)
                         .onFailure { _ in
                             imageLoadFailed = true
                         }
