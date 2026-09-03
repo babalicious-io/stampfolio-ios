@@ -2,15 +2,16 @@
 //  SlideshowToolbarItem.swift
 //  StampFolio
 //
-//  Toolbar menu for choosing which protocols to include in a slideshow
+//  Toolbar control: tap starts the slideshow; long press configures protocols and interval
 //
 
 import SwiftUI
 import SwiftData
 
-/// Leading toolbar play button that opens a Filter/Sort-style protocol picker.
-/// Presentation lives on the collection view via `playlist` — same as long-press fullscreen —
-/// because a `fullScreenCover` attached to a toolbar `Menu` does not get a screen-sized frame.
+/// Leading toolbar play button. Tap starts playback; long press opens protocol/interval
+/// configuration. Presentation lives on the collection view via `playlist` — same as
+/// long-press fullscreen — because a `fullScreenCover` attached to a toolbar `Menu`
+/// does not get a screen-sized frame.
 struct SlideshowToolbarItem: ToolbarContent {
 
     @Binding var playlist: SlideshowPlaylist?
@@ -24,7 +25,7 @@ struct SlideshowToolbarItem: ToolbarContent {
 
 // MARK: - Menu Button
 
-/// Protocol picker. Sets `playlist` on Play Now; the parent presents the cover.
+/// Protocol/interval picker. Tap (`primaryAction`) sets `playlist`; the parent presents the cover.
 private struct SlideshowMenuButton: View {
 
     // MARK: - Environment
@@ -45,6 +46,7 @@ private struct SlideshowMenuButton: View {
     @AppStorage("slideshowInterval") private var slideshowInterval = 5
 
     private static let slideshowIntervals = [3, 5, 7, 9, 10, 12, 15, 20, 25, 30, 45, 60, 90, 120]
+    private static let selectedProtocolsKey = "slideshowSelectedProtocols"
 
     // MARK: - Computed Properties
 
@@ -64,12 +66,6 @@ private struct SlideshowMenuButton: View {
             return [only]
         }
         return selectedProtocols
-    }
-
-    private var playMenuLabel: AttributedString {
-        var label = AttributedString("Play")
-        label.inlinePresentationIntent = .stronglyEmphasized
-        return label
     }
 
     // MARK: - Body
@@ -95,32 +91,33 @@ private struct SlideshowMenuButton: View {
                 .pickerStyle(.menu)
                 .menuActionDismissBehavior(.disabled)
             }
-
-            Section {
-                Button {
-                    Task {
-                        await startSlideshow()
-                    }
-                } label: {
-                    Text(playMenuLabel)
-                }
-            }
         } label: {
             Image(systemName: "play.square.stack")
                 .font(.system(size: 18))
                 .foregroundStyle(Color.primary)
+        } primaryAction: {
+            Task {
+                await startSlideshow()
+            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Start slideshow")
         .accessibilityHint(showsProtocolPicker
-            ? "Choose protocols and interval, then tap Play"
-            : "Choose interval, then tap Play")
+            ? "Tap to play. Long press to choose protocols and interval."
+            : "Tap to play. Long press to choose interval.")
         .onAppear {
-            refreshProtocolOrder()
+            protocolOrder = ProtocolType.loadSavedOrder()
+            loadOrDefaultSelectedProtocols()
         }
-        .onChange(of: showStamps) { _, _ in refreshProtocolOrder() }
-        .onChange(of: showOrdinals) { _, _ in refreshProtocolOrder() }
-        .onChange(of: showCounterparty) { _, _ in refreshProtocolOrder() }
+        .onChange(of: showStamps) { _, isOn in
+            handleSettingsToggle(.stamps, isOn: isOn)
+        }
+        .onChange(of: showOrdinals) { _, isOn in
+            handleSettingsToggle(.ordinals, isOn: isOn)
+        }
+        .onChange(of: showCounterparty) { _, isOn in
+            handleSettingsToggle(.counterparty, isOn: isOn)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .protocolOrderDidChange)) { _ in
             refreshProtocolOrder()
         }
@@ -137,17 +134,54 @@ private struct SlideshowMenuButton: View {
                 } else {
                     selectedProtocols.remove(protocolType)
                 }
+                saveSelectedProtocols()
             }
         )
     }
 
     private func refreshProtocolOrder() {
         protocolOrder = ProtocolType.loadSavedOrder()
+        syncSelectedProtocolsWithEnabled()
+        saveSelectedProtocols()
+    }
+
+    private func handleSettingsToggle(_ protocolType: ProtocolType, isOn: Bool) {
+        refreshProtocolOrder()
+        if isOn {
+            selectedProtocols.insert(protocolType)
+            saveSelectedProtocols()
+        }
+    }
+
+    private func syncSelectedProtocolsWithEnabled() {
         if enabledProtocols.count == 1, let only = enabledProtocols.first {
             selectedProtocols = [only]
         } else {
             selectedProtocols = selectedProtocols.filter { isEnabled($0) }
         }
+    }
+
+    private func loadOrDefaultSelectedProtocols() {
+        if UserDefaults.standard.object(forKey: Self.selectedProtocolsKey) == nil {
+            selectedProtocols = Set(enabledProtocols)
+            saveSelectedProtocols()
+            return
+        }
+
+        if let data = UserDefaults.standard.data(forKey: Self.selectedProtocolsKey),
+           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
+            selectedProtocols = Set(decoded)
+            syncSelectedProtocolsWithEnabled()
+            saveSelectedProtocols()
+        } else {
+            selectedProtocols = Set(enabledProtocols)
+            saveSelectedProtocols()
+        }
+    }
+
+    private func saveSelectedProtocols() {
+        guard let data = try? JSONEncoder().encode(Array(selectedProtocols)) else { return }
+        UserDefaults.standard.set(data, forKey: Self.selectedProtocolsKey)
     }
 
     private func isEnabled(_ protocolType: ProtocolType) -> Bool {
