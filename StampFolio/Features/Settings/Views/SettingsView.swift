@@ -62,7 +62,7 @@ struct SettingsView: View {
                     }
                     .onMove(perform: moveProtocol)
                 } header: {
-                    contentDisplayToggle
+                    protocolSectionHeader
                 }
                 
                 // Wallets Section
@@ -180,9 +180,9 @@ struct SettingsView: View {
     
     // MARK: - Protocol Section Header
     
-    private var contentDisplayToggle: some View {
+    private var protocolSectionHeader: some View {
         HStack(spacing: 14) {
-            Text("Content")
+            Text("Protocols")
             Spacer()
             Button {
                 protocolEditMode = protocolEditMode.isEditing ? .inactive : .active
