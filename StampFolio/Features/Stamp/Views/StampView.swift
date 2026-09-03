@@ -137,6 +137,18 @@ struct StampView: View {
                             set: { _ in viewModel.toggleEditionFilter("multiple") }
                         ))
                     }
+
+                    Section("EDITION STATUS") {
+                        Toggle("Locked", isOn: Binding(
+                            get: { viewModel.activeLockedFilters.contains("locked") },
+                            set: { _ in viewModel.toggleLockedFilter("locked") }
+                        ))
+
+                        Toggle("Unlocked", isOn: Binding(
+                            get: { viewModel.activeLockedFilters.contains("unlocked") },
+                            set: { _ in viewModel.toggleLockedFilter("unlocked") }
+                        ))
+                    }
                     
                     Section("FILE TYPE") {
                         Toggle("Jpg", isOn: Binding(
@@ -184,18 +196,6 @@ struct StampView: View {
                             set: { _ in viewModel.toggleFileFormatFilter("mp3") }
                         ))
                     }
-
-                    Section("LOCK STATUS") {
-                        Toggle("Locked", isOn: Binding(
-                            get: { viewModel.activeLockedFilters.contains("locked") },
-                            set: { _ in viewModel.toggleLockedFilter("locked") }
-                        ))
-
-                        Toggle("Unlocked", isOn: Binding(
-                            get: { viewModel.activeLockedFilters.contains("unlocked") },
-                            set: { _ in viewModel.toggleLockedFilter("unlocked") }
-                        ))
-                    }
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 18))
@@ -203,7 +203,7 @@ struct StampView: View {
                 }
                 .menuActionDismissBehavior(.disabled)
                 .accessibilityLabel("Filter stamps")
-                .accessibilityHint("Filter stamps by type, edition count, format, or lock status")
+                .accessibilityHint("Filter stamps by type, edition count, edition status, or format")
                 
                 // Sort Menu (using Section for semantic grouping)
                 Menu {

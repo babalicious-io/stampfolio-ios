@@ -262,7 +262,7 @@ struct CounterpartyView: View {
                         ))
                     }
 
-                    Section("LOCK STATUS") {
+                    Section("EDITION STATUS") {
                         Toggle("Locked", isOn: Binding(
                             get: { viewModel.activeLockedFilters.contains("locked") },
                             set: { _ in viewModel.toggleLockedFilter("locked") }
@@ -280,7 +280,7 @@ struct CounterpartyView: View {
                 }
                 .menuActionDismissBehavior(.disabled)
                 .accessibilityLabel("Filter assets")
-                .accessibilityHint("Filter assets by type, edition count, or lock status")
+                .accessibilityHint("Filter assets by type, edition count, or edition status")
 
                 Menu {
                     Section {
