@@ -146,7 +146,7 @@ private struct SlideshowMenuButton: View {
     var body: some View {
         Menu {
             if showsProtocolPicker {
-                Section {
+                Section("PROTOCOL") {
                     ForEach(enabledProtocols) { protocolType in
                         Toggle(protocolType.rawValue, isOn: binding(for: protocolType))
                             .menuActionDismissBehavior(.disabled)
@@ -154,7 +154,7 @@ private struct SlideshowMenuButton: View {
                 }
             }
 
-            Picker("Interval - \(slideshowInterval)s", selection: $slideshowInterval) {
+            Picker("INTERVAL", selection: $slideshowInterval) {
                 ForEach(Self.slideshowIntervals, id: \.self) { secs in
                     Text("\(secs)s")
                         .tag(secs)
