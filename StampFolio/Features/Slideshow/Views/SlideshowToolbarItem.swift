@@ -64,7 +64,7 @@ private struct SlideshowMenuButton: View {
             }
 
             Section {
-                Picker("Interval", selection: $slideshowInterval) {
+                Picker("Interval - \(slideshowInterval)s", selection: $slideshowInterval) {
                     ForEach(Self.slideshowIntervals, id: \.self) { secs in
                         Text("\(secs)s")
                             .tag(secs)
