@@ -120,14 +120,21 @@ struct StampView: View {
                             set: { _ in viewModel.toggleIdentFilter("classic") }
                         ))
                         
-                        Toggle("Cursed", isOn: Binding(
-                            get: { viewModel.activeIdentFilters.contains("cursed") },
-                            set: { _ in viewModel.toggleIdentFilter("cursed") }
-                        ))
-                        
                         Toggle("Posh", isOn: Binding(
                             get: { viewModel.activeIdentFilters.contains("posh") },
                             set: { _ in viewModel.toggleIdentFilter("posh") }
+                        ))
+                    }
+
+                    Section("EDITIONS") {
+                        Toggle("Single", isOn: Binding(
+                            get: { viewModel.activeEditionFilters.contains("single") },
+                            set: { _ in viewModel.toggleEditionFilter("single") }
+                        ))
+                        
+                        Toggle("Multiple", isOn: Binding(
+                            get: { viewModel.activeEditionFilters.contains("multiple") },
+                            set: { _ in viewModel.toggleEditionFilter("multiple") }
                         ))
                     }
                     
@@ -175,18 +182,6 @@ struct StampView: View {
                         Toggle("Mp3", isOn: Binding(
                             get: { viewModel.activeFileFormatFilters.contains("mp3") },
                             set: { _ in viewModel.toggleFileFormatFilter("mp3") }
-                        ))
-                    }
-                    
-                    Section("EDITIONS") {
-                        Toggle("Single", isOn: Binding(
-                            get: { viewModel.activeEditionFilters.contains("single") },
-                            set: { _ in viewModel.toggleEditionFilter("single") }
-                        ))
-                        
-                        Toggle("Multiple", isOn: Binding(
-                            get: { viewModel.activeEditionFilters.contains("multiple") },
-                            set: { _ in viewModel.toggleEditionFilter("multiple") }
                         ))
                     }
                 } label: {
