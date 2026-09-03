@@ -41,8 +41,27 @@ struct SlideshowFullscreenView: View {
                         dismiss()
                     }
 
-                if let currentItem {
-                    slidePage(for: currentItem, geometry: geometry)
+                ZStack {
+                    if let currentItem {
+                        slideMedia(for: currentItem)
+                            .id(currentItem.id)
+                            .scaleEffect(gestureState.scale)
+                            .offset(gestureState.offset)
+                            .offset(y: gestureState.dragOffset.height)
+                            .offset(x: gestureState.horizontalDragOffset.width)
+                            .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
+                    }
+
+                    Color.clear
+                        .contentShape(Rectangle())
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .gesture(gestureState.magnificationGesture())
+                .gesture(unifiedDragGesture)
+                .onTapGesture(count: 2) {
+                    withAnimation(.spring(response: 0.3)) {
+                        gestureState.toggleZoom()
+                    }
                 }
             }
         }
@@ -60,67 +79,15 @@ struct SlideshowFullscreenView: View {
         .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
     }
 
-    // MARK: - Slide Page
+    // MARK: - Media
 
     @ViewBuilder
-    private func slidePage(for item: SlideshowItem, geometry: GeometryProxy) -> some View {
+    private func slideMedia(for item: SlideshowItem) -> some View {
         switch item {
         case .stamp(let asset):
-            ZStack {
-                StampAssetFullscreenContent(asset: asset)
-                    .scaleEffect(gestureState.scale)
-                    .offset(gestureState.offset)
-                    .offset(y: gestureState.dragOffset.height)
-                    .offset(x: gestureState.horizontalDragOffset.width)
-                    .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
-
-                Color.clear
-                    .contentShape(Rectangle())
-            }
-            .gesture(gestureState.magnificationGesture())
-            .gesture(unifiedDragGesture)
-            .onTapGesture(count: 2) {
-                withAnimation(.spring(response: 0.3)) {
-                    gestureState.toggleZoom()
-                }
-            }
-
+            StampAssetFullscreenContent(asset: asset)
         case .counterparty(let asset):
-            VStack(spacing: 24) {
-                Spacer(minLength: 0)
-
-                CounterpartyAssetImageView(
-                    asset: asset,
-                    size: CGSize(width: geometry.size.width, height: geometry.size.height * 0.75)
-                )
-                .id(currentIndex)
-                .frame(maxWidth: geometry.size.width - 32, maxHeight: geometry.size.height * 0.75)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .scaleEffect(gestureState.scale)
-                .offset(gestureState.offset)
-                .offset(y: gestureState.dragOffset.height)
-                .offset(x: gestureState.horizontalDragOffset.width)
-                .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
-
-                Text(asset.displayName)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                    .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 300.0)
-
-                Spacer(minLength: 0)
-            }
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .contentShape(Rectangle())
-            .gesture(gestureState.magnificationGesture())
-            .gesture(unifiedDragGesture)
-            .onTapGesture(count: 2) {
-                withAnimation(.spring(response: 0.3)) {
-                    gestureState.toggleZoom()
-                }
-            }
+            CounterpartyAssetFullscreenContent(asset: asset)
         }
     }
 

@@ -87,6 +87,54 @@ struct CounterpartyAssetImageView: View {
     }
 }
 
+// MARK: - Fullscreen Content
+
+/// Full-bleed original artwork for immersive Counterparty viewing (slideshow and long-press).
+/// Card/row rendering stays on `CounterpartyAssetImageView`, which downsamples to a target size.
+struct CounterpartyAssetFullscreenContent: View {
+    let asset: CounterpartyAsset
+
+    @State private var resolvedImageURL: URL?
+    @State private var imageLoadFailed = false
+
+    var body: some View {
+        Group {
+            if let resolvedImageURL, !imageLoadFailed {
+                KFImage(resolvedImageURL)
+                    .placeholder { placeholderIcon }
+                    .loadDiskFileSynchronously()
+                    .retry(maxCount: 3)
+                    .cacheOriginalImage()
+                    .diskCacheExpiration(.never)
+                    .onFailure { _ in
+                        imageLoadFailed = true
+                    }
+                    .resizable()
+                    .interpolation(.none)
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                placeholderIcon
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task(id: asset.id) {
+            await resolveImageIfNeeded()
+        }
+    }
+
+    private var placeholderIcon: some View {
+        Image(systemName: asset.isNumericAsset ? "number" : "xmark.triangle.circle.square.fill")
+            .font(.system(size: 80, weight: .semibold))
+            .foregroundStyle(.white.opacity(0.55))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func resolveImageIfNeeded() async {
+        imageLoadFailed = false
+        resolvedImageURL = await CounterpartyAssetImageResolver.shared.resolveImageURL(for: asset)
+    }
+}
+
 // MARK: - Preview
 
 #Preview {

@@ -7,10 +7,8 @@
 
 import SwiftUI
 
-/// Full-screen viewer for Counterparty assets. Counterparty holdings are image-only (unlike
-/// Stamps, which also support HTML/audio/video/text content), so this is a much simpler
-/// single-page viewer than `StampAssetFullscreenView`, but mirrors the same pinch-to-zoom, pan,
-/// swipe-to-navigate, and swipe-down-to-dismiss gestures for a consistent fullscreen experience.
+/// Full-screen viewer for Counterparty assets. Mirrors `StampAssetFullscreenView`:
+/// full-bleed artwork on black, pinch-to-zoom, pan, swipe-to-navigate, swipe-down-to-dismiss.
 struct CounterpartyAssetFullscreenView: View {
 
     // MARK: - Properties
@@ -52,47 +50,29 @@ struct CounterpartyAssetFullscreenView: View {
                 Color.black
                     .ignoresSafeArea()
                     .onTapGesture {
-                        // Tap background to dismiss
                         dismiss()
                     }
 
-                if !assets.isEmpty {
-                    VStack(spacing: 24) {
-                        Spacer(minLength: 0)
-
-                        // Fills the available page (minus room for the name below), letterboxing
-                        // rather than cropping so card-shaped artwork is shown in full.
-                        CounterpartyAssetImageView(
-                            asset: currentAsset,
-                            size: CGSize(width: geometry.size.width, height: geometry.size.height * 0.75)
-                        )
-                        .id(currentIndex)
-                        .frame(maxWidth: geometry.size.width - 32, maxHeight: geometry.size.height * 0.75)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .scaleEffect(gestureState.scale)
-                        .offset(gestureState.offset)
-                        .offset(y: gestureState.dragOffset.height)
-                        .offset(x: gestureState.horizontalDragOffset.width)
-                        .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
-
-                        Text(currentAsset.displayName)
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                            .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 300.0)
-
-                        Spacer(minLength: 0)
+                ZStack {
+                    if !assets.isEmpty {
+                        CounterpartyAssetFullscreenContent(asset: currentAsset)
+                            .id(currentAsset.id)
+                            .scaleEffect(gestureState.scale)
+                            .offset(gestureState.offset)
+                            .offset(y: gestureState.dragOffset.height)
+                            .offset(x: gestureState.horizontalDragOffset.width)
+                            .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
                     }
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .contentShape(Rectangle())
-                    .gesture(gestureState.magnificationGesture())
-                    .gesture(unifiedDragGesture)
-                    .onTapGesture(count: 2) {
-                        withAnimation(.spring(response: 0.3)) {
-                            gestureState.toggleZoom()
-                        }
+
+                    Color.clear
+                        .contentShape(Rectangle())
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .gesture(gestureState.magnificationGesture())
+                .gesture(unifiedDragGesture)
+                .onTapGesture(count: 2) {
+                    withAnimation(.spring(response: 0.3)) {
+                        gestureState.toggleZoom()
                     }
                 }
             }
@@ -113,7 +93,6 @@ struct CounterpartyAssetFullscreenView: View {
 
     // MARK: - Gestures
 
-    // Unified drag gesture - handles pan when zoomed, navigation and dismiss when not zoomed
     private var unifiedDragGesture: some Gesture {
         gestureState.dragGesture(
             onNavigateNext: navigateToNext,

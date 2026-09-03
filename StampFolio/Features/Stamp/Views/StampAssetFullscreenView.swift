@@ -155,39 +155,42 @@ struct StampAssetFullscreenContent: View {
     @Environment(\.appColorScheme) private var appColorScheme
 
     var body: some View {
-        if asset.isText {
-            TextContentView(url: asset.imageURL)
-        } else if asset.isAudio {
-            AudioContentView(url: asset.imageURL)
-        } else if asset.isVideo {
-            VideoContentView(url: asset.imageURL)
-        } else if asset.isSVG || asset.isHTML {
-            WebContentView(url: asset.imageURL)
-        } else if asset.isGIF {
-            KFAnimatedImage(asset.imageURL)
-                .placeholder {
-                    ProgressView()
-                        .tint(appColorScheme.primary)
-                }
-                .loadDiskFileSynchronously()
-                .cacheOriginalImage()
-                .diskCacheExpiration(.never)
-                .aspectRatio(contentMode: .fit)
-                .allowsHitTesting(false)
-        } else {
-            KFImage(asset.imageURL)
-                .placeholder {
-                    ProgressView()
-                        .tint(appColorScheme.primary)
-                }
-                .loadDiskFileSynchronously()
-                .retry(maxCount: 3)
-                .cacheOriginalImage()
-                .diskCacheExpiration(.never)
-                .resizable()
-                .interpolation(.none)
-                .aspectRatio(contentMode: .fit)
+        Group {
+            if asset.isText {
+                TextContentView(url: asset.imageURL)
+            } else if asset.isAudio {
+                AudioContentView(url: asset.imageURL)
+            } else if asset.isVideo {
+                VideoContentView(url: asset.imageURL)
+            } else if asset.isSVG || asset.isHTML {
+                WebContentView(url: asset.imageURL)
+            } else if asset.isGIF {
+                KFAnimatedImage(asset.imageURL)
+                    .placeholder {
+                        ProgressView()
+                            .tint(appColorScheme.primary)
+                    }
+                    .loadDiskFileSynchronously()
+                    .cacheOriginalImage()
+                    .diskCacheExpiration(.never)
+                    .aspectRatio(contentMode: .fit)
+                    .allowsHitTesting(false)
+            } else {
+                KFImage(asset.imageURL)
+                    .placeholder {
+                        ProgressView()
+                            .tint(appColorScheme.primary)
+                    }
+                    .loadDiskFileSynchronously()
+                    .retry(maxCount: 3)
+                    .cacheOriginalImage()
+                    .diskCacheExpiration(.never)
+                    .resizable()
+                    .interpolation(.none)
+                    .aspectRatio(contentMode: .fit)
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
