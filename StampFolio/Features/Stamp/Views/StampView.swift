@@ -23,7 +23,6 @@ struct StampView: View {
     
     @State private var showOfflineBanner = false
     @State private var showAddWallet = false
-    @State private var showSlideshow = false
     @State private var fullscreenAsset: StampDisplay?
     @State private var detailAsset: StampDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
@@ -77,7 +76,7 @@ struct StampView: View {
                 .toolbar {
                     viewModeToolbarItem
                     ToolbarSpacer(.fixed, placement: .topBarLeading)
-                    slideshowToolbarItem
+                    SlideshowToolbarItem()
                     filterAndSortGroupToolbarItem
                     SettingsToolbarItem()
                 }
@@ -105,13 +104,6 @@ struct StampView: View {
                     initialIndex: index
                 )
             }
-        }
-        .fullScreenCover(isPresented: $showSlideshow) {
-            StampAssetFullscreenView(
-                assets: viewModel.filteredAssets.map(\.asset),
-                initialIndex: 0,
-                isSlideshow: true
-            )
         }
         .sheet(item: $detailAsset) { displayAsset in
             StampAssetDetailView(displayAsset: displayAsset, viewModel: viewModel)
@@ -152,22 +144,6 @@ struct StampView: View {
         }
     }
 
-    private var slideshowToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button {
-                guard !viewModel.filteredAssets.isEmpty else { return }
-                showSlideshow = true
-            } label: {
-                Image(systemName: "play.square.stack")
-                    .font(.system(size: 18))
-                    .foregroundStyle(Color.primary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Start slideshow")
-            .accessibilityHint("Play through all stamps automatically")
-        }
-    }
-    
     private var filterAndSortGroupToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             ControlGroup {
@@ -451,6 +427,7 @@ struct StampView: View {
 #Preview {
     StampView()
         .environment(StampViewModel())
+        .environment(CounterpartyViewModel())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

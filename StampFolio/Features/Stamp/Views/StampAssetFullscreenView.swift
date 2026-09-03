@@ -23,7 +23,6 @@ struct StampAssetFullscreenView: View {
     // MARK: - Environment
     
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.appColorScheme) private var appColorScheme
     
     // MARK: - State
     
@@ -61,7 +60,7 @@ struct StampAssetFullscreenView: View {
                 
                 // Content based on type
                 ZStack {
-                    contentView
+                    StampAssetFullscreenContent(asset: currentAsset)
                         .scaleEffect(gestureState.scale)
                         .offset(gestureState.offset)
                         .offset(y: gestureState.dragOffset.height)
@@ -93,51 +92,6 @@ struct StampAssetFullscreenView: View {
         .accessibilityAddTraits(.isImage)
         .accessibilityLabel("\(currentAsset.formattedStampId), \(currentIndex + 1) of \(assets.count)")
         .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
-    }
-    
-    // MARK: - Content View
-    
-    @ViewBuilder
-    private var contentView: some View {
-        if currentAsset.isText {
-            // Plain text content
-            TextContentView(url: currentAsset.imageURL)
-        } else if currentAsset.isAudio {
-            // Audio content
-            AudioContentView(url: currentAsset.imageURL)
-        } else if currentAsset.isVideo {
-            // Video content
-            VideoContentView(url: currentAsset.imageURL)
-        } else if currentAsset.isSVG || currentAsset.isHTML {
-            // WebView for SVG/HTML content
-            WebContentView(url: currentAsset.imageURL)
-        } else if currentAsset.isGIF {
-            // KFAnimatedImage for animated GIFs - full resolution (no downsampling)
-            KFAnimatedImage(currentAsset.imageURL)
-                .placeholder {
-                    ProgressView()
-                        .tint(appColorScheme.primary)
-                }
-                .loadDiskFileSynchronously()
-                .cacheOriginalImage()
-                .diskCacheExpiration(.never)
-                .aspectRatio(contentMode: .fit)
-                .allowsHitTesting(false)
-        } else {
-            // KFImage for static images (jpg, png, webp) - full resolution (no downsampling)
-            KFImage(currentAsset.imageURL)
-                .placeholder {
-                    ProgressView()
-                        .tint(appColorScheme.primary)
-                }
-                .loadDiskFileSynchronously()
-                .retry(maxCount: 3)
-                .cacheOriginalImage()
-                .diskCacheExpiration(.never)
-                .resizable()
-                .interpolation(.none) // Prevents pixelation for small/pixel art stamps
-                .aspectRatio(contentMode: .fit)
-        }
     }
     
     // MARK: - Gestures
@@ -188,6 +142,51 @@ struct StampAssetFullscreenView: View {
             currentIndex = currentIndex < assets.count - 1 ? currentIndex + 1 : 0
             gestureState.horizontalDragOffset = .zero
             gestureState.resetZoom()
+        }
+    }
+}
+
+// MARK: - Stamp Fullscreen Content
+
+/// Renders a stamp's media for immersive fullscreen (shared by browsing and slideshow)
+struct StampAssetFullscreenContent: View {
+    let asset: StampAsset
+
+    @Environment(\.appColorScheme) private var appColorScheme
+
+    var body: some View {
+        if asset.isText {
+            TextContentView(url: asset.imageURL)
+        } else if asset.isAudio {
+            AudioContentView(url: asset.imageURL)
+        } else if asset.isVideo {
+            VideoContentView(url: asset.imageURL)
+        } else if asset.isSVG || asset.isHTML {
+            WebContentView(url: asset.imageURL)
+        } else if asset.isGIF {
+            KFAnimatedImage(asset.imageURL)
+                .placeholder {
+                    ProgressView()
+                        .tint(appColorScheme.primary)
+                }
+                .loadDiskFileSynchronously()
+                .cacheOriginalImage()
+                .diskCacheExpiration(.never)
+                .aspectRatio(contentMode: .fit)
+                .allowsHitTesting(false)
+        } else {
+            KFImage(asset.imageURL)
+                .placeholder {
+                    ProgressView()
+                        .tint(appColorScheme.primary)
+                }
+                .loadDiskFileSynchronously()
+                .retry(maxCount: 3)
+                .cacheOriginalImage()
+                .diskCacheExpiration(.never)
+                .resizable()
+                .interpolation(.none)
+                .aspectRatio(contentMode: .fit)
         }
     }
 }

@@ -25,7 +25,6 @@ struct CounterpartyView: View {
 
     @State private var showAddWallet = false
     @State private var showOfflineBanner = false
-    @State private var showSlideshow = false
     @State private var detailAsset: CounterpartyDisplay?
     @State private var fullscreenAsset: CounterpartyDisplay?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
@@ -79,7 +78,7 @@ struct CounterpartyView: View {
                 .toolbar {
                     viewModeToolbarItem
                     ToolbarSpacer(.fixed, placement: .topBarLeading)
-                    slideshowToolbarItem
+                    SlideshowToolbarItem()
                     filterAndSortGroupToolbarItem
                     SettingsToolbarItem()
                 }
@@ -112,13 +111,6 @@ struct CounterpartyView: View {
                     initialIndex: index
                 )
             }
-        }
-        .fullScreenCover(isPresented: $showSlideshow) {
-            CounterpartyAssetFullscreenView(
-                assets: viewModel.filteredAssets.map(\.asset),
-                initialIndex: 0,
-                isSlideshow: true
-            )
         }
     }
 
@@ -274,22 +266,6 @@ struct CounterpartyView: View {
             .accessibilityLabel("View mode")
             .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
             .accessibilityHint("Tap to cycle through view modes")
-        }
-    }
-
-    private var slideshowToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button {
-                guard !viewModel.filteredAssets.isEmpty else { return }
-                showSlideshow = true
-            } label: {
-                Image(systemName: "play.square.stack")
-                    .font(.system(size: 18))
-                    .foregroundStyle(Color.primary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Start slideshow")
-            .accessibilityHint("Play through all Counterparty assets automatically")
         }
     }
 
