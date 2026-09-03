@@ -119,6 +119,7 @@ struct MainTabView: View {
         .environment(StampViewModel())
         .environment(CounterpartyViewModel())
         .environment(SettingsViewModel())
+        .environment(SlideshowSelection())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

@@ -42,6 +42,7 @@ struct ContentView: View {
         .environment(SettingsViewModel())
         .environment(StampViewModel())
         .environment(CounterpartyViewModel())
+        .environment(SlideshowSelection())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

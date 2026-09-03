@@ -42,30 +42,6 @@ struct CounterpartyView: View {
         viewModel.currentSortOption != .balanceDescending
     }
 
-    /// Icon for the current view mode
-    private var viewModeIcon: String {
-        switch viewMode {
-        case .normalGrid:
-            return "square.grid.2x2.fill"
-        case .denseGrid:
-            return "square.grid.3x3.fill"
-        case .list:
-            return "rectangle.grid.1x3.fill"
-        }
-    }
-
-    /// Cycle to the next view mode
-    private func cycleViewMode() {
-        switch viewMode {
-        case .normalGrid:
-            viewMode = .denseGrid
-        case .denseGrid:
-            viewMode = .list
-        case .list:
-            viewMode = .normalGrid
-        }
-    }
-
     /// Dynamic grid columns using native adaptive sizing with device awareness, mirroring `StampView`
     private var columns: [GridItem] {
         gridColumns(viewMode: viewMode, horizontalSizeClass: horizontalSizeClass)
@@ -77,7 +53,7 @@ struct CounterpartyView: View {
         NavigationStack {
             mainContent
                 .toolbar {
-                    viewModeToolbarItem
+                    ViewModeToolbarItem(viewMode: $viewMode)
                     ToolbarSpacer(.fixed, placement: .topBarLeading)
                     SlideshowToolbarItem(playlist: $slideshowPlaylist)
                     filterAndSortGroupToolbarItem
@@ -258,21 +234,6 @@ struct CounterpartyView: View {
 
     // MARK: - Toolbar Items
 
-    private var viewModeToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button {
-                cycleViewMode()
-            } label: {
-                Image(systemName: viewModeIcon)
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color.primary)
-            }
-            .accessibilityLabel("View mode")
-            .accessibilityValue(viewMode == .list ? "List view" : viewMode == .denseGrid ? "Dense grid layout" : "Normal grid layout")
-            .accessibilityHint("Tap to cycle through view modes")
-        }
-    }
-
     private var filterAndSortGroupToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             ControlGroup {
@@ -378,6 +339,7 @@ struct CounterpartyView: View {
     CounterpartyView()
         .environment(CounterpartyViewModel())
         .environment(StampViewModel())
+        .environment(SlideshowSelection())
         .environment(NetworkMonitor())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

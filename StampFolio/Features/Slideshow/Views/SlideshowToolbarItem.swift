@@ -7,6 +7,80 @@
 
 import SwiftUI
 import SwiftData
+import Observation
+
+/// App-scoped slideshow protocol selection. Shared by every collection tab so toggles
+/// stay in sync without relying on `onAppear` reloads from disk.
+@Observable
+@MainActor
+final class SlideshowSelection {
+
+    static let selectedProtocolsKey = "slideshowSelectedProtocols"
+
+    var selectedProtocols: Set<ProtocolType> = []
+
+    init() {
+        loadOrDefault(enabled: Self.enabledProtocolsFromDefaults())
+    }
+
+    func loadOrDefault(enabled: [ProtocolType]) {
+        if UserDefaults.standard.object(forKey: Self.selectedProtocolsKey) == nil {
+            selectedProtocols = Set(enabled)
+            save()
+            return
+        }
+
+        if let data = UserDefaults.standard.data(forKey: Self.selectedProtocolsKey),
+           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
+            selectedProtocols = Set(decoded)
+            sync(enabled: enabled)
+            save()
+        } else {
+            selectedProtocols = Set(enabled)
+            save()
+        }
+    }
+
+    func save() {
+        guard let data = try? JSONEncoder().encode(Array(selectedProtocols)) else { return }
+        UserDefaults.standard.set(data, forKey: Self.selectedProtocolsKey)
+    }
+
+    func sync(enabled: [ProtocolType]) {
+        if enabled.count == 1, let only = enabled.first {
+            selectedProtocols = [only]
+        } else {
+            let enabledSet = Set(enabled)
+            selectedProtocols = selectedProtocols.filter { enabledSet.contains($0) }
+            if selectedProtocols.isEmpty, let first = enabled.first {
+                selectedProtocols = [first]
+            }
+        }
+    }
+
+    func handleSettingsToggle(_ protocolType: ProtocolType, isOn: Bool, enabled: [ProtocolType]) {
+        sync(enabled: enabled)
+        if isOn {
+            selectedProtocols.insert(protocolType)
+        }
+        save()
+    }
+
+    private static func enabledProtocolsFromDefaults() -> [ProtocolType] {
+        ProtocolType.loadSavedOrder().filter { isEnabledFromDefaults($0) }
+    }
+
+    private static func isEnabledFromDefaults(_ protocolType: ProtocolType) -> Bool {
+        switch protocolType {
+        case .stamps:
+            return UserDefaults.standard.object(forKey: "showStamps") as? Bool ?? true
+        case .ordinals:
+            return UserDefaults.standard.object(forKey: "showOrdinals") as? Bool ?? true
+        case .counterparty:
+            return UserDefaults.standard.object(forKey: "showCounterparty") as? Bool ?? true
+        }
+    }
+}
 
 /// Leading toolbar play button. Tap starts playback; long press opens protocol/interval
 /// configuration. Presentation lives on the collection view via `playlist` — same as
@@ -32,12 +106,12 @@ private struct SlideshowMenuButton: View {
 
     @Environment(StampViewModel.self) private var stampViewModel
     @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
+    @Environment(SlideshowSelection.self) private var slideshowSelection
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
 
     // MARK: - State
 
     @Binding var playlist: SlideshowPlaylist?
-    @State private var selectedProtocols: Set<ProtocolType> = []
     @State private var protocolOrder: [ProtocolType] = ProtocolType.loadSavedOrder()
 
     @AppStorage("showStamps") private var showStamps = true
@@ -46,7 +120,6 @@ private struct SlideshowMenuButton: View {
     @AppStorage("slideshowInterval") private var slideshowInterval = 5
 
     private static let slideshowIntervals = [3, 5, 7, 9, 10, 12, 15, 20, 25, 30, 45, 60, 90, 120]
-    private static let selectedProtocolsKey = "slideshowSelectedProtocols"
 
     // MARK: - Computed Properties
 
@@ -65,7 +138,7 @@ private struct SlideshowMenuButton: View {
         if enabledProtocols.count == 1, let only = enabledProtocols.first {
             return [only]
         }
-        return selectedProtocols
+        return slideshowSelection.selectedProtocols
     }
 
     // MARK: - Body
@@ -107,7 +180,7 @@ private struct SlideshowMenuButton: View {
             : "Tap to play. Long press to choose interval.")
         .onAppear {
             protocolOrder = ProtocolType.loadSavedOrder()
-            loadOrDefaultSelectedProtocols()
+            slideshowSelection.sync(enabled: enabledProtocols)
         }
         .onChange(of: showStamps) { _, isOn in
             handleSettingsToggle(.stamps, isOn: isOn)
@@ -127,17 +200,17 @@ private struct SlideshowMenuButton: View {
 
     private func binding(for protocolType: ProtocolType) -> Binding<Bool> {
         Binding(
-            get: { selectedProtocols.contains(protocolType) },
+            get: { slideshowSelection.selectedProtocols.contains(protocolType) },
             set: { isOn in
                 if isOn {
-                    selectedProtocols.insert(protocolType)
+                    slideshowSelection.selectedProtocols.insert(protocolType)
                 } else {
-                    selectedProtocols.remove(protocolType)
-                    if selectedProtocols.isEmpty {
-                        selectedProtocols.insert(fallbackProtocol(after: protocolType))
+                    slideshowSelection.selectedProtocols.remove(protocolType)
+                    if slideshowSelection.selectedProtocols.isEmpty {
+                        slideshowSelection.selectedProtocols.insert(fallbackProtocol(after: protocolType))
                     }
                 }
-                saveSelectedProtocols()
+                slideshowSelection.save()
             }
         )
     }
@@ -154,50 +227,13 @@ private struct SlideshowMenuButton: View {
 
     private func refreshProtocolOrder() {
         protocolOrder = ProtocolType.loadSavedOrder()
-        syncSelectedProtocolsWithEnabled()
-        saveSelectedProtocols()
+        slideshowSelection.sync(enabled: enabledProtocols)
+        slideshowSelection.save()
     }
 
     private func handleSettingsToggle(_ protocolType: ProtocolType, isOn: Bool) {
-        refreshProtocolOrder()
-        if isOn {
-            selectedProtocols.insert(protocolType)
-            saveSelectedProtocols()
-        }
-    }
-
-    private func syncSelectedProtocolsWithEnabled() {
-        if enabledProtocols.count == 1, let only = enabledProtocols.first {
-            selectedProtocols = [only]
-        } else {
-            selectedProtocols = selectedProtocols.filter { isEnabled($0) }
-            if selectedProtocols.isEmpty, let first = enabledProtocols.first {
-                selectedProtocols = [first]
-            }
-        }
-    }
-
-    private func loadOrDefaultSelectedProtocols() {
-        if UserDefaults.standard.object(forKey: Self.selectedProtocolsKey) == nil {
-            selectedProtocols = Set(enabledProtocols)
-            saveSelectedProtocols()
-            return
-        }
-
-        if let data = UserDefaults.standard.data(forKey: Self.selectedProtocolsKey),
-           let decoded = try? JSONDecoder().decode([ProtocolType].self, from: data) {
-            selectedProtocols = Set(decoded)
-            syncSelectedProtocolsWithEnabled()
-            saveSelectedProtocols()
-        } else {
-            selectedProtocols = Set(enabledProtocols)
-            saveSelectedProtocols()
-        }
-    }
-
-    private func saveSelectedProtocols() {
-        guard let data = try? JSONEncoder().encode(Array(selectedProtocols)) else { return }
-        UserDefaults.standard.set(data, forKey: Self.selectedProtocolsKey)
+        protocolOrder = ProtocolType.loadSavedOrder()
+        slideshowSelection.handleSettingsToggle(protocolType, isOn: isOn, enabled: enabledProtocols)
     }
 
     private func isEnabled(_ protocolType: ProtocolType) -> Bool {

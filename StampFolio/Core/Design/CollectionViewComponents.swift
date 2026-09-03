@@ -3,10 +3,50 @@
 //  StampFolio
 //
 //  Shared collection-view chrome reused by Stamp, Counterparty, and Ordinals:
-//  the settings toolbar button, offline banner, loading state, and grid column sizing.
+//  view-mode and settings toolbar buttons, offline banner, loading state, and grid column sizing.
 //
 
 import SwiftUI
+
+// MARK: - View Mode Toolbar Item
+
+/// Leading toolbar control: tap cycles layouts; long press opens a picker to jump to one.
+struct ViewModeToolbarItem: ToolbarContent {
+
+    @Binding var viewMode: ViewMode
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            ViewModeMenuButton(viewMode: $viewMode)
+        }
+    }
+}
+
+private struct ViewModeMenuButton: View {
+
+    @Binding var viewMode: ViewMode
+
+    var body: some View {
+        Menu {
+            Picker("View", selection: $viewMode) {
+                ForEach(ViewMode.allCases) { mode in
+                    Label(mode.title, systemImage: mode.icon)
+                        .tag(mode)
+                }
+            }
+        } label: {
+            Image(systemName: viewMode.icon)
+                .font(.system(size: 16))
+                .foregroundStyle(Color.primary)
+        } primaryAction: {
+            viewMode = viewMode.next
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("View mode")
+        .accessibilityValue(viewMode.accessibilityValue)
+        .accessibilityHint("Tap to cycle through view modes. Long press to choose a view.")
+    }
+}
 
 // MARK: - Settings Toolbar Item
 
