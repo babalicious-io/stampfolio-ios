@@ -8,19 +8,23 @@
 import SwiftUI
 import SwiftData
 
-/// Leading toolbar play button that opens a Filter/Sort-style protocol picker
+/// Leading toolbar play button that opens a Filter/Sort-style protocol picker.
+/// Presentation lives on the collection view via `playlist` — same as long-press fullscreen —
+/// because a `fullScreenCover` attached to a toolbar `Menu` does not get a screen-sized frame.
 struct SlideshowToolbarItem: ToolbarContent {
+
+    @Binding var playlist: SlideshowPlaylist?
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            SlideshowMenuButton()
+            SlideshowMenuButton(playlist: $playlist)
         }
     }
 }
 
 // MARK: - Menu Button
 
-/// Menu + mixed slideshow cover. Lives in a View so it can own presentation state.
+/// Protocol picker. Sets `playlist` on Play Now; the parent presents the cover.
 private struct SlideshowMenuButton: View {
 
     // MARK: - Environment
@@ -31,10 +35,9 @@ private struct SlideshowMenuButton: View {
 
     // MARK: - State
 
+    @Binding var playlist: SlideshowPlaylist?
     @State private var selectedProtocols: Set<ProtocolType> = []
     @State private var protocolOrder: [ProtocolType] = ProtocolType.loadSavedOrder()
-    @State private var slideshowItems: [SlideshowItem] = []
-    @State private var showSlideshow = false
 
     @AppStorage("showStamps") private var showStamps = true
     @AppStorage("showOrdinals") private var showOrdinals = true
@@ -81,9 +84,6 @@ private struct SlideshowMenuButton: View {
         .onReceive(NotificationCenter.default.publisher(for: .protocolOrderDidChange)) { _ in
             refreshProtocolOrder()
         }
-        .fullScreenCover(isPresented: $showSlideshow) {
-            SlideshowFullscreenView(items: slideshowItems)
-        }
     }
 
     // MARK: - Bindings
@@ -121,8 +121,7 @@ private struct SlideshowMenuButton: View {
         await loadDataIfNeeded()
         let items = buildSlideshowItems()
         guard !items.isEmpty else { return }
-        slideshowItems = items
-        showSlideshow = true
+        playlist = SlideshowPlaylist(items: items)
     }
 
     /// Fetch any selected protocol that hasn't been loaded yet (e.g. playing Counterparty from Stamps)

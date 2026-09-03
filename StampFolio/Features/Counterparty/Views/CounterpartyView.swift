@@ -27,6 +27,7 @@ struct CounterpartyView: View {
     @State private var showOfflineBanner = false
     @State private var detailAsset: CounterpartyDisplay?
     @State private var fullscreenAsset: CounterpartyDisplay?
+    @State private var slideshowPlaylist: SlideshowPlaylist?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("counterpartyViewMode") private var viewMode: ViewMode = .normalGrid
 
@@ -78,9 +79,12 @@ struct CounterpartyView: View {
                 .toolbar {
                     viewModeToolbarItem
                     ToolbarSpacer(.fixed, placement: .topBarLeading)
-                    SlideshowToolbarItem()
+                    SlideshowToolbarItem(playlist: $slideshowPlaylist)
                     filterAndSortGroupToolbarItem
                     SettingsToolbarItem()
+                }
+                .fullScreenCover(item: $slideshowPlaylist) { playlist in
+                    SlideshowPlayer(playlist: playlist)
                 }
         }
         .task {

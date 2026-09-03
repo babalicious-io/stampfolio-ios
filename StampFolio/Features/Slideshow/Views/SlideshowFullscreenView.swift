@@ -7,7 +7,32 @@
 
 import SwiftUI
 
-/// Full-screen autoplay viewer that pages through mixed protocol assets
+/// Routes a playlist to the player that already works for that content.
+/// Single-protocol playlists reuse the long-press fullscreen views.
+struct SlideshowPlayer: View {
+    let playlist: SlideshowPlaylist
+
+    var body: some View {
+        if playlist.isStampsOnly {
+            StampAssetFullscreenView(
+                assets: playlist.stampAssets,
+                initialIndex: 0,
+                isSlideshow: true
+            )
+        } else if playlist.isCounterpartyOnly {
+            CounterpartyAssetFullscreenView(
+                assets: playlist.counterpartyAssets,
+                initialIndex: 0,
+                isSlideshow: true
+            )
+        } else {
+            SlideshowFullscreenView(items: playlist.items)
+        }
+    }
+}
+
+/// Full-screen autoplay viewer that pages through mixed protocol assets.
+/// Chrome matches `StampAssetFullscreenView` (the layout that already works on long-press).
 struct SlideshowFullscreenView: View {
 
     // MARK: - Properties
@@ -26,8 +51,8 @@ struct SlideshowFullscreenView: View {
 
     // MARK: - Computed Properties
 
-    private var currentItem: SlideshowItem? {
-        items.indices.contains(currentIndex) ? items[currentIndex] : nil
+    private var currentItem: SlideshowItem {
+        items[currentIndex]
     }
 
     // MARK: - Body
@@ -42,16 +67,12 @@ struct SlideshowFullscreenView: View {
                     }
 
                 ZStack {
-                    if let currentItem {
-                        slideMedia(for: currentItem, size: geometry.size)
-                            .id(currentItem.id)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                            .scaleEffect(gestureState.scale)
-                            .offset(gestureState.offset)
-                            .offset(y: gestureState.dragOffset.height)
-                            .offset(x: gestureState.horizontalDragOffset.width)
-                            .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
-                    }
+                    SlideshowSlide(item: currentItem, size: geometry.size)
+                        .scaleEffect(gestureState.scale)
+                        .offset(gestureState.offset)
+                        .offset(y: gestureState.dragOffset.height)
+                        .offset(x: gestureState.horizontalDragOffset.width)
+                        .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
 
                     Color.clear
                         .contentShape(Rectangle())
@@ -76,20 +97,8 @@ struct SlideshowFullscreenView: View {
             navigateToNextSlideshow()
         }
         .accessibilityAddTraits(.isImage)
-        .accessibilityLabel(currentItem.map { "\($0.accessibilityName), \(currentIndex + 1) of \(items.count)" } ?? "")
+        .accessibilityLabel("\(currentItem.accessibilityName), \(currentIndex + 1) of \(items.count)")
         .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
-    }
-
-    // MARK: - Media
-
-    @ViewBuilder
-    private func slideMedia(for item: SlideshowItem, size: CGSize) -> some View {
-        switch item {
-        case .stamp(let asset):
-            StampAssetFullscreenContent(asset: asset, size: size)
-        case .counterparty(let asset):
-            CounterpartyAssetFullscreenContent(asset: asset, size: size)
-        }
     }
 
     // MARK: - Gestures
@@ -143,11 +152,28 @@ struct SlideshowFullscreenView: View {
     }
 }
 
+// MARK: - Slide Media
+
+/// Concrete slide view so mixed media is not wrapped in `if let` / `.id` (those collapse stamp layout).
+private struct SlideshowSlide: View {
+    let item: SlideshowItem
+    let size: CGSize
+
+    var body: some View {
+        switch item {
+        case .stamp(let asset):
+            StampAssetFullscreenContent(asset: asset, size: size)
+        case .counterparty(let asset):
+            CounterpartyAssetFullscreenContent(asset: asset, size: size)
+        }
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
-    SlideshowFullscreenView(items: [
+    SlideshowPlayer(playlist: SlideshowPlaylist(items: [
         .stamp(.sample),
         .counterparty(.sample)
-    ])
+    ]))
 }

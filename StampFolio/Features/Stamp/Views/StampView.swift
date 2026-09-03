@@ -25,6 +25,7 @@ struct StampView: View {
     @State private var showAddWallet = false
     @State private var fullscreenAsset: StampDisplay?
     @State private var detailAsset: StampDisplay?
+    @State private var slideshowPlaylist: SlideshowPlaylist?
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("stampViewMode") private var viewMode: ViewMode = .normalGrid
     
@@ -76,9 +77,12 @@ struct StampView: View {
                 .toolbar {
                     viewModeToolbarItem
                     ToolbarSpacer(.fixed, placement: .topBarLeading)
-                    SlideshowToolbarItem()
+                    SlideshowToolbarItem(playlist: $slideshowPlaylist)
                     filterAndSortGroupToolbarItem
                     SettingsToolbarItem()
+                }
+                .fullScreenCover(item: $slideshowPlaylist) { playlist in
+                    SlideshowPlayer(playlist: playlist)
                 }
         }
         .task {

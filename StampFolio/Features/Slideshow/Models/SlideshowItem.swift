@@ -30,3 +30,37 @@ enum SlideshowItem: Identifiable, Hashable {
         }
     }
 }
+
+/// A Play Now session. Identifiable so `fullScreenCover(item:)` can present from the
+/// collection view (the same place long-press fullscreen is presented).
+struct SlideshowPlaylist: Identifiable {
+    let id: UUID
+    let items: [SlideshowItem]
+
+    init(items: [SlideshowItem]) {
+        self.id = UUID()
+        self.items = items
+    }
+
+    var stampAssets: [StampAsset] {
+        items.compactMap { item in
+            if case .stamp(let asset) = item { return asset }
+            return nil
+        }
+    }
+
+    var counterpartyAssets: [CounterpartyAsset] {
+        items.compactMap { item in
+            if case .counterparty(let asset) = item { return asset }
+            return nil
+        }
+    }
+
+    var isStampsOnly: Bool {
+        !stampAssets.isEmpty && counterpartyAssets.isEmpty
+    }
+
+    var isCounterpartyOnly: Bool {
+        !counterpartyAssets.isEmpty && stampAssets.isEmpty
+    }
+}
