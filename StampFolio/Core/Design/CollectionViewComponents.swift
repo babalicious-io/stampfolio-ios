@@ -28,11 +28,13 @@ private struct ViewModeMenuButton: View {
 
     var body: some View {
         Menu {
-            ForEach(ViewMode.allCases) { mode in
-                Button {
-                    viewMode = mode
-                } label: {
-                    Label(mode.title, systemImage: mode == viewMode ? mode.icon : mode.outlineIcon)
+            Section("VIEW") {
+                ForEach(ViewMode.allCases) { mode in
+                    Button {
+                        viewMode = mode
+                    } label: {
+                        Label(mode.title, systemImage: mode == viewMode ? mode.icon : mode.outlineIcon)
+                    }
                 }
             }
         } label: {
