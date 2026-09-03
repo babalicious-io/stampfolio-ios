@@ -52,6 +52,12 @@ private struct SlideshowMenuButton: View {
         protocolOrder.filter { isEnabled($0) }
     }
 
+    private var playMenuLabel: AttributedString {
+        var label = AttributedString("Play")
+        label.inlinePresentationIntent = .stronglyEmphasized
+        return label
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -75,12 +81,13 @@ private struct SlideshowMenuButton: View {
             }
 
             Section {
-                Button("Play") {
+                Button {
                     Task {
                         await startSlideshow()
                     }
+                } label: {
+                    Text(playMenuLabel)
                 }
-                .keyboardShortcut(.defaultAction)
             }
         } label: {
             Image(systemName: "play.square.stack")
