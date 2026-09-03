@@ -55,8 +55,9 @@ struct CounterpartyAssetFullscreenView: View {
 
                 ZStack {
                     if !assets.isEmpty {
-                        CounterpartyAssetFullscreenContent(asset: currentAsset)
+                        CounterpartyAssetFullscreenContent(asset: currentAsset, size: geometry.size)
                             .id(currentAsset.id)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                             .scaleEffect(gestureState.scale)
                             .offset(gestureState.offset)
                             .offset(y: gestureState.dragOffset.height)

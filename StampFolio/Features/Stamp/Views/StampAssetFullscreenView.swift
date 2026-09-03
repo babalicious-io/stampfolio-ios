@@ -60,7 +60,7 @@ struct StampAssetFullscreenView: View {
                 
                 // Content based on type
                 ZStack {
-                    StampAssetFullscreenContent(asset: currentAsset)
+                    StampAssetFullscreenContent(asset: currentAsset, size: geometry.size)
                         .scaleEffect(gestureState.scale)
                         .offset(gestureState.offset)
                         .offset(y: gestureState.dragOffset.height)
@@ -71,6 +71,7 @@ struct StampAssetFullscreenView: View {
                     Color.clear
                         .contentShape(Rectangle())
                 }
+                .frame(width: geometry.size.width, height: geometry.size.height)
                 .gesture(gestureState.magnificationGesture())
                 .gesture(unifiedDragGesture)
                 .onTapGesture(count: 2) {
@@ -148,9 +149,11 @@ struct StampAssetFullscreenView: View {
 
 // MARK: - Stamp Fullscreen Content
 
-/// Renders a stamp's media for immersive fullscreen (shared by browsing and slideshow)
+/// Renders a stamp's media for immersive fullscreen (shared by browsing and slideshow).
+/// `size` must be the canvas in points — `KFImage` / `WKWebView` collapse to 0×0 without it.
 struct StampAssetFullscreenContent: View {
     let asset: StampAsset
+    let size: CGSize
 
     @Environment(\.appColorScheme) private var appColorScheme
 
@@ -190,7 +193,7 @@ struct StampAssetFullscreenContent: View {
                     .aspectRatio(contentMode: .fit)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(width: size.width, height: size.height)
     }
 }
 
@@ -214,7 +217,11 @@ struct WebContentView: UIViewRepresentable {
         webView.scrollView.backgroundColor = .clear
         webView.scrollView.isScrollEnabled = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
-        
+        webView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        webView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        webView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        webView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+
         return webView
     }
     

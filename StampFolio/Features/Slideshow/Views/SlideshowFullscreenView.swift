@@ -43,8 +43,9 @@ struct SlideshowFullscreenView: View {
 
                 ZStack {
                     if let currentItem {
-                        slideMedia(for: currentItem)
+                        slideMedia(for: currentItem, size: geometry.size)
                             .id(currentItem.id)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                             .scaleEffect(gestureState.scale)
                             .offset(gestureState.offset)
                             .offset(y: gestureState.dragOffset.height)
@@ -82,12 +83,12 @@ struct SlideshowFullscreenView: View {
     // MARK: - Media
 
     @ViewBuilder
-    private func slideMedia(for item: SlideshowItem) -> some View {
+    private func slideMedia(for item: SlideshowItem, size: CGSize) -> some View {
         switch item {
         case .stamp(let asset):
-            StampAssetFullscreenContent(asset: asset)
+            StampAssetFullscreenContent(asset: asset, size: size)
         case .counterparty(let asset):
-            CounterpartyAssetFullscreenContent(asset: asset)
+            CounterpartyAssetFullscreenContent(asset: asset, size: size)
         }
     }
 

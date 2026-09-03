@@ -91,8 +91,10 @@ struct CounterpartyAssetImageView: View {
 
 /// Full-bleed original artwork for immersive Counterparty viewing (slideshow and long-press).
 /// Card/row rendering stays on `CounterpartyAssetImageView`, which downsamples to a target size.
+/// `size` must be the canvas in points — `KFImage` collapses to 0×0 without it.
 struct CounterpartyAssetFullscreenContent: View {
     let asset: CounterpartyAsset
+    let size: CGSize
 
     @State private var resolvedImageURL: URL?
     @State private var imageLoadFailed = false
@@ -116,7 +118,7 @@ struct CounterpartyAssetFullscreenContent: View {
                 placeholderIcon
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(width: size.width, height: size.height)
         .task(id: asset.id) {
             await resolveImageIfNeeded()
         }
@@ -126,7 +128,7 @@ struct CounterpartyAssetFullscreenContent: View {
         Image(systemName: asset.isNumericAsset ? "number" : "xmark.triangle.circle.square.fill")
             .font(.system(size: 80, weight: .semibold))
             .foregroundStyle(.white.opacity(0.55))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: size.width, height: size.height)
     }
 
     private func resolveImageIfNeeded() async {
