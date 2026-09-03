@@ -164,6 +164,11 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         return String(format: "%g", value)
     }
 
+    /// Whole-token supply for edition filters (1 vs many). Uses normalized supply so divisible assets compare correctly.
+    var editionCount: Double {
+        Double(supplyNormalized) ?? 0
+    }
+
     /// URL to the asset's page on the XChain / Counterparty explorer
     var explorerURL: URL? {
         URL(string: "https://xchain.io/asset/\(asset)")

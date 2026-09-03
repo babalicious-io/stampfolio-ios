@@ -78,6 +78,12 @@ struct CounterpartyAssetInfo: Codable, Hashable, Sendable {
     /// Current owner address (nil for XCP)
     let owner: String?
 
+    /// Total supply in the asset's smallest unit, when the balances payload includes it
+    let supply: Int64?
+
+    /// Total supply already divisibility-adjusted, when the balances payload includes it
+    let supplyNormalized: String?
+
     enum CodingKeys: String, CodingKey {
         case assetLongname = "asset_longname"
         case description
@@ -85,5 +91,7 @@ struct CounterpartyAssetInfo: Codable, Hashable, Sendable {
         case divisible
         case locked
         case owner
+        case supply
+        case supplyNormalized = "supply_normalized"
     }
 }

@@ -238,7 +238,7 @@ struct CounterpartyView: View {
         ToolbarItem(placement: .topBarTrailing) {
             ControlGroup {
                 Menu {
-                    Section("TYPE") {
+                    Section("ASSET TYPE") {
                         Toggle("Named", isOn: Binding(
                             get: { viewModel.activeAssetTypeFilters.contains("named") },
                             set: { _ in viewModel.toggleAssetTypeFilter("named") }
@@ -250,15 +250,15 @@ struct CounterpartyView: View {
                         ))
                     }
 
-                    Section("DIVISIBILITY") {
-                        Toggle("Divisible", isOn: Binding(
-                            get: { viewModel.activeDivisibleFilters.contains("divisible") },
-                            set: { _ in viewModel.toggleDivisibleFilter("divisible") }
+                    Section("EDITIONS") {
+                        Toggle("Single", isOn: Binding(
+                            get: { viewModel.activeEditionFilters.contains("single") },
+                            set: { _ in viewModel.toggleEditionFilter("single") }
                         ))
 
-                        Toggle("Non-divisible", isOn: Binding(
-                            get: { viewModel.activeDivisibleFilters.contains("non_divisible") },
-                            set: { _ in viewModel.toggleDivisibleFilter("non_divisible") }
+                        Toggle("Multiple", isOn: Binding(
+                            get: { viewModel.activeEditionFilters.contains("multiple") },
+                            set: { _ in viewModel.toggleEditionFilter("multiple") }
                         ))
                     }
 
@@ -280,7 +280,7 @@ struct CounterpartyView: View {
                 }
                 .menuActionDismissBehavior(.disabled)
                 .accessibilityLabel("Filter assets")
-                .accessibilityHint("Filter assets by type, divisibility, or lock status")
+                .accessibilityHint("Filter assets by type, edition count, or lock status")
 
                 Menu {
                     Section {

@@ -61,6 +61,9 @@ final class StampViewModel {
     
     /// Filter state: Active edition filters ("single" or "multiple")
     var activeEditionFilters: Set<String> = []
+
+    /// Filter state: Active lock-status filters ("locked" or "unlocked")
+    var activeLockedFilters: Set<String> = []
     
     /// Market data cache (memory-only, cleared on app close/wallet delete)
     private var marketDataCache: [Int: StampAssetMarketData] = [:]
@@ -69,7 +72,10 @@ final class StampViewModel {
     
     /// Check if any filters are active
     var hasActiveFilters: Bool {
-        !activeIdentFilters.isEmpty || !activeFileFormatFilters.isEmpty || !activeEditionFilters.isEmpty
+        !activeIdentFilters.isEmpty
+            || !activeFileFormatFilters.isEmpty
+            || !activeEditionFilters.isEmpty
+            || !activeLockedFilters.isEmpty
     }
     
     /// Filtered assets based on active collection filters
@@ -117,6 +123,13 @@ final class StampViewModel {
                     if edition == "multiple" && supply > 1 { return true }
                 }
                 return false
+            }
+        }
+
+        if !activeLockedFilters.isEmpty {
+            result = result.filter { display in
+                let key = display.asset.locked == true ? "locked" : "unlocked"
+                return activeLockedFilters.contains(key)
             }
         }
         
@@ -430,6 +443,11 @@ final class StampViewModel {
     /// - Parameter edition: The edition type to toggle
     func toggleEditionFilter(_ edition: String) {
         activeEditionFilters.toggleMembership(of: edition)
+    }
+
+    /// Toggle a lock-status filter ("locked" or "unlocked")
+    func toggleLockedFilter(_ value: String) {
+        activeLockedFilters.toggleMembership(of: value)
     }
     
     /// Returns sorted assets based on the given option

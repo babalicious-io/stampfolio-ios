@@ -66,8 +66,8 @@ struct CounterpartyDisplay: Identifiable {
             owner: balance.assetInfo?.owner,
             divisible: balance.assetInfo?.divisible ?? false,
             locked: balance.assetInfo?.locked ?? false,
-            supply: 0,
-            supplyNormalized: "0",
+            supply: balance.assetInfo?.supply ?? 0,
+            supplyNormalized: Self.normalizedSupply(from: balance.assetInfo),
             description: balance.assetInfo?.description,
             mimeType: nil,
             firstIssuanceBlockTime: nil,
@@ -76,6 +76,18 @@ struct CounterpartyDisplay: Identifiable {
         self.balance = balance.balance
         self.divisible = balance.assetInfo?.divisible ?? false
         self.walletAddress = balance.address
+    }
+
+    /// Prefer API-normalized supply; fall back to converting raw supply by divisibility.
+    private static func normalizedSupply(from info: CounterpartyAssetInfo?) -> String {
+        if let normalized = info?.supplyNormalized, !normalized.isEmpty {
+            return normalized
+        }
+        guard let supply = info?.supply else { return "0" }
+        if info?.divisible == true {
+            return String(Double(supply) / 100_000_000.0)
+        }
+        return String(supply)
     }
 
     /// Whether this asset matches a free-text search query

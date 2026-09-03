@@ -49,14 +49,14 @@ final class CounterpartyViewModel {
     /// Current sort option
     var currentSortOption: CounterpartySortOption = .balanceDescending
 
-    /// Filter state: Active divisibility filters ("divisible" or "non_divisible")
-    var activeDivisibleFilters: Set<String> = []
-
     /// Filter state: Active lock-status filters ("locked" or "unlocked")
     var activeLockedFilters: Set<String> = []
 
     /// Filter state: Active asset-type filters ("named" or "numeric")
     var activeAssetTypeFilters: Set<String> = []
+
+    /// Filter state: Active edition filters ("single" or "multiple")
+    var activeEditionFilters: Set<String> = []
 
     /// On-demand asset detail cache (memory-only, cleared on app close/wallet delete)
     private var detailCache: [String: CounterpartyAsset] = [:]
@@ -71,19 +71,14 @@ final class CounterpartyViewModel {
 
     /// Check if any filters are active
     var hasActiveFilters: Bool {
-        !activeDivisibleFilters.isEmpty || !activeLockedFilters.isEmpty || !activeAssetTypeFilters.isEmpty
+        !activeLockedFilters.isEmpty
+            || !activeAssetTypeFilters.isEmpty
+            || !activeEditionFilters.isEmpty
     }
 
     /// Filtered assets based on active collection filters
     var filteredAssets: [CounterpartyDisplay] {
         var result = assets
-
-        if !activeDivisibleFilters.isEmpty {
-            result = result.filter { display in
-                let key = display.asset.divisible ? "divisible" : "non_divisible"
-                return activeDivisibleFilters.contains(key)
-            }
-        }
 
         if !activeLockedFilters.isEmpty {
             result = result.filter { display in
@@ -96,6 +91,17 @@ final class CounterpartyViewModel {
             result = result.filter { display in
                 let key = display.asset.isNumericAsset ? "numeric" : "named"
                 return activeAssetTypeFilters.contains(key)
+            }
+        }
+
+        if !activeEditionFilters.isEmpty {
+            result = result.filter { display in
+                let supply = display.asset.editionCount
+                for edition in activeEditionFilters {
+                    if edition == "single" && supply == 1 { return true }
+                    if edition == "multiple" && supply > 1 { return true }
+                }
+                return false
             }
         }
 
@@ -320,11 +326,6 @@ final class CounterpartyViewModel {
         errorMessage = nil
     }
 
-    /// Toggle a divisibility filter ("divisible" or "non_divisible")
-    func toggleDivisibleFilter(_ value: String) {
-        activeDivisibleFilters.toggleMembership(of: value)
-    }
-
     /// Toggle a lock-status filter ("locked" or "unlocked")
     func toggleLockedFilter(_ value: String) {
         activeLockedFilters.toggleMembership(of: value)
@@ -333,6 +334,11 @@ final class CounterpartyViewModel {
     /// Toggle an asset-type filter ("named" or "numeric")
     func toggleAssetTypeFilter(_ value: String) {
         activeAssetTypeFilters.toggleMembership(of: value)
+    }
+
+    /// Toggle an edition filter ("single" or "multiple")
+    func toggleEditionFilter(_ edition: String) {
+        activeEditionFilters.toggleMembership(of: edition)
     }
 
     /// Sort assets by the given option
