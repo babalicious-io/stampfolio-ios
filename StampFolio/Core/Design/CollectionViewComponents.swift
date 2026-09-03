@@ -10,7 +10,7 @@ import SwiftUI
 
 // MARK: - View Mode Toolbar Item
 
-/// Leading toolbar control: tap cycles layouts; long press opens a picker to jump to one.
+/// Leading toolbar control: tap cycles layouts; long press opens a menu to jump to one.
 struct ViewModeToolbarItem: ToolbarContent {
 
     @Binding var viewMode: ViewMode
@@ -28,19 +28,21 @@ private struct ViewModeMenuButton: View {
 
     var body: some View {
         Menu {
-            Picker("View", selection: $viewMode) {
-                ForEach(ViewMode.allCases) { mode in
-                    Label(mode.title, systemImage: mode.icon)
-                        .tag(mode)
+            ForEach(ViewMode.allCases) { mode in
+                Button {
+                    viewMode = mode
+                } label: {
+                    Label(mode.title, systemImage: mode == viewMode ? mode.icon : mode.outlineIcon)
                 }
             }
         } label: {
             Image(systemName: viewMode.icon)
                 .font(.system(size: 16))
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(.primary)
         } primaryAction: {
             viewMode = viewMode.next
         }
+        .tint(.primary)
         .buttonStyle(.plain)
         .accessibilityLabel("View mode")
         .accessibilityValue(viewMode.accessibilityValue)

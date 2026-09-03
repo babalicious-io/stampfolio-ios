@@ -15,7 +15,7 @@ enum ViewMode: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// SF Symbol for the current layout
+    /// Filled SF Symbol for the current layout (toolbar and selected menu row)
     var icon: String {
         switch self {
         case .normalGrid:
@@ -24,6 +24,18 @@ enum ViewMode: String, Codable, CaseIterable, Identifiable {
             return "square.grid.3x3.fill"
         case .list:
             return "rectangle.grid.1x3.fill"
+        }
+    }
+
+    /// Outline SF Symbol for unselected menu rows
+    var outlineIcon: String {
+        switch self {
+        case .normalGrid:
+            return "square.grid.2x2"
+        case .denseGrid:
+            return "square.grid.3x3"
+        case .list:
+            return "rectangle.grid.1x3"
         }
     }
 
