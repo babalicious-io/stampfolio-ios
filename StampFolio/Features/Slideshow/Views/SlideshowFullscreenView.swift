@@ -68,6 +68,7 @@ struct SlideshowFullscreenView: View {
 
                 ZStack {
                     SlideshowSlide(item: currentItem, size: geometry.size)
+                        .id(currentItem.id)
                         .scaleEffect(gestureState.scale)
                         .offset(gestureState.offset)
                         .offset(y: gestureState.dragOffset.height)
@@ -154,7 +155,7 @@ struct SlideshowFullscreenView: View {
 
 // MARK: - Slide Media
 
-/// Concrete slide view so mixed media is not wrapped in `if let` / `.id` (those collapse stamp layout).
+/// Inner media only. Chrome and gestures stay on `SlideshowFullscreenView`.
 private struct SlideshowSlide: View {
     let item: SlideshowItem
     let size: CGSize

@@ -54,16 +54,13 @@ struct CounterpartyAssetFullscreenView: View {
                     }
 
                 ZStack {
-                    if !assets.isEmpty {
-                        CounterpartyAssetFullscreenContent(asset: currentAsset, size: geometry.size)
-                            .id(currentAsset.id)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                            .scaleEffect(gestureState.scale)
-                            .offset(gestureState.offset)
-                            .offset(y: gestureState.dragOffset.height)
-                            .offset(x: gestureState.horizontalDragOffset.width)
-                            .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
-                    }
+                    CounterpartyAssetFullscreenContent(asset: currentAsset, size: geometry.size)
+                        .id(currentAsset.id)
+                        .scaleEffect(gestureState.scale)
+                        .offset(gestureState.offset)
+                        .offset(y: gestureState.dragOffset.height)
+                        .offset(x: gestureState.horizontalDragOffset.width)
+                        .opacity(1.0 - Double(abs(gestureState.dragOffset.height)) / 500.0)
 
                     Color.clear
                         .contentShape(Rectangle())
@@ -88,7 +85,7 @@ struct CounterpartyAssetFullscreenView: View {
             navigateToNextSlideshow()
         }
         .accessibilityAddTraits(.isImage)
-        .accessibilityLabel(assets.indices.contains(currentIndex) ? "\(assets[currentIndex].displayName), \(currentIndex + 1) of \(assets.count)" : "")
+        .accessibilityLabel("\(currentAsset.displayName), \(currentIndex + 1) of \(assets.count)")
         .accessibilityHint("Swipe left for next, right for previous, down to close, double tap to zoom")
     }
 

@@ -128,7 +128,6 @@ struct CounterpartyAssetFullscreenContent: View {
         Image(systemName: asset.isNumericAsset ? "number" : "xmark.triangle.circle.square.fill")
             .font(.system(size: 80, weight: .semibold))
             .foregroundStyle(.white.opacity(0.55))
-            .frame(width: size.width, height: size.height)
     }
 
     private func resolveImageIfNeeded() async {
