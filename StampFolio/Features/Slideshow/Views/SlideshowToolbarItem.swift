@@ -75,11 +75,12 @@ private struct SlideshowMenuButton: View {
             }
 
             Section {
-                Button("Play Now", systemImage: "play.fill") {
+                Button("Play") {
                     Task {
                         await startSlideshow()
                     }
                 }
+                .keyboardShortcut(.defaultAction)
             }
         } label: {
             Image(systemName: "play.square.stack")
@@ -88,7 +89,7 @@ private struct SlideshowMenuButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Start slideshow")
-        .accessibilityHint("Choose protocols and interval, then tap Play Now")
+        .accessibilityHint("Choose protocols and interval, then tap Play")
         .onAppear {
             refreshProtocolOrder()
         }
