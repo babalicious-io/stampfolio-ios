@@ -52,6 +52,20 @@ private struct SlideshowMenuButton: View {
         protocolOrder.filter { isEnabled($0) }
     }
 
+    /// Protocol toggles are redundant when Settings leaves only one protocol visible.
+    private var showsProtocolPicker: Bool {
+        enabledProtocols.count > 1
+    }
+
+    /// Slideshow inclusion set. When a single protocol is enabled in Settings, use it
+    /// even if the user never saw (or toggled) the picker.
+    private var protocolsForPlayback: Set<ProtocolType> {
+        if enabledProtocols.count == 1, let only = enabledProtocols.first {
+            return [only]
+        }
+        return selectedProtocols
+    }
+
     private var playMenuLabel: AttributedString {
         var label = AttributedString("Play")
         label.inlinePresentationIntent = .stronglyEmphasized
@@ -62,10 +76,12 @@ private struct SlideshowMenuButton: View {
 
     var body: some View {
         Menu {
-            Section {
-                ForEach(enabledProtocols) { protocolType in
-                    Toggle(protocolType.rawValue, isOn: binding(for: protocolType))
-                        .menuActionDismissBehavior(.disabled)
+            if showsProtocolPicker {
+                Section {
+                    ForEach(enabledProtocols) { protocolType in
+                        Toggle(protocolType.rawValue, isOn: binding(for: protocolType))
+                            .menuActionDismissBehavior(.disabled)
+                    }
                 }
             }
 
@@ -96,7 +112,9 @@ private struct SlideshowMenuButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Start slideshow")
-        .accessibilityHint("Choose protocols and interval, then tap Play")
+        .accessibilityHint(showsProtocolPicker
+            ? "Choose protocols and interval, then tap Play"
+            : "Choose interval, then tap Play")
         .onAppear {
             refreshProtocolOrder()
         }
@@ -125,7 +143,11 @@ private struct SlideshowMenuButton: View {
 
     private func refreshProtocolOrder() {
         protocolOrder = ProtocolType.loadSavedOrder()
-        selectedProtocols = selectedProtocols.filter { isEnabled($0) }
+        if enabledProtocols.count == 1, let only = enabledProtocols.first {
+            selectedProtocols = [only]
+        } else {
+            selectedProtocols = selectedProtocols.filter { isEnabled($0) }
+        }
     }
 
     private func isEnabled(_ protocolType: ProtocolType) -> Bool {
@@ -148,8 +170,8 @@ private struct SlideshowMenuButton: View {
 
     /// Fetch any selected protocol that hasn't been loaded yet (e.g. playing Counterparty from Stamps)
     private func loadDataIfNeeded() async {
-        let needsStamps = selectedProtocols.contains(.stamps) || selectedProtocols.contains(.counterparty)
-        let needsCounterparty = selectedProtocols.contains(.counterparty)
+        let needsStamps = protocolsForPlayback.contains(.stamps) || protocolsForPlayback.contains(.counterparty)
+        let needsCounterparty = protocolsForPlayback.contains(.counterparty)
 
         if needsStamps, stampViewModel.assets.isEmpty, !stampViewModel.isLoading {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
@@ -163,7 +185,7 @@ private struct SlideshowMenuButton: View {
 
     private func buildSlideshowItems() -> [SlideshowItem] {
         var items: [SlideshowItem] = []
-        for protocolType in enabledProtocols where selectedProtocols.contains(protocolType) {
+        for protocolType in enabledProtocols where protocolsForPlayback.contains(protocolType) {
             switch protocolType {
             case .stamps:
                 items += stampViewModel.filteredAssets.map { .stamp($0.asset) }
