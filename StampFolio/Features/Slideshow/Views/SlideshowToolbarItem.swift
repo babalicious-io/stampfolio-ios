@@ -42,6 +42,9 @@ private struct SlideshowMenuButton: View {
     @AppStorage("showStamps") private var showStamps = true
     @AppStorage("showOrdinals") private var showOrdinals = true
     @AppStorage("showCounterparty") private var showCounterparty = true
+    @AppStorage("slideshowInterval") private var slideshowInterval = 5
+
+    private static let slideshowIntervals = [3, 5, 7, 9, 10, 12, 15, 20, 25, 30, 45, 60, 90, 120]
 
     // MARK: - Computed Properties
 
@@ -61,6 +64,17 @@ private struct SlideshowMenuButton: View {
             }
 
             Section {
+                Picker("Interval", selection: $slideshowInterval) {
+                    ForEach(Self.slideshowIntervals, id: \.self) { secs in
+                        Text("\(secs)s")
+                            .tag(secs)
+                    }
+                }
+                .pickerStyle(.menu)
+                .menuActionDismissBehavior(.disabled)
+            }
+
+            Section {
                 Button("Play Now", systemImage: "play.fill") {
                     Task {
                         await startSlideshow()
@@ -74,7 +88,7 @@ private struct SlideshowMenuButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Start slideshow")
-        .accessibilityHint("Choose protocols, then tap Play Now")
+        .accessibilityHint("Choose protocols and interval, then tap Play Now")
         .onAppear {
             refreshProtocolOrder()
         }
