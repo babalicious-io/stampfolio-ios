@@ -133,10 +133,23 @@ private struct SlideshowMenuButton: View {
                     selectedProtocols.insert(protocolType)
                 } else {
                     selectedProtocols.remove(protocolType)
+                    if selectedProtocols.isEmpty {
+                        selectedProtocols.insert(fallbackProtocol(after: protocolType))
+                    }
                 }
                 saveSelectedProtocols()
             }
         )
+    }
+
+    /// Next Settings-enabled protocol after `protocolType`, wrapping. Used when turning off
+    /// the last selected protocol so the slideshow always has at least one source.
+    private func fallbackProtocol(after protocolType: ProtocolType) -> ProtocolType {
+        let options = enabledProtocols
+        guard let index = options.firstIndex(of: protocolType), !options.isEmpty else {
+            return options.first ?? protocolType
+        }
+        return options[(index + 1) % options.count]
     }
 
     private func refreshProtocolOrder() {
@@ -158,6 +171,9 @@ private struct SlideshowMenuButton: View {
             selectedProtocols = [only]
         } else {
             selectedProtocols = selectedProtocols.filter { isEnabled($0) }
+            if selectedProtocols.isEmpty, let first = enabledProtocols.first {
+                selectedProtocols = [first]
+            }
         }
     }
 
