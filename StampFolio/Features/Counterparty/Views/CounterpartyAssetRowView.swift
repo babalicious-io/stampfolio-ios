@@ -83,23 +83,21 @@ struct CounterpartyAssetRowView: View {
 
                     Spacer(minLength: 4)
 
+                    if showsWalletIcon {
+                        walletIcon
+                    }
+                }
+
+                HStack(alignment: .center, spacing: 8) {
                     AssetStatusIconsView(
                         isLocked: asset.locked,
                         isDivisible: asset.divisible
                     )
-                }
 
-                if formattedFloorPrice != nil || showsWalletIcon {
-                    HStack(alignment: .center, spacing: 8) {
-                        if let formattedFloorPrice {
-                            AssetFloorPricePill(text: formattedFloorPrice)
-                        }
+                    Spacer(minLength: 4)
 
-                        Spacer(minLength: 4)
-
-                        if showsWalletIcon {
-                            walletIcon
-                        }
+                    if let formattedFloorPrice {
+                        AssetFloorPricePill(text: formattedFloorPrice)
                     }
                 }
             }

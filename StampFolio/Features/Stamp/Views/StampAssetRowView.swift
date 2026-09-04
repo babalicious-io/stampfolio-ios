@@ -87,24 +87,22 @@ struct StampAssetRowView: View {
                     
                     Spacer(minLength: 4)
                     
+                    if showsWalletIcon {
+                        walletIcon
+                    }
+                }
+                
+                HStack(alignment: .center, spacing: 8) {
                     AssetStatusIconsView(
                         isLocked: asset.isLocked,
                         isDivisible: asset.divisible,
                         isKeyburned: asset.isKeyburned
                     )
-                }
-                
-                if formattedFloorPrice != nil || showsWalletIcon {
-                    HStack(alignment: .center, spacing: 8) {
-                        if let formattedFloorPrice {
-                            AssetFloorPricePill(text: formattedFloorPrice)
-                        }
-                        
-                        Spacer(minLength: 4)
-                        
-                        if showsWalletIcon {
-                            walletIcon
-                        }
+                    
+                    Spacer(minLength: 4)
+                    
+                    if let formattedFloorPrice {
+                        AssetFloorPricePill(text: formattedFloorPrice)
                     }
                 }
             }
