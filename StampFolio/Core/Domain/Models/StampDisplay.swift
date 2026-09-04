@@ -128,6 +128,7 @@ struct StampDisplay: Identifiable {
         self.balance = 0
         self.divisible = asset.divisible
         self.walletAddress = nil
+        self.marketData = asset.marketData
     }
 
     /// Whether this stamp matches a free-text search query

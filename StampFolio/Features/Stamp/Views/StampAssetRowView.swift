@@ -68,7 +68,7 @@ struct StampAssetRowView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .center, spacing: 8) {
-                    Text(asset.formattedStampId)
+                    Text("#\(asset.stampId)")
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundStyle(.primary)
@@ -79,22 +79,32 @@ struct StampAssetRowView: View {
                     AssetBalancePill(text: displayAsset.formattedBalance)
                 }
                 
-                Text(artistName)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                
-                HStack(spacing: 8) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(artistName)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    
+                    Spacer(minLength: 4)
+                    
                     AssetStatusIconsView(
                         isLocked: asset.isLocked,
                         isDivisible: asset.divisible,
                         isKeyburned: asset.isKeyburned
                     )
-                    
-                    Spacer(minLength: 4)
-                    
-                    if showWalletIcons, displayAsset.walletAddress != nil {
-                        walletIcon
+                }
+                
+                if formattedFloorPrice != nil || showsWalletIcon {
+                    HStack(alignment: .center, spacing: 8) {
+                        if let formattedFloorPrice {
+                            AssetFloorPricePill(text: formattedFloorPrice)
+                        }
+                        
+                        Spacer(minLength: 4)
+                        
+                        if showsWalletIcon {
+                            walletIcon
+                        }
                     }
                 }
             }
@@ -158,17 +168,31 @@ struct StampAssetRowView: View {
         }
     }
     
+    // MARK: - Floor Price
+    
+    private var formattedFloorPrice: String? {
+        displayAsset.marketData?.formattedFloorPrice
+            ?? asset.marketData?.formattedFloorPrice
+    }
+    
+    private var showsWalletIcon: Bool {
+        showWalletIcons && displayAsset.walletAddress != nil
+    }
+    
     // MARK: - Accessibility
     
     private var accessibilityDescription: String {
         var parts = [
-            asset.formattedStampId,
+            "Stamp \(asset.stampId)",
             artistName,
             "Balance: \(displayAsset.formattedBalance)",
             asset.isLocked ? "Locked" : "Unlocked"
         ]
         if asset.divisible { parts.append("Divisible") }
         if asset.isKeyburned { parts.append("Keyburn") }
+        if let formattedFloorPrice {
+            parts.append("Floor price: \(formattedFloorPrice)")
+        }
         return parts.joined(separator: ", ")
     }
     

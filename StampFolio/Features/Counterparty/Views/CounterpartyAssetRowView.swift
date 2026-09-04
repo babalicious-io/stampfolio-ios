@@ -75,21 +75,31 @@ struct CounterpartyAssetRowView: View {
                     AssetBalancePill(text: displayAsset.formattedBalance)
                 }
 
-                Text(issuerName)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                HStack(alignment: .center, spacing: 8) {
+                    Text(issuerName)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
 
-                HStack(spacing: 8) {
+                    Spacer(minLength: 4)
+
                     AssetStatusIconsView(
                         isLocked: asset.locked,
                         isDivisible: asset.divisible
                     )
+                }
 
-                    Spacer(minLength: 4)
+                if formattedFloorPrice != nil || showsWalletIcon {
+                    HStack(alignment: .center, spacing: 8) {
+                        if let formattedFloorPrice {
+                            AssetFloorPricePill(text: formattedFloorPrice)
+                        }
 
-                    if showWalletIcons, displayAsset.walletAddress != nil {
-                        walletIcon
+                        Spacer(minLength: 4)
+
+                        if showsWalletIcon {
+                            walletIcon
+                        }
                     }
                 }
             }
@@ -112,6 +122,16 @@ struct CounterpartyAssetRowView: View {
         return asset.asset == "XCP" ? "Counterparty" : "No issuer"
     }
 
+    // MARK: - Floor Price
+
+    private var formattedFloorPrice: String? {
+        asset.marketData?.formattedFloorPrice
+    }
+
+    private var showsWalletIcon: Bool {
+        showWalletIcons && displayAsset.walletAddress != nil
+    }
+
     // MARK: - Accessibility
 
     private var accessibilityDescription: String {
@@ -122,6 +142,9 @@ struct CounterpartyAssetRowView: View {
             asset.locked ? "Locked" : "Unlocked"
         ]
         if asset.divisible { parts.append("Divisible") }
+        if let formattedFloorPrice {
+            parts.append("Floor price: \(formattedFloorPrice)")
+        }
         return parts.joined(separator: ", ")
     }
 

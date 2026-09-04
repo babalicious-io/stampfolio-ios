@@ -152,13 +152,11 @@ enum AssetRowMetrics {
 struct AssetBalancePill: View {
     let text: String
 
-    @Environment(\.appColorScheme) private var appColorScheme
-
     var body: some View {
         Text(text)
             .font(.caption)
             .fontWeight(.bold)
-            .foregroundStyle(appColorScheme.primary)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
@@ -166,6 +164,28 @@ struct AssetBalancePill: View {
                     .fill(Color(uiColor: .systemBackground).opacity(0.85))
             )
             .accessibilityLabel("Balance: \(text)")
+    }
+}
+
+// MARK: - Asset Floor Price Pill
+
+/// Orange floor-price chip; omit from the row when there is no price
+struct AssetFloorPricePill: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundStyle(.orange)
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
+            )
+            .accessibilityLabel("Floor price: \(text)")
     }
 }
 
