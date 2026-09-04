@@ -143,7 +143,7 @@ enum AssetRowMetrics {
         width: previewHeight * 5 / 7,
         height: previewHeight
     )
-    static let statusIconSize: CGFloat = 20
+    static let statusIconSize: CGFloat = 16
 }
 
 // MARK: - Asset Balance Pill
