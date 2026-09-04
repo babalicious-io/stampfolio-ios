@@ -28,7 +28,7 @@ struct CounterpartyView: View {
     @State private var detailAsset: CounterpartyDisplay?
     @State private var fullscreenAsset: CounterpartyDisplay?
     @State private var slideshowPlaylist: SlideshowPlaylist?
-    @AppStorage("counterpartyViewMode") private var viewMode: ViewMode = .normalGrid
+    @AppStorage(ViewMode.storageKey) private var viewMode: ViewMode = .normalGrid
 
     // MARK: - Computed Properties
 

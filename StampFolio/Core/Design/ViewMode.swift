@@ -15,6 +15,9 @@ enum ViewMode: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Shared AppStorage key so grid/list mode persists across protocol tabs
+    static let storageKey = "collectionViewMode"
+
     /// Filled SF Symbol for the current layout (toolbar and selected menu row)
     var icon: String {
         switch self {

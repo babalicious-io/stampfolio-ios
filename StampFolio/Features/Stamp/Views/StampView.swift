@@ -26,7 +26,7 @@ struct StampView: View {
     @State private var fullscreenAsset: StampDisplay?
     @State private var detailAsset: StampDisplay?
     @State private var slideshowPlaylist: SlideshowPlaylist?
-    @AppStorage("stampViewMode") private var viewMode: ViewMode = .normalGrid
+    @AppStorage(ViewMode.storageKey) private var viewMode: ViewMode = .normalGrid
     
     // MARK: - Layout
     
