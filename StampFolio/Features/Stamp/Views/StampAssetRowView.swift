@@ -50,7 +50,7 @@ struct StampAssetRowView: View {
                 onLongPress()  // Show detail view
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(asset.formattedStampId), \(artistName), Balance: \(displayAsset.formattedBalance)")
+            .accessibilityLabel(accessibilityDescription)
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
@@ -58,37 +58,45 @@ struct StampAssetRowView: View {
     // MARK: - Row Content
     
     private var rowContent: some View {
-        HStack(spacing: 16) {
-            // Stamp image
+        HStack(alignment: .top, spacing: 16) {
             stampImage
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .frame(
+                    width: AssetRowMetrics.stampPreviewSize.width,
+                    height: AssetRowMetrics.stampPreviewSize.height
+                )
+                .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
             
-            // Stamp information
             VStack(alignment: .leading, spacing: 4) {
-                // Stamp number
-                Text(asset.formattedStampId)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
+                HStack(alignment: .center, spacing: 8) {
+                    Text(asset.formattedStampId)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    
+                    Spacer(minLength: 4)
+                    
+                    AssetBalancePill(text: displayAsset.formattedBalance)
+                }
                 
-                // Artist/Creator
                 Text(artistName)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 
-                // Edition balance
-                Text("Balance: \(displayAsset.formattedBalance)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-            Spacer()
-            
-            // Wallet icon (conditional)
-            if showWalletIcons, displayAsset.walletAddress != nil {
-                walletIcon
+                HStack(spacing: 8) {
+                    AssetStatusIconsView(
+                        isLocked: asset.isLocked,
+                        isDivisible: asset.divisible,
+                        isKeyburned: asset.isKeyburned
+                    )
+                    
+                    Spacer(minLength: 4)
+                    
+                    if showWalletIcons, displayAsset.walletAddress != nil {
+                        walletIcon
+                    }
+                }
             }
         }
         .padding(12)
@@ -114,7 +122,11 @@ struct StampAssetRowView: View {
             StampAssetMediaView(type: asset.isAudio ? .audio : .video)
         } else {
             // Raster: Pixel images (jpg, png, webp, gif)
-            StampAssetPixelView(stamp: asset, geometry: CGSize(width: 64, height: 64), onFailure: { imageLoadFailed = true })
+            StampAssetPixelView(
+                stamp: asset,
+                geometry: AssetRowMetrics.stampPreviewSize,
+                onFailure: { imageLoadFailed = true }
+            )
         }
     }
     
@@ -146,6 +158,20 @@ struct StampAssetRowView: View {
         }
     }
     
+    // MARK: - Accessibility
+    
+    private var accessibilityDescription: String {
+        var parts = [
+            asset.formattedStampId,
+            artistName,
+            "Balance: \(displayAsset.formattedBalance)",
+            asset.isLocked ? "Locked" : "Unlocked"
+        ]
+        if asset.divisible { parts.append("Divisible") }
+        if asset.isKeyburned { parts.append("Keyburn") }
+        return parts.joined(separator: ", ")
+    }
+    
     // MARK: - Wallet Icon
     
     private var walletIcon: some View {
@@ -170,6 +196,12 @@ struct StampAssetRowView: View {
         
         StampAssetRowView(
             displayAsset: StampDisplay(from: StampAsset.samples[1]),
+            onTap: {},
+            onLongPress: {}
+        )
+        
+        StampAssetRowView(
+            displayAsset: StampDisplay(from: StampAsset.samples[2]),
             onTap: {},
             onLongPress: {}
         )

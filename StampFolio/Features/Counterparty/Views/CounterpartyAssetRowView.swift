@@ -46,7 +46,7 @@ struct CounterpartyAssetRowView: View {
                 onLongPress()  // Show fullscreen viewer
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(asset.displayName), Balance: \(displayAsset.formattedBalance)")
+            .accessibilityLabel(accessibilityDescription)
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
@@ -54,35 +54,43 @@ struct CounterpartyAssetRowView: View {
     // MARK: - Row Content
 
     private var rowContent: some View {
-        HStack(spacing: 16) {
+        HStack(alignment: .top, spacing: 16) {
             assetIcon
-                .frame(width: 48, height: 48)
+                .frame(
+                    width: AssetRowMetrics.counterpartyPreviewSize.width,
+                    height: AssetRowMetrics.counterpartyPreviewSize.height
+                )
+                .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(asset.displayName)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
+                HStack(alignment: .center, spacing: 8) {
+                    Text(asset.displayName)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
 
-                Text(issuerLabel)
-                    .font(.caption)
+                    Spacer(minLength: 4)
+
+                    AssetBalancePill(text: displayAsset.formattedBalance)
+                }
+
+                Text(issuerName)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
-                badgesRow
-            }
+                HStack(spacing: 8) {
+                    AssetStatusIconsView(
+                        isLocked: asset.locked,
+                        isDivisible: asset.divisible
+                    )
 
-            Spacer()
+                    Spacer(minLength: 4)
 
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(displayAsset.formattedBalance)
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.primary)
-
-                if showWalletIcons, displayAsset.walletAddress != nil {
-                    walletIcon
+                    if showWalletIcons, displayAsset.walletAddress != nil {
+                        walletIcon
+                    }
                 }
             }
         }
@@ -92,46 +100,29 @@ struct CounterpartyAssetRowView: View {
     // MARK: - Asset Icon
 
     private var assetIcon: some View {
-        CounterpartyAssetImageView(asset: asset, size: CGSize(width: 48, height: 48))
-            .clipShape(Circle())
+        CounterpartyAssetImageView(asset: asset, size: AssetRowMetrics.counterpartyPreviewSize)
     }
 
-    // MARK: - Issuer Label
+    // MARK: - Issuer Name
 
-    private var issuerLabel: String {
+    private var issuerName: String {
         if let issuer = asset.issuer {
-            return "Issued by \(issuer.truncatedAddress(prefixLength: 6, suffixLength: 6))"
+            return issuer.truncatedAddress(length: 6)
         }
-        return asset.asset == "XCP" ? "Counterparty protocol currency" : "No issuer"
+        return asset.asset == "XCP" ? "Counterparty" : "No issuer"
     }
 
-    // MARK: - Badges
+    // MARK: - Accessibility
 
-    private var badgesRow: some View {
-        HStack(spacing: 6) {
-            if asset.locked {
-                badge(text: "Locked", systemImage: "lock.fill")
-            }
-            if asset.divisible {
-                badge(text: "Divisible", systemImage: "divide")
-            }
-        }
-    }
-
-    private func badge(text: String, systemImage: String) -> some View {
-        HStack(spacing: 2) {
-            Image(systemName: systemImage)
-                .font(.system(size: 8))
-            Text(text)
-                .font(.caption2)
-        }
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background(
-            Capsule()
-                .fill(Color(uiColor: .systemBackground).opacity(0.6))
-        )
+    private var accessibilityDescription: String {
+        var parts = [
+            asset.displayName,
+            issuerName,
+            "Balance: \(displayAsset.formattedBalance)",
+            asset.locked ? "Locked" : "Unlocked"
+        ]
+        if asset.divisible { parts.append("Divisible") }
+        return parts.joined(separator: ", ")
     }
 
     // MARK: - Wallet Icon
@@ -140,7 +131,7 @@ struct CounterpartyAssetRowView: View {
         WalletIndicatorView(
             walletAddress: displayAsset.walletAddress,
             wallets: wallets,
-            style: .plain,
+            style: .circleBackground,
             accessibilityHint: "Shows which wallet holds this asset"
         )
     }

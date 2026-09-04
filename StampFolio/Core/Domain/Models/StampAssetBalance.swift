@@ -41,6 +41,9 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
     
     /// Whether the stamp is divisible (0 = false, 1 = true)
     let divisible: Int
+
+    /// Keyburn amount when present on the balance payload
+    let keyburn: Int?
     
     /// MIME type of the stamp content (nullable in API)
     let fileType: String?
@@ -108,6 +111,7 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
         case _editionsBalance = "balance"
         case locked
         case divisible
+        case keyburn
         case fileType = "stamp_mimetype"        
         case txHash = "tx_hash"
         case stampUrl = "stamp_url"
@@ -133,6 +137,7 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
         _editionsBalance = try container.decode(BalanceValue.self, forKey: ._editionsBalance)
         locked = try container.decodeIfPresent(Int.self, forKey: .locked)
         divisible = try container.decode(Int.self, forKey: .divisible)
+        keyburn = try container.decodeIfPresent(Int.self, forKey: .keyburn)
         fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
         txHash = try container.decode(String.self, forKey: .txHash)
         stampUrl = try container.decode(String.self, forKey: .stampUrl)

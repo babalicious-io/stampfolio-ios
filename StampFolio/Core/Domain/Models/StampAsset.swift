@@ -161,6 +161,12 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     
     /// Identifiable conformance - uses stampId
     var id: Int { stampId }
+
+    /// Whether issuance is locked; missing values are treated as unlocked
+    var isLocked: Bool { locked == true }
+
+    /// Whether keys were burned at issuance (`keyburn` is typically 1 when true)
+    var isKeyburned: Bool { (keyburn ?? 0) != 0 }
     
     /// URL to the stamp detail page on Stampchain.io
     var stampchainURL: URL {
@@ -332,7 +338,7 @@ extension StampAsset {
             fileSize: 500,
             divisible: false,
             locked: false,
-            keyburn: nil,
+            keyburn: 1,
             blockTime: Date().addingTimeInterval(-172800),
             blockIndex: 933835,
             txHash: "test123",

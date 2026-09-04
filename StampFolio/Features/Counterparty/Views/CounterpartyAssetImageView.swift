@@ -140,9 +140,12 @@ struct CounterpartyAssetFullscreenContent: View {
 
 #Preview {
     HStack(spacing: 16) {
-        CounterpartyAssetImageView(asset: .sample, size: CGSize(width: 48, height: 48))
-            .frame(width: 48, height: 48)
-            .clipShape(Circle())
+        CounterpartyAssetImageView(asset: .sample, size: AssetRowMetrics.counterpartyPreviewSize)
+            .frame(
+                width: AssetRowMetrics.counterpartyPreviewSize.width,
+                height: AssetRowMetrics.counterpartyPreviewSize.height
+            )
+            .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
 
         CounterpartyAssetImageView(asset: .sample, size: CGSize(width: 120, height: 120))
             .frame(width: 120, height: 120)

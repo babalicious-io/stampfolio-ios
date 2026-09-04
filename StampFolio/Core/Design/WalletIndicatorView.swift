@@ -15,9 +15,9 @@ struct WalletIndicatorView: View {
     enum Style {
         /// Capsule background, used on grid cards
         case pill
-        /// Circle background, used on the Stamp row layout
+        /// Circle background, used on Stamp and Counterparty row layouts
         case circleBackground
-        /// No background, used on the Counterparty row layout
+        /// No background
         case plain
     }
 

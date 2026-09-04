@@ -109,7 +109,7 @@ struct StampDisplay: Identifiable {
             fileSize: nil,
             divisible: walletBalance.isDivisible,
             locked: walletBalance.locked.map { $0 == 1 },
-            keyburn: nil,
+            keyburn: walletBalance.keyburn,
             blockTime: nil,
             blockIndex: nil,
             txHash: walletBalance.txHash,

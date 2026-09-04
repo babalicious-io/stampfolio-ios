@@ -3,7 +3,8 @@
 //  StampFolio
 //
 //  Shared collection-view chrome reused by Stamp, Counterparty, and Ordinals:
-//  view-mode and settings toolbar buttons, offline banner, loading state, and grid column sizing.
+//  view-mode and settings toolbar buttons, offline banner, loading state, grid
+//  column sizing, and list-row preview/status/balance components.
 //
 
 import SwiftUI
@@ -128,4 +129,77 @@ func gridColumns(viewMode: ViewMode, horizontalSizeClass: UserInterfaceSizeClass
     }
 
     return [GridItem(.adaptive(minimum: minSize, maximum: 300), spacing: 16)]
+}
+
+// MARK: - Asset Row Metrics
+
+/// Shared list-row sizing for Stamp and Counterparty previews and status glyphs
+enum AssetRowMetrics {
+    static let previewHeight: CGFloat = 64
+    static let previewCornerRadius: CGFloat = 12
+    static let stampPreviewSize = CGSize(width: previewHeight, height: previewHeight)
+    /// Portrait trading-card ratio used by Counterparty tiles (width / height = 5 / 7)
+    static let counterpartyPreviewSize = CGSize(
+        width: previewHeight * 5 / 7,
+        height: previewHeight
+    )
+    /// Previous row badges used 8pt icons; status glyphs are 2pt larger
+    static let statusIconSize: CGFloat = 10
+}
+
+// MARK: - Asset Balance Pill
+
+/// Compact balance chip used in the top-trailing corner of list rows
+struct AssetBalancePill: View {
+    let text: String
+
+    @Environment(\.appColorScheme) private var appColorScheme
+
+    var body: some View {
+        Text(text)
+            .font(.caption)
+            .fontWeight(.bold)
+            .foregroundStyle(appColorScheme.primary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
+            )
+            .accessibilityLabel("Balance: \(text)")
+    }
+}
+
+// MARK: - Asset Status Icons
+
+/// Lock, optional divisible, and optional keyburn glyphs for list rows
+struct AssetStatusIconsView: View {
+    let isLocked: Bool
+    let isDivisible: Bool
+    var isKeyburned: Bool = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            statusIcon(
+                systemName: isLocked ? "lock.fill" : "lock.open.fill",
+                label: isLocked ? "Locked" : "Unlocked"
+            )
+
+            if isDivisible {
+                statusIcon(systemName: "divide", label: "Divisible")
+            }
+
+            if isKeyburned {
+                statusIcon(systemName: "flame.fill", label: "Keyburn")
+            }
+        }
+        .foregroundStyle(.secondary)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func statusIcon(systemName: String, label: String) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: AssetRowMetrics.statusIconSize))
+            .accessibilityLabel(label)
+    }
 }
