@@ -181,6 +181,11 @@ struct SearchView: View {
                                         onTap: { stampDetailAsset = displayAsset },
                                         onLongPress: { stampFullscreenAsset = displayAsset }
                                     )
+                                    .onAppear {
+                                        Task {
+                                            await stampViewModel.fetchMarketDataIfNeeded(for: displayAsset)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -193,6 +198,11 @@ struct SearchView: View {
                                         onTap: { counterpartyDetailAsset = displayAsset },
                                         onLongPress: { counterpartyFullscreenAsset = displayAsset }
                                     )
+                                    .onAppear {
+                                        Task {
+                                            await counterpartyViewModel.fetchMarketDataIfNeeded(for: displayAsset)
+                                        }
+                                    }
                                 }
                             }
                         }

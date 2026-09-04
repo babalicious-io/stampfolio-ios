@@ -208,6 +208,11 @@ struct CounterpartyView: View {
                                 fullscreenAsset = displayAsset
                             }
                         )
+                        .onAppear {
+                            Task {
+                                await viewModel.fetchMarketDataIfNeeded(for: displayAsset)
+                            }
+                        }
                     }
                 }
                 .padding()
