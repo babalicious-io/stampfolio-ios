@@ -143,8 +143,7 @@ enum AssetRowMetrics {
         width: previewHeight * 5 / 7,
         height: previewHeight
     )
-    /// Previous row badges used 8pt icons; status glyphs are 2pt larger
-    static let statusIconSize: CGFloat = 10
+    static let statusIconSize: CGFloat = 20
 }
 
 // MARK: - Asset Balance Pill
