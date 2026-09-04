@@ -58,7 +58,7 @@ struct StampAssetRowView: View {
     // MARK: - Row Content
     
     private var rowContent: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .center, spacing: 24) {
             stampImage
                 .frame(
                     width: AssetRowMetrics.stampPreviewSize.width,
@@ -99,7 +99,7 @@ struct StampAssetRowView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(6)
     }
     
     // MARK: - Stamp Image

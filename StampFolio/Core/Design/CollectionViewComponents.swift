@@ -135,7 +135,7 @@ func gridColumns(viewMode: ViewMode, horizontalSizeClass: UserInterfaceSizeClass
 
 /// Shared list-row sizing for Stamp and Counterparty previews and status glyphs
 enum AssetRowMetrics {
-    static let previewHeight: CGFloat = 64
+    static let previewHeight: CGFloat = 76
     static let previewCornerRadius: CGFloat = 12
     static let stampPreviewSize = CGSize(width: previewHeight, height: previewHeight)
     /// Portrait trading-card ratio used by Counterparty tiles (width / height = 5 / 7)

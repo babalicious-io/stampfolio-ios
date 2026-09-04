@@ -94,7 +94,7 @@ struct CounterpartyAssetRowView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(6)
     }
 
     // MARK: - Asset Icon
