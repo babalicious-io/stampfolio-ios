@@ -28,7 +28,6 @@ struct CounterpartyView: View {
     @State private var detailAsset: CounterpartyDisplay?
     @State private var fullscreenAsset: CounterpartyDisplay?
     @State private var slideshowPlaylist: SlideshowPlaylist?
-    @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("counterpartyViewMode") private var viewMode: ViewMode = .normalGrid
 
     // MARK: - Computed Properties
@@ -307,7 +306,7 @@ struct CounterpartyView: View {
                         ))
                     }
 
-                    if showWalletIcons {
+                    if wallets.count > 1 {
                         Section {
                             Toggle("Wallet - asc", isOn: Binding(
                                 get: { viewModel.currentSortOption == .walletAscending },

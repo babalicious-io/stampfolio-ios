@@ -26,7 +26,6 @@ struct StampView: View {
     @State private var fullscreenAsset: StampDisplay?
     @State private var detailAsset: StampDisplay?
     @State private var slideshowPlaylist: SlideshowPlaylist?
-    @AppStorage("showWalletIcons") private var showWalletIcons = false
     @AppStorage("stampViewMode") private var viewMode: ViewMode = .normalGrid
     
     // MARK: - Layout
@@ -243,7 +242,7 @@ struct StampView: View {
                         ))
                     }
                     
-                    if showWalletIcons {
+                    if wallets.count > 1 {
                         Section {
                             Toggle("Wallet - asc", isOn: Binding(
                                 get: { viewModel.currentSortOption == .walletAscending },
