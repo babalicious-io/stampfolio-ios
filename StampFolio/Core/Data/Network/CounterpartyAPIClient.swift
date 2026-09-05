@@ -114,9 +114,11 @@ actor CounterpartyAPIClient {
     func fetchAssetDetail(_ asset: String) async throws -> CounterpartyAsset {
         async let assetTask = fetchAsset(asset)
         async let marketTask = fetchAssetMarketData(asset)
+        async let txHashTask: String? = try? fetchFirstIssuanceTxHash(asset)
 
         var result = try await assetTask
         result.marketData = await marketTask
+        result.firstIssuanceTxHash = await txHashTask
         return result
     }
 
@@ -145,6 +147,21 @@ actor CounterpartyAPIClient {
         let response = try decoder.decode(CounterpartyDispensersResponse.self, from: data)
         let floorPrice = response.result.first.flatMap { Decimal(string: $0.satoshirateNormalized ?? "") }
         return (response.resultCount ?? response.result.count, floorPrice)
+    }
+
+    /// Fetch the first (oldest valid) issuance transaction hash for an asset.
+    /// Returns nil when the asset has no issuances or the request fails.
+    private func fetchFirstIssuanceTxHash(_ asset: String) async throws -> String? {
+        let encoded = asset.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? asset
+        let endpoint = "\(baseURL)/assets/\(encoded)/issuances?status=valid&limit=1&sort=tx_index:asc"
+
+        guard let url = URL(string: endpoint) else {
+            throw NetworkError.invalidURL
+        }
+
+        let (data, _) = try await executor.perform(url)
+        let response = try decoder.decode(CounterpartyIssuancesResponse.self, from: data)
+        return response.result.first?.txHash
     }
 
 }
@@ -196,5 +213,18 @@ private struct CounterpartyDispenserSummary: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case satoshirateNormalized = "satoshirate_normalized"
+    }
+}
+
+/// Response wrapper for the issuances endpoint (only the first-issuance tx hash is needed)
+private struct CounterpartyIssuancesResponse: Decodable {
+    let result: [CounterpartyIssuanceSummary]
+}
+
+private struct CounterpartyIssuanceSummary: Decodable {
+    let txHash: String?
+
+    enum CodingKeys: String, CodingKey {
+        case txHash = "tx_hash"
     }
 }

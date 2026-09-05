@@ -23,14 +23,12 @@ struct StampAssetRowView: View {
     // MARK: - Environment
     
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate) private var wallets: [WalletConfig]
     
     // MARK: - State
     
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @State private var isPressed = false
-    @State private var imageLoadFailed = false
     
     // MARK: - Body
     
@@ -59,11 +57,7 @@ struct StampAssetRowView: View {
     
     private var rowContent: some View {
         HStack(alignment: .center, spacing: 24) {
-            stampImage
-                .frame(
-                    width: AssetRowMetrics.stampPreviewSize.width,
-                    height: AssetRowMetrics.stampPreviewSize.height
-                )
+            StampAssetImageView(asset: asset, size: AssetRowMetrics.stampPreviewSize)
                 .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
             
             VStack(alignment: .leading, spacing: 4) {
@@ -108,52 +102,6 @@ struct StampAssetRowView: View {
             }
         }
         .padding(6)
-    }
-    
-    // MARK: - Stamp Image
-    
-    @ViewBuilder
-    private var stampImage: some View {
-        if imageLoadFailed {
-            failedImageView
-        } else if asset.isHTML || asset.isSVG {
-            // Vector: HTML/SVG via WebView
-            StampAssetVectorView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
-        } else if asset.isText {
-            // Text: Plain text content
-            StampAssetTextView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
-        } else if asset.isLibrary, let label = asset.libraryLabel {
-            // Library: JS/CSS/GZIP files
-            StampAssetLibraryView(label: label)
-        } else if asset.isAudio || asset.isVideo {
-            // Media: Audio/Video placeholders
-            StampAssetMediaView(type: asset.isAudio ? .audio : .video)
-        } else {
-            // Raster: Pixel images (jpg, png, webp, gif)
-            StampAssetPixelView(
-                stamp: asset,
-                geometry: AssetRowMetrics.stampPreviewSize,
-                onFailure: { imageLoadFailed = true }
-            )
-        }
-    }
-    
-    // MARK: - Failed Image View
-    
-    private var failedImageView: some View {
-        ZStack {
-            Color(uiColor: .systemBackground)
-            
-            VStack(spacing: 4) {
-                Image(systemName: "photo.badge.exclamationmark")
-                    .font(.caption)
-                    .foregroundStyle(appColorScheme.primary)
-                
-                Text("Failed")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
     }
     
     // MARK: - Artist Name

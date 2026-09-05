@@ -34,21 +34,33 @@ struct CounterpartyAssetDetailView: View {
         NavigationStack {
             List {
                 Section {
+                    identificationSection
+                }
+
+                Section {
                     assetImageHeader
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
 
                 Section {
-                    identificationSection
-                }
-
-                Section {
                     holdingContent
                 }
 
                 Section {
-                    marketContent
+                    statusContent
+                }
+
+                if showsMarketSection {
+                    Section {
+                        marketContent
+                    }
+                }
+
+                if showsChainSection {
+                    Section {
+                        chainContent
+                    }
                 }
 
                 if let description = asset.description, !description.isEmpty {
@@ -78,19 +90,6 @@ struct CounterpartyAssetDetailView: View {
         }
     }
 
-    // MARK: - Asset Image Header
-
-    private var assetImageHeader: some View {
-        // Sized to a portrait "trading card" ratio (matching the grid tile) since most
-        // Counterparty artwork is card-shaped rather than square like Stamps; square/icon
-        // artwork is still shown in full via CounterpartyAssetImageView's letterboxing.
-        CounterpartyAssetImageView(asset: asset, size: CGSize(width: 300, height: 420))
-            .frame(width: 300, height: 420)
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-    }
-
     // MARK: - Identification Section
 
     private var identificationSection: some View {
@@ -112,34 +111,36 @@ struct CounterpartyAssetDetailView: View {
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 6) {
-                if asset.locked {
-                    Text("Locked")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(appColorScheme.primary.opacity(0.8))
-                        .clipShape(Capsule())
-                }
-
-                Text(asset.divisible ? "Divisible" : "Non-divisible")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
+            Text("counterparty")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(appColorScheme.primary.opacity(0.8))
+                .clipShape(Capsule())
         }
         .padding(.vertical, 4)
+    }
+
+    // MARK: - Asset Image Header
+
+    private var assetImageHeader: some View {
+        Color.clear
+            .aspectRatio(5 / 7, contentMode: .fit)
+            .overlay {
+                GeometryReader { geometry in
+                    CounterpartyAssetImageView(asset: asset, size: geometry.size)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                }
+            }
+            .padding(.vertical, 8)
     }
 
     // MARK: - Holding Content
 
     @ViewBuilder
     private var holdingContent: some View {
-        MetadataRow(label: "Balance", value: currentDisplayAsset.formattedBalance)
-
-        MetadataRow(label: "Supply", value: asset.formattedSupply)
-
         if let issuer = asset.issuer {
             MetadataRow(
                 label: "Issuer",
@@ -156,18 +157,34 @@ struct CounterpartyAssetDetailView: View {
             )
         }
 
-        if let date = asset.firstIssuanceDate {
-            MetadataRow(label: "Issued", value: date.formatted(date: .abbreviated, time: .omitted))
-        }
+        MetadataRow(label: "Supply", value: asset.formattedSupply)
+
+        MetadataRow(label: "Balance", value: currentDisplayAsset.formattedBalance)
+    }
+
+    // MARK: - Status
+
+    @ViewBuilder
+    private var statusContent: some View {
+        MetadataRow(label: "Locked", value: yesNo(asset.locked))
+        MetadataRow(label: "Divisible", value: yesNo(asset.divisible))
     }
 
     // MARK: - Market Content
 
+    private var showsMarketSection: Bool {
+        if currentDisplayAsset.isLoadingMarketData { return true }
+        guard let marketData = asset.marketData else { return false }
+        return marketData.holderCount != nil
+            || marketData.formattedFloorPrice != nil
+            || (marketData.openDispensersCount ?? 0) > 0
+    }
+
     @ViewBuilder
     private var marketContent: some View {
         if let marketData = asset.marketData {
-            if let holders = marketData.formattedHolderCount {
-                MetadataRow(label: "Holders", value: holders)
+            if let holderCount = marketData.holderCount {
+                MetadataRow(label: "Holders", value: "\(holderCount)")
             }
             if let floorPrice = marketData.formattedFloorPrice {
                 MetadataRow(label: "Floor Price", value: floorPrice)
@@ -177,6 +194,44 @@ struct CounterpartyAssetDetailView: View {
             }
         } else if currentDisplayAsset.isLoadingMarketData {
             MetadataLoadingRow()
+        }
+    }
+
+    // MARK: - Chain Content
+
+    private var showsChainSection: Bool {
+        asset.firstIssuanceDate != nil
+            || asset.firstIssuanceBlockIndex != nil
+            || asset.firstIssuanceTxHash != nil
+    }
+
+    @ViewBuilder
+    private var chainContent: some View {
+        if let date = asset.firstIssuanceDate {
+            MetadataRow(
+                label: "Issued",
+                value: date.formatted(date: .abbreviated, time: .shortened)
+            )
+        }
+
+        if let reissuedDate = asset.lastIssuanceDate,
+           asset.lastIssuanceBlockTime != asset.firstIssuanceBlockTime {
+            MetadataRow(
+                label: "Reissued",
+                value: reissuedDate.formatted(date: .abbreviated, time: .shortened)
+            )
+        }
+
+        if let blockIndex = asset.firstIssuanceBlockIndex {
+            MetadataRow(label: "Block", value: "#\(blockIndex)")
+        }
+
+        if let txHash = asset.firstIssuanceTxHash, !txHash.isEmpty {
+            MetadataRow(
+                label: "Tx Hash",
+                value: txHash.prefix(8) + "..." + txHash.suffix(8),
+                fullValue: txHash
+            )
         }
     }
 
@@ -207,7 +262,7 @@ struct CounterpartyAssetDetailView: View {
             }
         } label: {
             HStack {
-                Text("View on XChain.io")
+                Text("View on Horizon Market")
                     .fontWeight(.medium)
 
                 Image(systemName: "arrow.up.right.square")
@@ -218,8 +273,14 @@ struct CounterpartyAssetDetailView: View {
             .glassEffect(.regular.tint(appColorScheme.primary).interactive(), in: .capsule)
         }
         .tint(.secondary)
-        .accessibilityLabel("View asset on XChain.io")
-        .accessibilityHint("Opens Safari to the asset detail page")
+        .accessibilityLabel("View asset on Horizon Market")
+        .accessibilityHint("Opens Safari to the asset page on Horizon Market")
+    }
+
+    // MARK: - Helpers
+
+    private func yesNo(_ value: Bool) -> String {
+        value ? "Yes" : "No"
     }
 }
 

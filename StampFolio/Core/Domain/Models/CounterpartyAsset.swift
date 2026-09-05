@@ -48,6 +48,12 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
     /// Block time of the most recent issuance (Unix seconds)
     let lastIssuanceBlockTime: Int?
 
+    /// Block index of the first issuance
+    let firstIssuanceBlockIndex: Int?
+
+    /// Transaction hash of the first issuance, fetched on-demand from `/issuances`
+    var firstIssuanceTxHash: String?
+
     /// Market-style data (holder count, open dispensers, floor price) fetched on-demand
     var marketData: CounterpartyAssetMarketData?
 
@@ -66,6 +72,7 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         case mimeType = "mime_type"
         case firstIssuanceBlockTime = "first_issuance_block_time"
         case lastIssuanceBlockTime = "last_issuance_block_time"
+        case firstIssuanceBlockIndex = "first_issuance_block_index"
     }
 
     // MARK: - Initialization
@@ -83,6 +90,8 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         mimeType: String?,
         firstIssuanceBlockTime: Int?,
         lastIssuanceBlockTime: Int?,
+        firstIssuanceBlockIndex: Int? = nil,
+        firstIssuanceTxHash: String? = nil,
         marketData: CounterpartyAssetMarketData? = nil
     ) {
         self.asset = asset
@@ -97,6 +106,8 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         self.mimeType = mimeType
         self.firstIssuanceBlockTime = firstIssuanceBlockTime
         self.lastIssuanceBlockTime = lastIssuanceBlockTime
+        self.firstIssuanceBlockIndex = firstIssuanceBlockIndex
+        self.firstIssuanceTxHash = firstIssuanceTxHash
         self.marketData = marketData
     }
 
@@ -116,6 +127,8 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         self.mimeType = try container.decodeIfPresent(String.self, forKey: .mimeType)
         self.firstIssuanceBlockTime = try container.decodeIfPresent(Int.self, forKey: .firstIssuanceBlockTime)
         self.lastIssuanceBlockTime = try container.decodeIfPresent(Int.self, forKey: .lastIssuanceBlockTime)
+        self.firstIssuanceBlockIndex = try container.decodeIfPresent(Int.self, forKey: .firstIssuanceBlockIndex)
+        self.firstIssuanceTxHash = nil
         self.marketData = nil
     }
 
@@ -169,9 +182,10 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         Double(supplyNormalized) ?? 0
     }
 
-    /// URL to the asset's page on the XChain / Counterparty explorer
+    /// URL to the asset's page on Horizon Market
     var explorerURL: URL? {
-        URL(string: "https://xchain.io/asset/\(asset)")
+        let name = displayName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? asset
+        return URL(string: "https://horizon.market/assets/\(name)")
     }
 }
 
@@ -193,6 +207,8 @@ extension CounterpartyAsset {
         mimeType: "text/plain",
         firstIssuanceBlockTime: 1_700_000_000,
         lastIssuanceBlockTime: 1_700_000_000,
+        firstIssuanceBlockIndex: 390_000,
+        firstIssuanceTxHash: "e94be2793462692ca8fea3a54dd90ff4b18735196a2bc426382c11959533c8ca",
         marketData: CounterpartyAssetMarketData(
             holderCount: 128,
             openDispensersCount: 2,

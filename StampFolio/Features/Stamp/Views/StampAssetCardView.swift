@@ -31,7 +31,6 @@ struct StampAssetCardView: View {
     
     @AppStorage("showWalletIcons") private var showWalletIcons = false
     @State private var isPressed = false
-    @State private var imageLoadFailed = false
     
     // MARK: - Body
     
@@ -61,27 +60,7 @@ struct StampAssetCardView: View {
     private var stampContent: some View {
         GeometryReader { geometry in
             ZStack {
-                // Stamp image routing
-                if imageLoadFailed {
-                    failedImageView
-                } else if asset.isHTML || asset.isSVG {
-                    // Vector: HTML/SVG via WebView
-                    StampAssetVectorView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
-                        .frame(width: geometry.size.width, height: geometry.size.width)
-                } else if asset.isText {
-                    // Text: Plain text content
-                    StampAssetTextView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
-                        .frame(width: geometry.size.width, height: geometry.size.width)
-                } else if asset.isLibrary, let label = asset.libraryLabel {
-                    // Library: JS/CSS/GZIP files
-                    StampAssetLibraryView(label: label)
-                } else if asset.isAudio || asset.isVideo {
-                    // Media: Audio/Video placeholders
-                    StampAssetMediaView(type: asset.isAudio ? .audio : .video)
-                } else {
-                    // Raster: Pixel images (jpg, png, webp, gif)
-                    StampAssetPixelView(stamp: asset, geometry: geometry.size, onFailure: { imageLoadFailed = true })
-                }
+                StampAssetImageView(asset: asset, size: geometry.size)
                 
                 // Overlay: Stamp number (top left), wallet icon (top right) and Edition balance (bottom right)
                 // Hidden in dense grid mode for cleaner appearance
@@ -115,32 +94,6 @@ struct StampAssetCardView: View {
         }
         .aspectRatio(1, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 24))
-    }
-    
-    // MARK: - Failed Image View
-    
-    private var failedImageView: some View {
-        ZStack {
-            Color(uiColor: .systemBackground)
-            
-            VStack(spacing: 8) {
-                Image(systemName: "photo.badge.exclamationmark")
-                    .font(.title)
-                    .foregroundStyle(appColorScheme.primary)
-                
-                Text("Failed to load")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                
-                Button {
-                    imageLoadFailed = false
-                } label: {
-                    Text("Retry")
-                        .font(.caption2)
-                        .foregroundStyle(appColorScheme.primary)
-                }
-            }
-        }
     }
     
     // MARK: - Stamp Number Pill

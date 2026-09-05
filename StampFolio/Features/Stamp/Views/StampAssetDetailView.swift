@@ -9,52 +9,63 @@ import SwiftUI
 
 /// Popup displaying stamp metadata details
 struct StampAssetDetailView: View {
-    
+
     // MARK: - Properties
-    
+
     let displayAsset: StampDisplay
     let viewModel: StampViewModel
-    
+
     // Get current stamp from viewModel (updates when market data fetched)
     private var currentDisplayAsset: StampDisplay {
         viewModel.assets.first(where: { $0.id == displayAsset.id }) ?? displayAsset
     }
-    
+
     // Convenience accessor for the underlying stamp (always use current data)
     private var asset: StampAsset { currentDisplayAsset.asset }
-    
+
     // MARK: - Environment
-    
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.appColorScheme) private var appColorScheme
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             List {
-                // Section 1: Stamp Identification
                 Section {
                     stampIdentificationSection
                 }
-                
-                // Section 2: Creator, Supply & Market Data
+
                 Section {
-                    creatorAndMarketContent
+                    stampImageHeader
                 }
-                
-                // Section 3: File Information
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+
+                Section {
+                    identityContent
+                }
+
+                Section {
+                    statusContent
+                }
+
                 Section {
                     fileInformationContent
                 }
-                
-                // Section 4: Blockchain Information
+
+                if showsMarketSection {
+                    Section {
+                        marketContent
+                    }
+                }
+
                 Section {
                     blockchainInformationContent
                 }
-                
-                // View on Stampchain Button
+
                 Section {
                     stampchainLinkButton
                 }
@@ -72,33 +83,21 @@ struct StampAssetDetailView: View {
         }
         .tint(.primary)
         .task {
-            // Fetch market data when popup opens (if not already cached)
             await viewModel.fetchMarketDataIfNeeded(for: displayAsset)
         }
     }
-    
-    // MARK: - Section 1: Stamp Identification
-    
+
+    // MARK: - Header
+
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
-                // STAMP label (light) + stampId number (semibold)
-                Text("STAMP #\(Text("\(asset.stampId)").fontWeight(.bold))")
-                    .fontWeight(.light)
-                    .font(.title2)
-                    .foregroundStyle(.primary)
-                
-                // CPID label (light) + counterpartyId (semibold)
-                Text("CPID \(Text(asset.counterpartyId).fontWeight(.bold))")
-                    .fontWeight(.light)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-                    .textSelection(.enabled)
-            }
-            
+            Text("#\(asset.stampId)")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundStyle(.primary)
+
             Spacer()
-            
-            // Stamp type badge
+
             Text(asset.stampType)
                 .font(.caption)
                 .fontWeight(.semibold)
@@ -110,34 +109,85 @@ struct StampAssetDetailView: View {
         }
         .padding(.vertical, 4)
     }
-    
-    // MARK: - Section 2: Creator, Supply & Market Data
-    
+
+    // MARK: - Image
+
+    private var stampImageHeader: some View {
+        Color.clear
+            .aspectRatio(1, contentMode: .fit)
+            .overlay {
+                GeometryReader { geometry in
+                    StampAssetImageView(asset: asset, size: geometry.size)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                }
+            }
+            .padding(.vertical, 8)
+    }
+
+    // MARK: - Identity
+
     @ViewBuilder
-    private var creatorAndMarketContent: some View {
-        if let creatorName = asset.creatorName {
+    private var identityContent: some View {
+        MetadataRow(
+            label: "CPID",
+            value: asset.counterpartyId,
+            fullValue: asset.counterpartyId
+        )
+
+        if let creatorName = asset.creatorName, !creatorName.isEmpty {
             MetadataRow(label: "Artist", value: creatorName)
         }
-        
+
         MetadataRow(
-            label: "Addy",
+            label: "Creator",
             value: asset.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
             fullValue: asset.creatorAddy
         )
-        
+
         MetadataRow(label: "Editions", value: "\(asset.editionsSupply)")
-        
-        // Show balance (user's balance vs total supply)
-        MetadataRow(label: "Balance", value: displayAsset.formattedBalanceWithSupply)
-        
-        // Holders: always show (at least one holder); updates when market data loads
+
+        MetadataRow(label: "Balance", value: currentDisplayAsset.formattedBalance)
+    }
+
+    // MARK: - Status
+
+    @ViewBuilder
+    private var statusContent: some View {
+        MetadataRow(label: "Locked", value: yesNo(asset.isLocked))
+        MetadataRow(label: "Keyburn", value: yesNo(asset.isKeyburned))
+        MetadataRow(label: "Divisible", value: yesNo(asset.divisible))
+    }
+
+    // MARK: - File
+
+    @ViewBuilder
+    private var fileInformationContent: some View {
         MetadataRow(
-            label: "Holders",
-            value: currentDisplayAsset.marketData?.formattedHolderCount ?? "1 holder"
+            label: "File Type",
+            value: asset.fileType.map { $0.isEmpty ? "N/A" : $0 } ?? "N/A"
         )
-        
-        // Market data (fetched on-demand) - use currentDisplayAsset for updates
+        MetadataRow(
+            label: "File Size",
+            value: (asset.fileSize.map { $0 > 0 } == true) ? (asset.formattedFileSize ?? "N/A") : "N/A"
+        )
+    }
+
+    // MARK: - Market
+
+    private var showsMarketSection: Bool {
+        if currentDisplayAsset.isLoadingMarketData { return true }
+        guard let marketData = currentDisplayAsset.marketData else { return false }
+        return marketData.holderCount != nil
+            || marketData.formattedFloorPrice != nil
+            || (marketData.openDispensersCount ?? 0) > 0
+    }
+
+    @ViewBuilder
+    private var marketContent: some View {
         if let marketData = currentDisplayAsset.marketData {
+            if let holderCount = marketData.holderCount {
+                MetadataRow(label: "Holders", value: "\(holderCount)")
+            }
             if let floorPrice = marketData.formattedFloorPrice {
                 MetadataRow(label: "Floor Price", value: floorPrice)
             }
@@ -148,25 +198,9 @@ struct StampAssetDetailView: View {
             MetadataLoadingRow()
         }
     }
-    
-    // MARK: - Section 3: File Information
-    
-    @ViewBuilder
-    private var fileInformationContent: some View {
-        // File Type: always show (from balance); "N/A" when nil/empty
-        MetadataRow(
-            label: "File Type",
-            value: asset.fileType.map { $0.isEmpty ? "N/A" : $0 } ?? "N/A"
-        )
-        // File Size: always show; "N/A" when null/0, else formatted value (updates when stamp-by-id fetch completes)
-        MetadataRow(
-            label: "File Size",
-            value: (asset.fileSize.map { $0 > 0 } == true) ? (asset.formattedFileSize ?? "N/A") : "N/A"
-        )
-    }
-    
-    // MARK: - Section 4: Blockchain Information
-    
+
+    // MARK: - Blockchain
+
     @ViewBuilder
     private var blockchainInformationContent: some View {
         if let blockTime = asset.blockTime {
@@ -184,9 +218,9 @@ struct StampAssetDetailView: View {
             fullValue: asset.txHash
         )
     }
-    
+
     // MARK: - Stampchain Link Button
-    
+
     private var stampchainLinkButton: some View {
         Button {
             openURL(asset.stampchainURL)
@@ -194,7 +228,7 @@ struct StampAssetDetailView: View {
             HStack {
                 Text("View on Stampchain.io")
                     .fontWeight(.medium)
-                
+
                 Image(systemName: "arrow.up.right.square")
             }
             .frame(maxWidth: .infinity)
@@ -205,6 +239,12 @@ struct StampAssetDetailView: View {
         .tint(.secondary)
         .accessibilityLabel("View stamp on Stampchain website")
         .accessibilityHint("Opens Safari to the stamp detail page")
+    }
+
+    // MARK: - Helpers
+
+    private func yesNo(_ value: Bool) -> String {
+        value ? "Yes" : "No"
     }
 }
 
