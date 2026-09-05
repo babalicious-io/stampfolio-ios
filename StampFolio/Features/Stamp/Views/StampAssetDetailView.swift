@@ -101,21 +101,23 @@ struct StampAssetDetailView: View {
     }
 
     private var stampIdentificationSection: some View {
-        HStack(alignment: .top) {
-            Image(systemName: ProtocolType.stamps.icon)
-                .font(.title2)
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("\(asset.stampType.capitalized) stamp")
-
-            Spacer()
-
+        HStack(alignment: .center) {
             Text(headerTitle)
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundStyle(.primary)
-                .multilineTextAlignment(.trailing)
+                .multilineTextAlignment(.leading)
                 .textSelection(.enabled)
+
+            Spacer()
+
+            Image(systemName: ProtocolType.stamps.icon)
+                .font(.title2)
+                .foregroundStyle(.secondary)
+                .accessibilityLabel("\(asset.stampType.capitalized) stamp")
         }
+        .padding(.vertical, 4)
+    }
         .padding(.vertical, 4)
     }
 

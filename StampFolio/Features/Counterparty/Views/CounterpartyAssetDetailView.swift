@@ -93,30 +93,30 @@ struct CounterpartyAssetDetailView: View {
     // MARK: - Identification Section
 
     private var identificationSection: some View {
-        HStack(alignment: .top) {
-            Image(systemName: ProtocolType.counterparty.icon)
-                .font(.title2)
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("Counterparty")
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 8) {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(asset.displayName)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
-                    .multilineTextAlignment(.trailing)
+                    .multilineTextAlignment(.leading)
                     .textSelection(.enabled)
 
                 if asset.isSubasset {
                     Text(asset.asset)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.trailing)
+                        .multilineTextAlignment(.leading)
                         .textSelection(.enabled)
                 }
             }
+
+            Spacer()
+
+            Image(systemName: ProtocolType.counterparty.icon)
+                .font(.title2)
+                .foregroundStyle(.secondary)
+                .accessibilityLabel("Counterparty")
         }
         .padding(.vertical, 4)
     }
