@@ -12,7 +12,7 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
-    /// Stamp type - set based on which API endpoint returned it ("classic", "cursed", "posh")
+    /// Stamp type: classic, cursed, or posh, derived from stamp number and CPID
     var stampType: String?
     
     /// Asset identifier type ("STAMP", "SRC-721", "SRC-101", etc.)
@@ -125,12 +125,10 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        // stampType will be set manually after decoding by API client
-        self.stampType = nil
-        
         ident = try container.decodeIfPresent(String.self, forKey: .ident)
         stampId = try container.decode(Int.self, forKey: .stampId)
         counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
+        stampType = StampAsset.resolvedStampType(stampId: stampId, counterpartyId: counterpartyId)
         creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
         creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
         editionsSupply = try container.decodeIfPresent(Int.self, forKey: .editionsSupply)

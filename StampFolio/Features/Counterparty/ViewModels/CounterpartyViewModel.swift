@@ -452,7 +452,8 @@ final class CounterpartyViewModel {
         }
 
         let task = Task { [weak self] in
-            await self?.fetchAndApplySupplies(names: names, forceRefresh: forceRefresh)
+            guard let self else { return }
+            await self.fetchAndApplySupplies(names: names, forceRefresh: forceRefresh)
         }
         if cancelExisting {
             supplyHydrationTask = task

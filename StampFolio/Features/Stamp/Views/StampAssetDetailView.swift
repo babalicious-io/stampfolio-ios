@@ -93,6 +93,13 @@ struct StampAssetDetailView: View {
 
     // MARK: - Header
 
+    /// HTML title when present; otherwise named (posh) CPID; otherwise stamp number.
+    private var headerTitle: String {
+        if let htmlTitle { return htmlTitle }
+        if asset.isPosh { return asset.counterpartyId }
+        return "#\(asset.stampId)"
+    }
+
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
             Image(systemName: ProtocolType.stamps.icon)
@@ -102,7 +109,7 @@ struct StampAssetDetailView: View {
 
             Spacer()
 
-            Text(asset.isPosh ? asset.counterpartyId : "#\(asset.stampId)")
+            Text(headerTitle)
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundStyle(.primary)

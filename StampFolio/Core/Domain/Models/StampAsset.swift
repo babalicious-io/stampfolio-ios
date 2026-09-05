@@ -12,7 +12,7 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
-    /// Stamp type - set based on which API endpoint returned it
+    /// Stamp type: classic (positive), cursed (negative numeric CPID), or posh (named CPID)
     let stampType: String
     
     /// Content-standard identifier ("STAMP", "SRC-721", "SRC-101", etc.)
@@ -131,16 +131,14 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
         self.stampUrl = stampUrl
     }
     
-    /// Custom decoder (stampType not in JSON, set to default)
+    /// Custom decoder. `stampType` is not in JSON; derived from stamp number and CPID.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        // stampType will be set manually after decoding, default to "classic"
-        self.stampType = "classic"
-        
+
         self.ident = try container.decodeIfPresent(String.self, forKey: .ident)
         self.stampId = try container.decode(Int.self, forKey: .stampId)
         self.counterpartyId = try container.decode(String.self, forKey: .counterpartyId)
+        self.stampType = Self.resolvedStampType(stampId: stampId, counterpartyId: counterpartyId)
         self.creatorAddy = try container.decode(String.self, forKey: .creatorAddy)
         self.creatorName = try container.decodeIfPresent(String.self, forKey: .creatorName)
         self.editionsSupply = try container.decode(Int.self, forKey: .editionsSupply)
@@ -155,6 +153,16 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
         self.fileHash = try container.decodeIfPresent(String.self, forKey: .fileHash)
         self.marketData = try container.decodeIfPresent(StampAssetMarketData.self, forKey: .marketData)
         self.stampUrl = try container.decode(String.self, forKey: .stampUrl)
+    }
+
+    /// Classic when `stampId > 0`; otherwise cursed (numeric `A…` CPID) or posh (named CPID).
+    static func resolvedStampType(stampId: Int, counterpartyId: String) -> String {
+        if stampId > 0 {
+            return "classic"
+        }
+        let isNumericCPID = counterpartyId.hasPrefix("A")
+            && counterpartyId.dropFirst().allSatisfy(\.isNumber)
+        return isNumericCPID ? "cursed" : "posh"
     }
     
     // MARK: - Computed Properties

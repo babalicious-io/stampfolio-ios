@@ -65,34 +65,14 @@ actor StampchainAPIClient {
         print("✅ Received \(data.count) bytes")
         
         let apiResponse = try decoder.decode(WalletBalanceResponse.self, from: data)
-        var stamps = apiResponse.data
-        
-        // Set stampType based on stampId and counterpartyId
-        for i in stamps.indices {
-            let stampId = stamps[i].stampId
-            let counterpartyId = stamps[i].counterpartyId
-            
-            if stampId > 0 {
-                // Positive stamps are classic
-                stamps[i].stampType = "classic"
-            } else {
-                // Negative stamps: check if POSH (named CPID) or CURSED (numeric CPID)
-                if counterpartyId.hasPrefix("A") && counterpartyId.dropFirst().allSatisfy({ $0.isNumber }) {
-                    // Numeric CPID (A + numbers) = cursed
-                    stamps[i].stampType = "cursed"
-                } else {
-                    // Named CPID = posh
-                    stamps[i].stampType = "posh"
-                }
-            }
-        }
-        
+        let stamps = apiResponse.data
+
         print("✅ Decoded \(stamps.count) stamps")
         let classicCount = stamps.filter { $0.stampType == "classic" }.count
         let cursedCount = stamps.filter { $0.stampType == "cursed" }.count
         let poshCount = stamps.filter { $0.stampType == "posh" }.count
         print("   - \(classicCount) classic, \(cursedCount) cursed, \(poshCount) posh")
-        
+
         return stamps
     }
     
