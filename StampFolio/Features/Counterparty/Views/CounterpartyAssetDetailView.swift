@@ -94,14 +94,10 @@ struct CounterpartyAssetDetailView: View {
 
     private var identificationSection: some View {
         HStack(alignment: .top) {
-            Text("counterparty")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(appColorScheme.primary.opacity(0.8))
-                .clipShape(Capsule())
+            Image(systemName: ProtocolType.counterparty.icon)
+                .font(.title2)
+                .foregroundStyle(appColorScheme.primary)
+                .accessibilityLabel("Counterparty")
 
             Spacer()
 

@@ -95,14 +95,10 @@ struct StampAssetDetailView: View {
 
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
-            Text(asset.stampType)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(appColorScheme.primary.opacity(0.8))
-                .clipShape(Capsule())
+            Image(systemName: ProtocolType.stamps.icon)
+                .font(.title2)
+                .foregroundStyle(appColorScheme.primary)
+                .accessibilityLabel("\(asset.stampType.capitalized) stamp")
 
             Spacer()
 
