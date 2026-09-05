@@ -13,7 +13,7 @@ GET /stamps/balance/{bitcoin_address}             # ✅ Works - returns wallet s
 
 ### Working Query Parameters
 ```bash
-GET /stamps?type=classic                          # ✅ Works - returns ~26,000 positive stamps
+GET /stamps?type=classic                          # ✅ Works - returns ~26,000 non-negative stamps (including 0)
 GET /stamps?type=cursed                           # ✅ Works - returns ~1,800 negative stamps (mixed CPID types)
 GET /stamps?type=posh                             # ✅ Works - returns ~300 negative stamps (named CPIDs only)
 GET /stamps?ident=SRC-721                         # ✅ Works - returns SRC-721 stamps
@@ -104,7 +104,7 @@ GET /address/{address}/stamps         # ❌ Wrong format
 
 **StampFolio Solution:**
 - Fetch all stamps in one call without type filters
-- Compute type locally: `stamp > 0` → classic, `stamp < 0` + numeric CPID → cursed, `stamp < 0` + named CPID → posh
+- Compute type locally: `stamp >= 0` → classic, `stamp < 0` + numeric CPID → cursed, `stamp < 0` + named CPID → posh
 - This eliminates duplicates and provides single source of truth
 
 ## Key Findings

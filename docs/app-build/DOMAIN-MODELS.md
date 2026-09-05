@@ -74,8 +74,8 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 
 **Special Handling:**
 - Custom decoder to handle `BalanceValue` (Double or String)
-- `stampType` is computed by `StampchainAPIClient` based on:
-  - `stampId > 0` → "classic"
+- `stampType` is computed by `StampAsset.resolvedStampType` based on:
+  - `stampId >= 0` → "classic"
   - `stampId < 0` + numeric CPID → "cursed"
   - `stampId < 0` + named CPID → "posh"
 
@@ -337,7 +337,7 @@ Views need both:
 The Stampchain API's `?type=` parameter is for filtering input, not a returned field. The API returns `type: null` for all stamps. Therefore:
 - We fetch all stamps in one call (avoiding duplicates from overlapping filters)
 - We compute type locally based on business rules:
-  - Positive stamp numbers → "classic"
+  - Non-negative stamp numbers (`stampId >= 0`, including 0) → "classic"
   - Negative + numeric CPID → "cursed"  
   - Negative + named CPID → "posh"
 

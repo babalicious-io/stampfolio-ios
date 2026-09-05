@@ -36,7 +36,7 @@ These protocols have their own API endpoints and are not queryable via the stamp
 
 | Type | Stamp Numbers | CPID Type | `ident` Field | Total Count |
 |------|--------------|-----------|---------------|-------------|
-| **Classic** | Positive (1+) | Numeric or Named | "STAMP" | ~26,000 |
+| **Classic** | Non-negative (>= 0) | Numeric or Named | "STAMP" | ~26,000 |
 | **Cursed** | Negative | Numeric OR Named | "STAMP" | ~1,800 |
 | **Posh** | Negative | Named only | "STAMP" | ~300 (subset of cursed) |
 
@@ -45,7 +45,7 @@ These protocols have their own API endpoints and are not queryable via the stamp
 The API supports filtering stamps using query parameters:
 
 ```bash
-GET /stamps?type=classic    # Returns ~26,000 positive stamps
+GET /stamps?type=classic    # Returns ~26,000 non-negative stamps (including 0)
 GET /stamps?type=cursed     # Returns ~1,800 negative stamps (numeric AND named CPIDs)
 GET /stamps?type=posh       # Returns ~300 negative stamps (ONLY named CPIDs - subset of cursed)
 GET /stamps?ident=SRC-721   # Returns SRC-721 recursive stamps
@@ -180,7 +180,7 @@ StampFolio uses a simplified approach to stamp type classification that avoids d
 
 2. **Local Type Computation**: Determines type client-side based on stamp characteristics:
    ```swift
-   if stamp > 0:
+   if stamp >= 0:
        type = "classic"
    else if stamp < 0 && cpid starts with "A" + only numbers:
        type = "cursed"
@@ -198,14 +198,13 @@ StampFolio uses a simplified approach to stamp type classification that avoids d
 
 | Stamp Number | CPID Pattern | Example CPID | Assigned Type |
 |-------------|--------------|--------------|---------------|
-| Positive (>0) | Any | `A888354448084788958` | `classic` |
+| Non-negative (>= 0) | Any | `A888354448084788958` | `classic` |
 | Negative (<0) | `A` + numbers only | `A2256256256256256256` | `cursed` |
 | Negative (<0) | Named (vanity) | `USDSTAMP`, `PEPE` | `posh` |
 
 ### Code Location
 
-- **API Client**: `StampchainAPIClient.swift` - `fetchStampsByWallet()` method
-- **Type Assignment Logic**: Computed after decoding API response
+- **Type Assignment Logic**: `StampAsset.resolvedStampType(stampId:counterpartyId:)` (used by `StampAsset` and `StampAssetBalance` decoders)
 - **Filtering**: `StampViewModel.swift` - filters by assigned `stampType` property
 
 ## Database Schema Reference
@@ -266,7 +265,7 @@ curl "https://stampchain.io/api/v2/stamps/1383564"
 ## Notes
 
 1. **API Filtering**: 
-   - `?type=classic` - Returns ~26,000 positive stamps
+   - `?type=classic` - Returns ~26,000 non-negative stamps (including 0)
    - `?type=cursed` - Returns ~1,800 negative stamps (both numeric AND named CPIDs)
    - `?type=posh` - Returns ~300 negative stamps (ONLY named CPIDs - subset of cursed)
    - `?ident=SRC-721` - Returns SRC-721 recursive stamps

@@ -69,7 +69,7 @@ Investigation into how many stamps have non-null `file_size_bytes` in the Stampc
 
 ## Findings by Type
 
-### Classic (positive stamp IDs)
+### Classic (non-negative stamp IDs, including 0)
 
 - **Page 1 (newest):** 50/50 have `file_size_bytes`.
 - **Page 2:** 50/50 have `file_size_bytes`.
