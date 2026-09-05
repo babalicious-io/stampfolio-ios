@@ -67,6 +67,12 @@ final class CounterpartyViewModel {
     /// Prefetchers for add-wallet / per-wallet refresh; not cancelled by each other
     private var incrementalImagePrefetchers: [ImagePrefetcher] = []
 
+    /// Full-collection supply hydration; cancelled when a new full fetch starts
+    private var supplyHydrationTask: Task<Void, Never>?
+
+    /// Max concurrent `GET /assets/{asset}` calls while confirming supply
+    private static let supplyHydrationConcurrency = 4
+
     // MARK: - Computed Properties
 
     /// Check if any filters are active
@@ -96,7 +102,7 @@ final class CounterpartyViewModel {
 
         if !activeEditionFilters.isEmpty {
             result = result.filter { display in
-                let supply = display.asset.editionCount
+                guard let supply = display.asset.editionCount else { return false }
                 for edition in activeEditionFilters {
                     if edition == "single" && supply == 1 { return true }
                     if edition == "multiple" && supply > 1 { return true }
@@ -188,7 +194,11 @@ final class CounterpartyViewModel {
         }
 
         let displayAssets = uniqueBalances.map { CounterpartyDisplay(from: $0) }
-        assets = sortedAssets(displayAssets, by: currentSortOption, wallets: wallets)
+        let withKnownSupply = await Self.assetsByApplyingKnownSupply(
+            incoming: displayAssets,
+            existing: assets
+        )
+        assets = sortedAssets(withKnownSupply, by: currentSortOption, wallets: wallets)
         applyStampExclusion(excludingCPIDs)
 
         if assets.isEmpty && !fetchErrors.isEmpty {
@@ -199,6 +209,7 @@ final class CounterpartyViewModel {
 
         if !assets.isEmpty {
             fetchAssetsImages(forceRefresh: forceRefresh, cancelExisting: true)
+            hydrateSupplies(from: assets, forceRefresh: forceRefresh, cancelExisting: true)
         }
     }
 
@@ -234,10 +245,14 @@ final class CounterpartyViewModel {
             let balances = try await apiClient.fetchBalances(for: wallet.address, forceRefresh: forceRefresh)
             let nonStampBalances = balances.filter { !Self.matchesStampCPID($0.asset, longname: $0.assetLongname, stampCPIDs: excludingCPIDs) }
             let newDisplayAssets = nonStampBalances.map { CounterpartyDisplay(from: $0) }
+            let withKnownSupply = await Self.assetsByApplyingKnownSupply(
+                incoming: newDisplayAssets,
+                existing: assets
+            )
 
             // Remove existing assets from this wallet, then add fresh ones
             var updatedAssets = assets.filter { $0.walletAddress != wallet.address }
-            updatedAssets.append(contentsOf: newDisplayAssets)
+            updatedAssets.append(contentsOf: withKnownSupply)
 
             // Deduplicate by asset name
             var seen = Set<String>()
@@ -250,11 +265,14 @@ final class CounterpartyViewModel {
             assets = sortedAssets(uniqueAssets, by: currentSortOption, wallets: allWallets)
             applyStampExclusion(excludingCPIDs)
 
-            if !newDisplayAssets.isEmpty {
-                fetchAssetsImages(from: newDisplayAssets, forceRefresh: forceRefresh, cancelExisting: false)
+            let hydrateIDs = Set(withKnownSupply.map(\.id))
+            let toHydrate = assets.filter { hydrateIDs.contains($0.id) }
+            if !toHydrate.isEmpty {
+                fetchAssetsImages(from: toHydrate, forceRefresh: forceRefresh, cancelExisting: false)
+                hydrateSupplies(from: toHydrate, forceRefresh: forceRefresh, cancelExisting: false)
             }
 
-            return newDisplayAssets.count
+            return toHydrate.count
         } catch {
             errorMessage = "Failed to refresh \(wallet.displayName): \(error.localizedDescription)"
             return nil
@@ -323,6 +341,8 @@ final class CounterpartyViewModel {
 
     /// Clear all assets and errors
     func clear() {
+        supplyHydrationTask?.cancel()
+        supplyHydrationTask = nil
         assets = []
         errorMessage = nil
     }
@@ -378,6 +398,9 @@ final class CounterpartyViewModel {
         do {
             let detail = try await apiClient.fetchAssetDetail(assetName)
             detailCache[assetName] = detail
+            if let entry = CounterpartySupplyCache.Entry(asset: detail) {
+                await CounterpartySupplyCache.shared.store(entry, for: assetName)
+            }
 
             if let index = assets.firstIndex(where: { $0.id == displayAsset.id }) {
                 let old = assets[index]
@@ -403,6 +426,130 @@ final class CounterpartyViewModel {
 
         for index in assets.indices {
             assets[index].isLoadingMarketData = false
+        }
+    }
+
+    // MARK: - Supply Hydration
+
+    /// Overlay in-memory + disk-cached supply, then confirm remaining assets via `GET /assets/{asset}`.
+    /// Full-collection loads cancel in-flight hydration; add-wallet / per-wallet refresh does not.
+    @MainActor
+    private func hydrateSupplies(
+        from displays: [CounterpartyDisplay],
+        forceRefresh: Bool,
+        cancelExisting: Bool
+    ) {
+        let names: [String]
+        if forceRefresh {
+            names = displays.map(\.asset.asset)
+        } else {
+            names = displays.compactMap { $0.asset.hasConfirmedSupply ? nil : $0.asset.asset }
+        }
+        guard !names.isEmpty else { return }
+
+        if cancelExisting {
+            supplyHydrationTask?.cancel()
+        }
+
+        let task = Task { [weak self] in
+            await self?.fetchAndApplySupplies(names: names, forceRefresh: forceRefresh)
+        }
+        if cancelExisting {
+            supplyHydrationTask = task
+        }
+    }
+
+    private func fetchAndApplySupplies(names: [String], forceRefresh: Bool) async {
+        let client = apiClient
+        var storedSincePersist = 0
+
+        await withTaskGroup(of: (String, CounterpartyAsset)?.self) { group in
+            var iterator = names.makeIterator()
+            var inFlight = 0
+
+            func enqueueNext() {
+                while inFlight < Self.supplyHydrationConcurrency, let name = iterator.next() {
+                    inFlight += 1
+                    group.addTask {
+                        do {
+                            let detail = try await client.fetchAsset(name, forceRefresh: forceRefresh)
+                            return (name, detail)
+                        } catch {
+                            return nil
+                        }
+                    }
+                }
+            }
+
+            enqueueNext()
+            for await result in group {
+                inFlight -= 1
+                if Task.isCancelled {
+                    group.cancelAll()
+                    break
+                }
+                if let (name, detail) = result {
+                    await applyFetchedSupply(name: name, detail: detail)
+                    storedSincePersist += 1
+                    if storedSincePersist.isMultiple(of: 25) {
+                        await CounterpartySupplyCache.shared.persist()
+                    }
+                }
+                enqueueNext()
+            }
+        }
+
+        await CounterpartySupplyCache.shared.persist()
+    }
+
+    @MainActor
+    private func applyFetchedSupply(name: String, detail: CounterpartyAsset) async {
+        if let entry = CounterpartySupplyCache.Entry(asset: detail) {
+            await CounterpartySupplyCache.shared.store(entry, for: name, persist: false)
+        }
+        guard let index = assets.firstIndex(where: { $0.asset.asset == name }) else { return }
+        let old = assets[index]
+        assets[index] = old.with(asset: old.asset.replacingOnChainMetadata(with: detail))
+    }
+
+    /// Fill unknown supply from the current session, then from the persistent supply cache.
+    private static func assetsByApplyingKnownSupply(
+        incoming: [CounterpartyDisplay],
+        existing: [CounterpartyDisplay]
+    ) async -> [CounterpartyDisplay] {
+        let preserved = preservingHydratedSupply(incoming: incoming, existing: existing)
+        return await applyingCachedSupplies(preserved)
+    }
+
+    private static func preservingHydratedSupply(
+        incoming: [CounterpartyDisplay],
+        existing: [CounterpartyDisplay]
+    ) -> [CounterpartyDisplay] {
+        guard !existing.isEmpty else { return incoming }
+        let existingByID = Dictionary(uniqueKeysWithValues: existing.map { ($0.id, $0) })
+        return incoming.map { display in
+            guard !display.asset.hasConfirmedSupply,
+                  let existingDisplay = existingByID[display.id],
+                  existingDisplay.asset.hasConfirmedSupply else {
+                return display
+            }
+            return display.with(asset: display.asset.applyingSupplyMetadata(from: existingDisplay.asset))
+        }
+    }
+
+    private static func applyingCachedSupplies(
+        _ displays: [CounterpartyDisplay]
+    ) async -> [CounterpartyDisplay] {
+        let names = displays.compactMap { $0.asset.hasConfirmedSupply ? nil : $0.asset.asset }
+        guard !names.isEmpty else { return displays }
+        let cached = await CounterpartySupplyCache.shared.entries(for: names)
+        guard !cached.isEmpty else { return displays }
+        return displays.map { display in
+            guard !display.asset.hasConfirmedSupply,
+                  let entry = cached[display.asset.asset] else {
+                return display
+            }
+            return display.with(asset: entry.applied(to: display.asset))
         }
     }
 

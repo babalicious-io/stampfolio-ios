@@ -30,11 +30,12 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
     /// Whether issuance has been permanently locked
     let locked: Bool
 
-    /// Total supply in the asset's smallest unit
-    let supply: Int64
+    /// Total supply in the asset's smallest unit. Nil until confirmed by `GET /assets/{asset}`
+    /// (verbose balances omit supply, so list rows start unknown rather than defaulting to 0).
+    let supply: Int64?
 
-    /// Total supply, already divisibility-adjusted, as a decimal string
-    let supplyNormalized: String
+    /// Total supply, already divisibility-adjusted, as a decimal string. Nil when unconfirmed.
+    let supplyNormalized: String?
 
     /// Free-text asset description (sometimes a URL to a JSON manifest with icon/traits)
     let description: String?
@@ -84,8 +85,8 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         owner: String?,
         divisible: Bool,
         locked: Bool,
-        supply: Int64,
-        supplyNormalized: String,
+        supply: Int64?,
+        supplyNormalized: String?,
         description: String?,
         mimeType: String?,
         firstIssuanceBlockTime: Int?,
@@ -121,8 +122,8 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         self.owner = try container.decodeIfPresent(String.self, forKey: .owner)
         self.divisible = try container.decode(Bool.self, forKey: .divisible)
         self.locked = try container.decode(Bool.self, forKey: .locked)
-        self.supply = try container.decode(Int64.self, forKey: .supply)
-        self.supplyNormalized = try container.decode(String.self, forKey: .supplyNormalized)
+        self.supply = try container.decodeIfPresent(Int64.self, forKey: .supply)
+        self.supplyNormalized = try container.decodeIfPresent(String.self, forKey: .supplyNormalized)
         self.description = try container.decodeIfPresent(String.self, forKey: .description)
         self.mimeType = try container.decodeIfPresent(String.self, forKey: .mimeType)
         self.firstIssuanceBlockTime = try container.decodeIfPresent(Int.self, forKey: .firstIssuanceBlockTime)
@@ -168,14 +169,82 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         lastIssuanceBlockTime.map { Date(timeIntervalSince1970: TimeInterval($0)) }
     }
 
-    /// Formatted total supply, with grouping and 8 decimals when divisible
-    var formattedSupply: String {
-        AssetQuantityFormat.string(fromNormalized: supplyNormalized, divisible: divisible)
+    /// Whether `GET /assets/{asset}` (or a cached copy of it) has confirmed total supply
+    var hasConfirmedSupply: Bool {
+        guard let supplyNormalized, !supplyNormalized.isEmpty else { return false }
+        return true
     }
 
-    /// Whole-token supply for edition filters (1 vs many). Uses normalized supply so divisible assets compare correctly.
-    var editionCount: Double {
-        Double(supplyNormalized) ?? 0
+    /// Formatted total supply, with grouping and 8 decimals when divisible. `"N/A"` until confirmed.
+    var formattedSupply: String {
+        guard let supplyNormalized, !supplyNormalized.isEmpty else { return "N/A" }
+        return AssetQuantityFormat.string(fromNormalized: supplyNormalized, divisible: divisible)
+    }
+
+    /// Whole-token supply for edition filters (1 vs many). Nil when supply is unconfirmed.
+    var editionCount: Double? {
+        supplyNormalized.flatMap(Double.init)
+    }
+
+    /// Copies confirmed supply and issuance timestamps from `source`, keeping this asset's
+    /// identity, current lock/divisibility from the balances payload, balance-side metadata,
+    /// and any already-fetched market data / issuance tx hash.
+    func applyingSupplyMetadata(from source: CounterpartyAsset) -> CounterpartyAsset {
+        CounterpartyAsset(
+            asset: asset,
+            assetLongname: assetLongname ?? source.assetLongname,
+            issuer: issuer ?? source.issuer,
+            owner: owner ?? source.owner,
+            divisible: divisible,
+            locked: locked,
+            supply: source.supply ?? supply,
+            supplyNormalized: source.supplyNormalized ?? supplyNormalized,
+            description: description ?? source.description,
+            mimeType: mimeType ?? source.mimeType,
+            firstIssuanceBlockTime: source.firstIssuanceBlockTime ?? firstIssuanceBlockTime,
+            lastIssuanceBlockTime: source.lastIssuanceBlockTime ?? lastIssuanceBlockTime,
+            firstIssuanceBlockIndex: source.firstIssuanceBlockIndex ?? firstIssuanceBlockIndex,
+            firstIssuanceTxHash: firstIssuanceTxHash ?? source.firstIssuanceTxHash,
+            marketData: marketData ?? source.marketData
+        )
+    }
+
+    /// Replaces on-chain asset fields with a `GET /assets/{asset}` payload, keeping market data
+    /// and issuance tx hash already loaded for the detail sheet.
+    func replacingOnChainMetadata(with detail: CounterpartyAsset) -> CounterpartyAsset {
+        var merged = detail
+        merged.marketData = marketData
+        merged.firstIssuanceTxHash = firstIssuanceTxHash ?? detail.firstIssuanceTxHash
+        return merged
+    }
+
+    /// Applies a confirmed supply snapshot (persistent cache entry).
+    /// Keeps lock/divisibility from the balances payload.
+    func withConfirmedSupply(
+        supply: Int64,
+        supplyNormalized: String,
+        mimeType: String?,
+        firstIssuanceBlockTime: Int?,
+        lastIssuanceBlockTime: Int?,
+        firstIssuanceBlockIndex: Int?
+    ) -> CounterpartyAsset {
+        CounterpartyAsset(
+            asset: asset,
+            assetLongname: assetLongname,
+            issuer: issuer,
+            owner: owner,
+            divisible: divisible,
+            locked: locked,
+            supply: supply,
+            supplyNormalized: supplyNormalized,
+            description: description,
+            mimeType: mimeType ?? self.mimeType,
+            firstIssuanceBlockTime: firstIssuanceBlockTime ?? self.firstIssuanceBlockTime,
+            lastIssuanceBlockTime: lastIssuanceBlockTime ?? self.lastIssuanceBlockTime,
+            firstIssuanceBlockIndex: firstIssuanceBlockIndex ?? self.firstIssuanceBlockIndex,
+            firstIssuanceTxHash: firstIssuanceTxHash,
+            marketData: marketData
+        )
     }
 
     /// URL to the asset's page on Horizon Market

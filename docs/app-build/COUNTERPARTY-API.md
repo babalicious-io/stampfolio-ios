@@ -37,7 +37,9 @@ Stampchain's `/stamps/balance/{address}` — and is called once per configured w
 `cursor`/`next_cursor` until exhausted (capped at 20 pages / ~2,000 assets as a safety limit).
 
 With `verbose=true`, each row includes a nested `asset_info` object (`description`, `issuer`,
-`owner`, `divisible`, `locked`), so no follow-up call is needed just to render the list.
+`owner`, `divisible`, `locked`). **`supply` is not included.** StampFolio therefore shows
+**N/A** for supply until `GET /assets/{asset}` confirms it, rather than defaulting missing
+supply to 0.
 
 ```json
 {
@@ -68,9 +70,17 @@ balance endpoint, no manual `/ 100_000_000` math is needed.
 
 ### `GET /assets/{asset}?verbose=true`
 
-Full detail for a single asset — supply, description, issuance dates, MIME type. Fetched
-on-demand when the user opens the asset detail sheet (mirrors
-`StampchainAPIClient.fetchStampDetails`).
+Full detail for a single asset — supply, description, issuance dates, MIME type. Used in two
+places:
+
+- **Supply hydration** after balances load (wallet add, collection fetch, pull-to-refresh).
+  `CounterpartyViewModel.hydrateSupplies` calls `fetchAsset` only (no holders/dispensers),
+  limited to 4 concurrent requests, and writes `CounterpartySupplyCache`
+  (`Caches/counterparty_supply.json`). Cached supply is overlaid on the next launch so the
+  list does not flash N/A.
+- **Detail sheet** via `fetchAssetDetail`, which also loads holders, dispensers, and the first
+  issuance tx hash (mirrors `StampchainAPIClient.fetchStampDetails`). That write also updates
+  the supply cache.
 
 ### `GET /assets/{asset}/holders?limit=1`
 
@@ -104,11 +114,15 @@ CounterpartyDisplay   (UI layer: asset + balance + wallet)
   `counterparty_manifest_cache`), resolves an asset's artwork URL from its `description` field
   (see "Resolving artwork from `description`" below) and decodes `CounterpartyAssetManifest`
   (`Core/Domain/Models/`) when the description points to a JSON manifest.
+- `CounterpartySupplyCache` (`Core/Data/Cache/`) — actor, memory + `Caches/counterparty_supply.json`,
+  confirmed supply from `GET /assets/{asset}`. Overlay on list bind; hydrate remaining in
+  the background after balances. Not cleared on app background (unlike `detailCache`).
 - `CounterpartyViewModel` (`Features/Counterparty/ViewModels/`) — `@Observable`, fetches all
   wallets concurrently with `withTaskGroup`, exposes `assets`/`isLoading`/`errorMessage`/
-  `searchText`/filter sets/sort options, and lazily fetches per-asset detail (holders, floor
-  price) only when the detail sheet opens, caching results in memory (cleared on wallet delete
-  and on app background, same lifecycle as `StampViewModel.clearMarketDataCache()`).
+  `searchText`/filter sets/sort options, hydrates supply after balances, and lazily fetches
+  per-asset detail (holders, floor price) only when the detail sheet opens, caching that
+  market payload in memory (cleared on wallet delete and on app background, same lifecycle
+  as `StampViewModel.clearMarketDataCache()`).
 
 ## Key Design Decisions
 

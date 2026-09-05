@@ -74,16 +74,19 @@ actor CounterpartyAPIClient {
     }
 
     /// Fetch full detail for a single asset (supply, description, issuance dates)
-    /// - Parameter asset: The asset name (e.g. "XCP", "A95428956980101314")
+    /// - Parameters:
+    ///   - asset: The asset name (e.g. "XCP", "A95428956980101314")
+    ///   - forceRefresh: When true, bypasses URLCache
     /// - Returns: Asset detail without market data
-    func fetchAsset(_ asset: String) async throws -> CounterpartyAsset {
-        let endpoint = "\(baseURL)/assets/\(asset)?verbose=true"
+    func fetchAsset(_ asset: String, forceRefresh: Bool = false) async throws -> CounterpartyAsset {
+        let encoded = encodedAssetName(asset)
+        let endpoint = "\(baseURL)/assets/\(encoded)?verbose=true"
 
         guard let url = URL(string: endpoint) else {
             throw NetworkError.invalidURL
         }
 
-        let (data, _) = try await executor.perform(url)
+        let (data, _) = try await executor.perform(url, forceRefresh: forceRefresh)
         let response = try decoder.decode(CounterpartyAssetResponse.self, from: data)
         return response.result
     }
@@ -94,7 +97,8 @@ actor CounterpartyAPIClient {
     /// - Parameter asset: The asset name
     /// - Returns: Market data (fields are nil if the corresponding request failed)
     func fetchAssetMarketData(_ asset: String) async -> CounterpartyAssetMarketData {
-        async let holderCountTask: Int? = try? fetchResultCount(endpoint: "\(baseURL)/assets/\(asset)/holders?limit=1")
+        let encoded = encodedAssetName(asset)
+        async let holderCountTask: Int? = try? fetchResultCount(endpoint: "\(baseURL)/assets/\(encoded)/holders?limit=1")
         async let dispensersTask: (count: Int, floorPrice: Decimal?)? = try? fetchOpenDispensers(asset)
 
         let holderCount = await holderCountTask
@@ -124,6 +128,10 @@ actor CounterpartyAPIClient {
 
     // MARK: - Private Methods
 
+    private func encodedAssetName(_ asset: String) -> String {
+        asset.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? asset
+    }
+
     /// Fetch just the `result_count` field from a paginated endpoint (used for holder/dispenser counts)
     private func fetchResultCount(endpoint: String) async throws -> Int {
         guard let url = URL(string: endpoint) else {
@@ -137,7 +145,8 @@ actor CounterpartyAPIClient {
 
     /// Fetch the count of open dispensers and the lowest `satoshirate` (BTC floor price) among them
     private func fetchOpenDispensers(_ asset: String) async throws -> (count: Int, floorPrice: Decimal?) {
-        let endpoint = "\(baseURL)/assets/\(asset)/dispensers?status=open&limit=1&sort=satoshirate:asc&verbose=true"
+        let encoded = encodedAssetName(asset)
+        let endpoint = "\(baseURL)/assets/\(encoded)/dispensers?status=open&limit=1&sort=satoshirate:asc&verbose=true"
 
         guard let url = URL(string: endpoint) else {
             throw NetworkError.invalidURL
@@ -152,7 +161,7 @@ actor CounterpartyAPIClient {
     /// Fetch the first (oldest valid) issuance transaction hash for an asset.
     /// Returns nil when the asset has no issuances or the request fails.
     private func fetchFirstIssuanceTxHash(_ asset: String) async throws -> String? {
-        let encoded = asset.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? asset
+        let encoded = encodedAssetName(asset)
         let endpoint = "\(baseURL)/assets/\(encoded)/issuances?status=valid&limit=1&sort=tx_index:asc"
 
         guard let url = URL(string: endpoint) else {

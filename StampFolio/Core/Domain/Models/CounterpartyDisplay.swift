@@ -71,7 +71,7 @@ struct CounterpartyDisplay: Identifiable {
             owner: balance.assetInfo?.owner,
             divisible: balance.assetInfo?.divisible ?? false,
             locked: balance.assetInfo?.locked ?? false,
-            supply: balance.assetInfo?.supply ?? 0,
+            supply: balance.assetInfo?.supply,
             supplyNormalized: Self.normalizedSupply(from: balance.assetInfo),
             description: balance.assetInfo?.description,
             mimeType: nil,
@@ -83,12 +83,24 @@ struct CounterpartyDisplay: Identifiable {
         self.walletAddress = balance.address
     }
 
+    /// Returns a copy with a different `CounterpartyAsset`, keeping balance and wallet.
+    func with(asset: CounterpartyAsset) -> CounterpartyDisplay {
+        CounterpartyDisplay(
+            asset: asset,
+            balance: balance,
+            divisible: asset.divisible,
+            walletAddress: walletAddress,
+            isLoadingMarketData: isLoadingMarketData
+        )
+    }
+
     /// Prefer API-normalized supply; fall back to converting raw supply by divisibility.
-    private static func normalizedSupply(from info: CounterpartyAssetInfo?) -> String {
+    /// Returns nil when the balances payload omitted supply entirely.
+    private static func normalizedSupply(from info: CounterpartyAssetInfo?) -> String? {
         if let normalized = info?.supplyNormalized, !normalized.isEmpty {
             return normalized
         }
-        guard let supply = info?.supply else { return "0" }
+        guard let supply = info?.supply else { return nil }
         if info?.divisible == true {
             return String(Double(supply) / 100_000_000.0)
         }
