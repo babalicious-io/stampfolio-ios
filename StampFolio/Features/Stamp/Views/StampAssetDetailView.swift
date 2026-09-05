@@ -29,6 +29,8 @@ struct StampAssetDetailView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.appColorScheme) private var appColorScheme
 
+    @State private var htmlTitle: String?
+
     // MARK: - Body
 
     var body: some View {
@@ -83,7 +85,9 @@ struct StampAssetDetailView: View {
         }
         .tint(.primary)
         .task {
-            await viewModel.fetchMarketDataIfNeeded(for: displayAsset)
+            async let market: Void = viewModel.fetchMarketDataIfNeeded(for: displayAsset)
+            async let title: Void = loadHTMLTitleIfNeeded()
+            _ = await (market, title)
         }
     }
 
@@ -91,10 +95,11 @@ struct StampAssetDetailView: View {
 
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
-            Text("#\(asset.stampId)")
+            Text(asset.isPosh ? asset.counterpartyId : "#\(asset.stampId)")
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundStyle(.primary)
+                .textSelection(.enabled)
 
             Spacer()
 
@@ -128,12 +133,20 @@ struct StampAssetDetailView: View {
 
     @ViewBuilder
     private var identityContent: some View {
-        MetadataRow(
-            label: "CPID",
-            value: asset.counterpartyId,
-            fullValue: asset.counterpartyId,
-            truncatesValue: true
-        )
+        if let htmlTitle {
+            MetadataRow(label: "Title", value: htmlTitle)
+        }
+
+        if asset.isPosh {
+            MetadataRow(label: "Stamp", value: "#\(asset.stampId)")
+        } else {
+            MetadataRow(
+                label: "CPID",
+                value: asset.counterpartyId,
+                fullValue: asset.counterpartyId,
+                truncatesValue: true
+            )
+        }
 
         if let creatorName = asset.creatorName, !creatorName.isEmpty {
             MetadataRow(label: "Artist", value: creatorName)
@@ -251,6 +264,30 @@ struct StampAssetDetailView: View {
 
     private func yesNo(_ value: Bool) -> String {
         value ? "Yes" : "No"
+    }
+
+    /// Reads cached HTML (or fetches it) and extracts a document title when present.
+    private func loadHTMLTitleIfNeeded() async {
+        guard asset.isHTML, let url = asset.imageURL else { return }
+
+        let html: String?
+        if let cached = await StampContentCache.shared.read(for: url) {
+            html = cached
+        } else {
+            html = await fetchHTML(from: url)
+        }
+
+        guard let html else { return }
+        htmlTitle = HTMLMetadataParser.title(from: html)
+    }
+
+    private func fetchHTML(from url: URL) async -> String? {
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return String(data: data, encoding: .utf8)
+        } catch {
+            return nil
+        }
     }
 }
 

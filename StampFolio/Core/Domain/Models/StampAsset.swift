@@ -167,6 +167,9 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
         AssetQuantityFormat.stamp(rawUnits: Double(editionsSupply), divisible: divisible)
     }
 
+    /// Whether this is a Posh stamp (named Counterparty asset)
+    var isPosh: Bool { stampType.lowercased() == "posh" }
+
     /// Whether issuance is locked; missing values are treated as unlocked
     var isLocked: Bool { locked == true }
 
