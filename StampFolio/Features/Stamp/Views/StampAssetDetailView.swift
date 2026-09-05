@@ -266,19 +266,19 @@ struct StampAssetDetailView: View {
         value ? "Yes" : "No"
     }
 
-    /// Reads cached HTML (or fetches it) and extracts a document title when present.
+    /// Reads a cached HTML title, or fetches HTML, stores it, and persists the parsed title.
     private func loadHTMLTitleIfNeeded() async {
         guard asset.isHTML, let url = asset.imageURL else { return }
+        let cache = StampContentCache.shared
 
-        let html: String?
-        if let cached = await StampContentCache.shared.read(for: url) {
-            html = cached
-        } else {
-            html = await fetchHTML(from: url)
+        if let title = await cache.readTitle(for: url) {
+            htmlTitle = title
+            return
         }
 
-        guard let html else { return }
-        htmlTitle = HTMLMetadataParser.title(from: html)
+        guard let html = await fetchHTML(from: url) else { return }
+        await cache.write(html, for: url)
+        htmlTitle = await cache.readTitle(for: url)
     }
 
     private func fetchHTML(from url: URL) async -> String? {
