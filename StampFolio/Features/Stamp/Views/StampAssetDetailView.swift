@@ -95,14 +95,6 @@ struct StampAssetDetailView: View {
 
     private var stampIdentificationSection: some View {
         HStack(alignment: .top) {
-            Text(asset.isPosh ? asset.counterpartyId : "#\(asset.stampId)")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundStyle(.primary)
-                .textSelection(.enabled)
-
-            Spacer()
-
             Text(asset.stampType)
                 .font(.caption)
                 .fontWeight(.semibold)
@@ -111,6 +103,15 @@ struct StampAssetDetailView: View {
                 .padding(.vertical, 4)
                 .background(appColorScheme.primary.opacity(0.8))
                 .clipShape(Capsule())
+
+            Spacer()
+
+            Text(asset.isPosh ? asset.counterpartyId : "#\(asset.stampId)")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.trailing)
+                .textSelection(.enabled)
         }
         .padding(.vertical, 4)
     }

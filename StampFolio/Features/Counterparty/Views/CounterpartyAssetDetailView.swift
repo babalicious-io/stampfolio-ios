@@ -94,23 +94,6 @@ struct CounterpartyAssetDetailView: View {
 
     private var identificationSection: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(asset.displayName)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .textSelection(.enabled)
-
-                if asset.isSubasset {
-                    Text(asset.asset)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
-            }
-
-            Spacer()
-
             Text("counterparty")
                 .font(.caption)
                 .fontWeight(.semibold)
@@ -119,6 +102,25 @@ struct CounterpartyAssetDetailView: View {
                 .padding(.vertical, 4)
                 .background(appColorScheme.primary.opacity(0.8))
                 .clipShape(Capsule())
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 8) {
+                Text(asset.displayName)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.trailing)
+                    .textSelection(.enabled)
+
+                if asset.isSubasset {
+                    Text(asset.asset)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.trailing)
+                        .textSelection(.enabled)
+                }
+            }
         }
         .padding(.vertical, 4)
     }
