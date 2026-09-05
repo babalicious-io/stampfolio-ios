@@ -113,17 +113,22 @@ struct CollectionLoadingView: View {
 
 // MARK: - Grid Columns
 
-/// Dynamic grid columns using native adaptive sizing with device awareness.
-/// iPhone: 2 columns (normal) / 3 columns (dense). iPad: 3-4 columns (normal) / 4-5 columns (dense).
+/// Adaptive grid columns from available width, not device type or orientation.
+/// Compact width uses a smaller tile minimum; regular width (iPad, Split View,
+/// Plus/Max landscape) uses a larger one. `GridItem.adaptive` then fits as many
+/// columns as the container allows, capped at 300pt so tiles do not grow huge.
 func gridColumns(viewMode: ViewMode, horizontalSizeClass: UserInterfaceSizeClass?) -> [GridItem] {
     if viewMode == .list {
         return [GridItem(.flexible(), spacing: 16)]
     }
 
-    let isIPad = horizontalSizeClass == .regular
+    let isRegularWidth = horizontalSizeClass == .regular
+    let isCompactWidth = !isRegularWidth
     let minSize: CGFloat
-    if isIPad {
+    if isRegularWidth {
         minSize = viewMode == .denseGrid ? 130 : 180
+    } else if isCompactWidth {
+        minSize = viewMode == .denseGrid ? 110 : 170
     } else {
         minSize = viewMode == .denseGrid ? 110 : 170
     }
@@ -144,6 +149,12 @@ enum AssetRowMetrics {
         height: previewHeight
     )
     static let statusIconSize: CGFloat = 12
+    /// Reserved width so ViewThatFits does not flop while market pills are still loading
+    static let marketColumnMinWidth: CGFloat = 110
+    /// Identity column bounds used only in the wide row candidate so long names
+    /// cannot inflate ideal width, and portrait width typically stays compact.
+    static let wideIdentityMinWidth: CGFloat = 180
+    static let wideIdentityMaxWidth: CGFloat = 240
 }
 
 // MARK: - Asset Balance Pill
@@ -186,6 +197,77 @@ struct AssetFloorPricePill: View {
                     .fill(Color(uiColor: .systemBackground).opacity(0.85))
             )
             .accessibilityLabel("Floor price: \(text)")
+    }
+}
+
+// MARK: - Asset Holders Pill
+
+/// Muted holder-count chip used in the wide list-row market column
+struct AssetHoldersPill: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
+            )
+            .accessibilityLabel(text)
+    }
+}
+
+// MARK: - Asset Listings Pill
+
+/// Open-dispenser count chip; omit from the row when the count is nil or zero
+struct AssetListingsPill: View {
+    let count: Int
+
+    var body: some View {
+        Text("\(count)")
+            .font(.caption)
+            .fontWeight(.bold)
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color(uiColor: .systemBackground).opacity(0.85))
+            )
+            .accessibilityLabel("\(count) listing\(count == 1 ? "" : "s")")
+    }
+}
+
+// MARK: - Asset Market Metrics Column
+
+/// Center column shown by ViewThatFits when the list row is wide enough:
+/// holders, listings, and floor price stacked to match the identity stack.
+struct AssetMarketMetricsColumn: View {
+    var holdersText: String?
+    var listingsCount: Int?
+    var floorPriceText: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let holdersText {
+                AssetHoldersPill(text: holdersText)
+            }
+
+            if let listingsCount, listingsCount > 0 {
+                AssetListingsPill(count: listingsCount)
+            }
+
+            if let floorPriceText {
+                AssetFloorPricePill(text: floorPriceText)
+            }
+        }
+        .frame(minWidth: AssetRowMetrics.marketColumnMinWidth, alignment: .leading)
     }
 }
 

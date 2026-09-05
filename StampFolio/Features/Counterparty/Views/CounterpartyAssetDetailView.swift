@@ -144,7 +144,7 @@ struct CounterpartyAssetDetailView: View {
         if let issuer = asset.issuer {
             MetadataRow(
                 label: "Issuer",
-                value: issuer.truncatedAddress(prefixLength: 6, suffixLength: 6),
+                value: issuer.truncatedAddress(prefixLength: 8, suffixLength: 8),
                 fullValue: issuer
             )
         }
@@ -152,14 +152,14 @@ struct CounterpartyAssetDetailView: View {
         if let owner = asset.owner, owner != asset.issuer {
             MetadataRow(
                 label: "Owner",
-                value: owner.truncatedAddress(prefixLength: 6, suffixLength: 6),
+                value: owner.truncatedAddress(prefixLength: 8, suffixLength: 8),
                 fullValue: owner
             )
         }
 
         MetadataRow(label: "Supply", value: asset.formattedSupply)
 
-        MetadataRow(label: "Balance", value: currentDisplayAsset.formattedBalance)
+        MetadataRow(label: "Balance", value: currentDisplayAsset.formattedDetailBalance)
     }
 
     // MARK: - Status
@@ -186,11 +186,11 @@ struct CounterpartyAssetDetailView: View {
             if let holderCount = marketData.holderCount {
                 MetadataRow(label: "Holders", value: "\(holderCount)")
             }
-            if let floorPrice = marketData.formattedFloorPrice {
-                MetadataRow(label: "Floor Price", value: floorPrice)
-            }
             if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
+            }
+            if let floorPrice = marketData.formattedFloorPrice {
+                MetadataRow(label: "Price", value: floorPrice)
             }
         } else if currentDisplayAsset.isLoadingMarketData {
             MetadataLoadingRow()

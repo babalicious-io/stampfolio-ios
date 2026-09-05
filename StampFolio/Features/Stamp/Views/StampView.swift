@@ -30,9 +30,7 @@ struct StampView: View {
     
     // MARK: - Layout
     
-    /// Dynamic grid columns using native adaptive sizing with device awareness
-    /// iPhone: 2 columns (normal) / 3 columns (dense)
-    /// iPad: 3-4 columns (normal) / 4-5 columns (dense)
+    /// Adaptive columns from available width (compact vs regular), not device type
     private var columns: [GridItem] {
         gridColumns(viewMode: viewMode, horizontalSizeClass: horizontalSizeClass)
     }
@@ -361,8 +359,6 @@ struct StampView: View {
                             }
                         )
                         .onAppear {
-                            // Fetch market data when row appears in list view
-                            // Applies to: iPhone (landscape) + iPad (all orientations)
                             Task {
                                 await viewModel.fetchMarketDataIfNeeded(for: displayAsset)
                             }

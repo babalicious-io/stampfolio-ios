@@ -162,6 +162,11 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     /// Identifiable conformance - uses stampId
     var id: Int { stampId }
 
+    /// Total editions, with grouping and 8 decimals when the stamp is divisible
+    var formattedEditions: String {
+        AssetQuantityFormat.stamp(rawUnits: Double(editionsSupply), divisible: divisible)
+    }
+
     /// Whether issuance is locked; missing values are treated as unlocked
     var isLocked: Bool { locked == true }
 

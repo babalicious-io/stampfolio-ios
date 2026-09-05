@@ -40,6 +40,11 @@ struct CounterpartyDisplay: Identifiable {
         return String(format: "%g", balance)
     }
 
+    /// Detail-sheet balance: grouping separators and 8 decimals when divisible
+    var formattedDetailBalance: String {
+        AssetQuantityFormat.string(from: balance, divisible: divisible)
+    }
+
     // MARK: - Initialization
 
     /// Memberwise initializer

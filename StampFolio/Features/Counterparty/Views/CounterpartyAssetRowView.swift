@@ -54,55 +54,92 @@ struct CounterpartyAssetRowView: View {
     // MARK: - Row Content
 
     private var rowContent: some View {
-        HStack(alignment: .top, spacing: 16) {
-            assetIcon
+        ViewThatFits(in: .horizontal) {
+            wideRow
+            compactRow
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(6)
+    }
+
+    private var wideRow: some View {
+        HStack(alignment: .center, spacing: 16) {
+            previewImage
+            marketColumn
+                .fixedSize(horizontal: true, vertical: false)
+            identityColumn(showsFloorPrice: false)
                 .frame(
-                    width: AssetRowMetrics.counterpartyPreviewSize.width,
-                    height: AssetRowMetrics.counterpartyPreviewSize.height
+                    minWidth: AssetRowMetrics.wideIdentityMinWidth,
+                    maxWidth: AssetRowMetrics.wideIdentityMaxWidth
                 )
-                .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .center, spacing: 8) {
-                    Text(asset.displayName)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
+    private var compactRow: some View {
+        HStack(alignment: .center, spacing: 16) {
+            previewImage
+            identityColumn(showsFloorPrice: true)
+        }
+    }
 
-                    Spacer(minLength: 4)
+    private var previewImage: some View {
+        assetIcon
+            .frame(
+                width: AssetRowMetrics.counterpartyPreviewSize.width,
+                height: AssetRowMetrics.counterpartyPreviewSize.height
+            )
+            .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
+    }
 
-                    AssetBalancePill(text: displayAsset.formattedBalance)
+    private var marketColumn: some View {
+        AssetMarketMetricsColumn(
+            holdersText: formattedHolderCount,
+            listingsCount: listingsCount,
+            floorPriceText: formattedFloorPrice
+        )
+    }
+
+    @ViewBuilder
+    private func identityColumn(showsFloorPrice: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .center, spacing: 8) {
+                Text(asset.displayName)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 4)
+
+                AssetBalancePill(text: displayAsset.formattedBalance)
+            }
+
+            HStack(alignment: .center, spacing: 8) {
+                Text(issuerName)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 4)
+
+                if showsWalletIcon {
+                    walletIcon
                 }
+            }
 
-                HStack(alignment: .center, spacing: 8) {
-                    Text(issuerName)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+            HStack(alignment: .center, spacing: 8) {
+                AssetStatusIconsView(
+                    isLocked: asset.locked,
+                    isDivisible: asset.divisible
+                )
 
-                    Spacer(minLength: 4)
+                Spacer(minLength: 4)
 
-                    if showsWalletIcon {
-                        walletIcon
-                    }
-                }
-
-                HStack(alignment: .center, spacing: 8) {
-                    AssetStatusIconsView(
-                        isLocked: asset.locked,
-                        isDivisible: asset.divisible
-                    )
-
-                    Spacer(minLength: 4)
-
-                    if let formattedFloorPrice {
-                        AssetFloorPricePill(text: formattedFloorPrice)
-                    }
+                if showsFloorPrice, let formattedFloorPrice {
+                    AssetFloorPricePill(text: formattedFloorPrice)
                 }
             }
         }
-        .padding(6)
     }
 
     // MARK: - Asset Icon
@@ -120,10 +157,18 @@ struct CounterpartyAssetRowView: View {
         return asset.asset == "XCP" ? "Counterparty" : "No issuer"
     }
 
-    // MARK: - Floor Price
+    // MARK: - Market Data
 
     private var formattedFloorPrice: String? {
         asset.marketData?.formattedFloorPrice
+    }
+
+    private var formattedHolderCount: String? {
+        asset.marketData?.formattedHolderCount
+    }
+
+    private var listingsCount: Int? {
+        asset.marketData?.openDispensersCount
     }
 
     private var showsWalletIcon: Bool {
@@ -140,6 +185,12 @@ struct CounterpartyAssetRowView: View {
             asset.locked ? "Locked" : "Unlocked"
         ]
         if asset.divisible { parts.append("Divisible") }
+        if let formattedHolderCount {
+            parts.append(formattedHolderCount)
+        }
+        if let listingsCount, listingsCount > 0 {
+            parts.append("\(listingsCount) listing\(listingsCount == 1 ? "" : "s")")
+        }
         if let formattedFloorPrice {
             parts.append("Floor price: \(formattedFloorPrice)")
         }

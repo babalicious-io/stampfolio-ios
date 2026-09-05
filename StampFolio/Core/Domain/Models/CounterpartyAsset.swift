@@ -168,13 +168,9 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         lastIssuanceBlockTime.map { Date(timeIntervalSince1970: TimeInterval($0)) }
     }
 
-    /// Formatted total supply, removing unnecessary decimals
+    /// Formatted total supply, with grouping and 8 decimals when divisible
     var formattedSupply: String {
-        guard let value = Double(supplyNormalized) else { return supplyNormalized }
-        if value.truncatingRemainder(dividingBy: 1) == 0 {
-            return String(format: "%.0f", value)
-        }
-        return String(format: "%g", value)
+        AssetQuantityFormat.string(fromNormalized: supplyNormalized, divisible: divisible)
     }
 
     /// Whole-token supply for edition filters (1 vs many). Uses normalized supply so divisible assets compare correctly.

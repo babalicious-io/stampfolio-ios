@@ -41,7 +41,7 @@ struct CounterpartyView: View {
         viewModel.currentSortOption != .balanceDescending
     }
 
-    /// Dynamic grid columns using native adaptive sizing with device awareness, mirroring `StampView`
+    /// Adaptive columns from available width (compact vs regular)
     private var columns: [GridItem] {
         gridColumns(viewMode: viewMode, horizontalSizeClass: horizontalSizeClass)
     }

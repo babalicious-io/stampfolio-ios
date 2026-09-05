@@ -131,22 +131,28 @@ struct StampAssetDetailView: View {
         MetadataRow(
             label: "CPID",
             value: asset.counterpartyId,
-            fullValue: asset.counterpartyId
+            fullValue: asset.counterpartyId,
+            truncatesValue: true
         )
 
         if let creatorName = asset.creatorName, !creatorName.isEmpty {
             MetadataRow(label: "Artist", value: creatorName)
+            MetadataRow(
+                label: "Addy",
+                value: asset.creatorAddy.truncatedAddress(prefixLength: 8, suffixLength: 8),
+                fullValue: asset.creatorAddy
+            )
+        } else {
+            MetadataRow(
+                label: "Creator",
+                value: asset.creatorAddy.truncatedAddress(prefixLength: 8, suffixLength: 8),
+                fullValue: asset.creatorAddy
+            )
         }
 
-        MetadataRow(
-            label: "Creator",
-            value: asset.creatorAddy.truncatedAddress(prefixLength: 6, suffixLength: 6),
-            fullValue: asset.creatorAddy
-        )
+        MetadataRow(label: "Editions", value: asset.formattedEditions)
 
-        MetadataRow(label: "Editions", value: "\(asset.editionsSupply)")
-
-        MetadataRow(label: "Balance", value: currentDisplayAsset.formattedBalance)
+        MetadataRow(label: "Balance", value: currentDisplayAsset.formattedDetailBalance)
     }
 
     // MARK: - Status
@@ -188,11 +194,11 @@ struct StampAssetDetailView: View {
             if let holderCount = marketData.holderCount {
                 MetadataRow(label: "Holders", value: "\(holderCount)")
             }
-            if let floorPrice = marketData.formattedFloorPrice {
-                MetadataRow(label: "Floor Price", value: floorPrice)
-            }
             if let dispensers = marketData.openDispensersCount, dispensers > 0 {
                 MetadataRow(label: "Listings", value: "\(dispensers)")
+            }
+            if let floorPrice = marketData.formattedFloorPrice {
+                MetadataRow(label: "Price", value: floorPrice)
             }
         } else if currentDisplayAsset.isLoadingMarketData {
             MetadataLoadingRow()

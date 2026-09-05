@@ -48,7 +48,7 @@ struct CounterpartyAssetCardView: View {
                 onLongPress()  // Show fullscreen viewer
             })
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(asset.displayName), Balance: \(displayAsset.formattedBalance)")
+            .accessibilityLabel(accessibilityDescription)
             .accessibilityHint("Tap for details, hold for fullscreen")
             .accessibilityAddTraits(.isButton)
     }
@@ -132,6 +132,16 @@ struct CounterpartyAssetCardView: View {
 
     private var walletIcon: some View {
         WalletIndicatorView(walletAddress: displayAsset.walletAddress, wallets: wallets, style: .pill)
+    }
+
+    // MARK: - Accessibility
+
+    private var accessibilityDescription: String {
+        var parts = [asset.displayName]
+        if viewMode != .denseGrid {
+            parts.append("Balance: \(displayAsset.formattedBalance)")
+        }
+        return parts.joined(separator: ", ")
     }
 }
 

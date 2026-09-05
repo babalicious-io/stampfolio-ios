@@ -56,52 +56,89 @@ struct StampAssetRowView: View {
     // MARK: - Row Content
     
     private var rowContent: some View {
+        ViewThatFits(in: .horizontal) {
+            wideRow
+            compactRow
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(6)
+    }
+
+    private var wideRow: some View {
         HStack(alignment: .center, spacing: 24) {
-            StampAssetImageView(asset: asset, size: AssetRowMetrics.stampPreviewSize)
-                .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
+            previewImage
+            marketColumn
+                .fixedSize(horizontal: true, vertical: false)
+            identityColumn(showsFloorPrice: false)
+                .frame(
+                    minWidth: AssetRowMetrics.wideIdentityMinWidth,
+                    maxWidth: AssetRowMetrics.wideIdentityMaxWidth
+                )
+        }
+    }
+
+    private var compactRow: some View {
+        HStack(alignment: .center, spacing: 24) {
+            previewImage
+            identityColumn(showsFloorPrice: true)
+        }
+    }
+
+    private var previewImage: some View {
+        StampAssetImageView(asset: asset, size: AssetRowMetrics.stampPreviewSize)
+            .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
+    }
+
+    private var marketColumn: some View {
+        AssetMarketMetricsColumn(
+            holdersText: formattedHolderCount,
+            listingsCount: listingsCount,
+            floorPriceText: formattedFloorPrice
+        )
+    }
+
+    @ViewBuilder
+    private func identityColumn(showsFloorPrice: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .center, spacing: 8) {
+                Text("#\(asset.stampId)")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                
+                Spacer(minLength: 4)
+                
+                AssetBalancePill(text: displayAsset.formattedBalance)
+            }
             
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .center, spacing: 8) {
-                    Text("#\(asset.stampId)")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                    
-                    Spacer(minLength: 4)
-                    
-                    AssetBalancePill(text: displayAsset.formattedBalance)
-                }
+            HStack(alignment: .center, spacing: 8) {
+                Text(artistName)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 
-                HStack(alignment: .center, spacing: 8) {
-                    Text(artistName)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                    
-                    Spacer(minLength: 4)
-                    
-                    if showsWalletIcon {
-                        walletIcon
-                    }
-                }
+                Spacer(minLength: 4)
                 
-                HStack(alignment: .center, spacing: 8) {
-                    AssetStatusIconsView(
-                        isLocked: asset.isLocked,
-                        isDivisible: asset.divisible,
-                        isKeyburned: asset.isKeyburned
-                    )
-                    
-                    Spacer(minLength: 4)
-                    
-                    if let formattedFloorPrice {
-                        AssetFloorPricePill(text: formattedFloorPrice)
-                    }
+                if showsWalletIcon {
+                    walletIcon
+                }
+            }
+            
+            HStack(alignment: .center, spacing: 8) {
+                AssetStatusIconsView(
+                    isLocked: asset.isLocked,
+                    isDivisible: asset.divisible,
+                    isKeyburned: asset.isKeyburned
+                )
+                
+                Spacer(minLength: 4)
+                
+                if showsFloorPrice, let formattedFloorPrice {
+                    AssetFloorPricePill(text: formattedFloorPrice)
                 }
             }
         }
-        .padding(6)
     }
     
     // MARK: - Artist Name
@@ -114,11 +151,21 @@ struct StampAssetRowView: View {
         }
     }
     
-    // MARK: - Floor Price
+    // MARK: - Market Data
     
     private var formattedFloorPrice: String? {
         displayAsset.marketData?.formattedFloorPrice
             ?? asset.marketData?.formattedFloorPrice
+    }
+
+    private var formattedHolderCount: String? {
+        displayAsset.marketData?.formattedHolderCount
+            ?? asset.marketData?.formattedHolderCount
+    }
+
+    private var listingsCount: Int? {
+        displayAsset.marketData?.openDispensersCount
+            ?? asset.marketData?.openDispensersCount
     }
     
     private var showsWalletIcon: Bool {
@@ -136,6 +183,12 @@ struct StampAssetRowView: View {
         ]
         if asset.divisible { parts.append("Divisible") }
         if asset.isKeyburned { parts.append("Keyburn") }
+        if let formattedHolderCount {
+            parts.append(formattedHolderCount)
+        }
+        if let listingsCount, listingsCount > 0 {
+            parts.append("\(listingsCount) listing\(listingsCount == 1 ? "" : "s")")
+        }
         if let formattedFloorPrice {
             parts.append("Floor price: \(formattedFloorPrice)")
         }

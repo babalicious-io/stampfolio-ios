@@ -45,6 +45,11 @@ struct StampDisplay: Identifiable {
             return String(format: "%.0f", balance)
         }
     }
+
+    /// Detail-sheet balance: grouping separators and 8 decimals when divisible
+    var formattedDetailBalance: String {
+        AssetQuantityFormat.stamp(rawUnits: balance, divisible: divisible)
+    }
     
     /// Formatted balance with total supply (e.g., "2/69")
     var formattedBalanceWithSupply: String {
