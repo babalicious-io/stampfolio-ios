@@ -137,20 +137,16 @@ struct StampAssetDetailView: View {
 
     @ViewBuilder
     private var identityContent: some View {
-        if let htmlTitle {
-            MetadataRow(label: "Title", value: htmlTitle)
+        if htmlTitle != nil || asset.isPosh {
+            MetadataRow(label: "Stamp", value: "#\(asset.stampId)")
         }
 
-        if asset.isPosh {
-            MetadataRow(label: "Stamp", value: "#\(asset.stampId)")
-        } else {
-            MetadataRow(
-                label: "CPID",
-                value: asset.counterpartyId,
-                fullValue: asset.counterpartyId,
-                truncatesValue: true
-            )
-        }
+        MetadataRow(
+            label: "CPID",
+            value: asset.counterpartyId,
+            fullValue: asset.counterpartyId,
+            truncatesValue: true
+        )
 
         if let creatorName = asset.creatorName, !creatorName.isEmpty {
             MetadataRow(label: "Artist", value: creatorName)
