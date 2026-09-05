@@ -12,7 +12,7 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     
     // MARK: - Properties
     
-    /// Stamp type: classic (positive), cursed (negative numeric CPID), or posh (named CPID)
+    /// Stamp type: classic (stampId >= 0), cursed (negative numeric CPID), or posh (named CPID)
     let stampType: String
     
     /// Content-standard identifier ("STAMP", "SRC-721", "SRC-101", etc.)
@@ -155,9 +155,9 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
         self.stampUrl = try container.decode(String.self, forKey: .stampUrl)
     }
 
-    /// Classic when `stampId > 0`; otherwise cursed (numeric `A…` CPID) or posh (named CPID).
+    /// Classic when `stampId >= 0`; otherwise cursed (numeric `A…` CPID) or posh (named CPID).
     static func resolvedStampType(stampId: Int, counterpartyId: String) -> String {
-        if stampId > 0 {
+        if stampId >= 0 {
             return "classic"
         }
         let isNumericCPID = counterpartyId.hasPrefix("A")
