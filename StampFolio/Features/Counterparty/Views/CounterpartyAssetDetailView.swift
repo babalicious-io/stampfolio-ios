@@ -96,7 +96,7 @@ struct CounterpartyAssetDetailView: View {
         HStack(alignment: .top) {
             Image(systemName: ProtocolType.counterparty.icon)
                 .font(.title2)
-                .foregroundStyle(appColorScheme.primary)
+                .foregroundStyle(.secondary)
                 .accessibilityLabel("Counterparty")
 
             Spacer()

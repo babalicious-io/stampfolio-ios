@@ -97,7 +97,7 @@ struct StampAssetDetailView: View {
         HStack(alignment: .top) {
             Image(systemName: ProtocolType.stamps.icon)
                 .font(.title2)
-                .foregroundStyle(appColorScheme.primary)
+                .foregroundStyle(.secondary)
                 .accessibilityLabel("\(asset.stampType.capitalized) stamp")
 
             Spacer()
