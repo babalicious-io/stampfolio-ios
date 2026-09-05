@@ -232,12 +232,13 @@ struct AddWalletView: View {
         // Unstructured task survives dismissing this view
         Task { @MainActor in
             let stampCount = await stampVM.fetchAssetMetadata(for: wallet, allWallets: allWallets)
-            let stampCPIDs = Set(stampVM.assets.map { $0.asset.counterpartyId })
+            let stampCPIDs = stampVM.stampCPIDs
             let counterpartyCount = await counterpartyVM.fetchAssetMetadata(
                 for: wallet,
                 allWallets: allWallets,
                 excludingCPIDs: stampCPIDs
             )
+            counterpartyVM.applyStampExclusion(stampCPIDs)
             if let stampCount, let counterpartyCount {
                 settingsVM.notifyIfWalletEmpty(stampCount: stampCount, counterpartyCount: counterpartyCount)
             }

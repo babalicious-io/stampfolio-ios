@@ -88,6 +88,9 @@ struct SearchView: View {
         .task {
             await loadDataIfNeeded()
         }
+        .onChange(of: stampViewModel.stampCPIDs) { _, cpids in
+            counterpartyViewModel.applyStampExclusion(cpids)
+        }
         .onAppear {
             protocolOrder = ProtocolType.loadSavedOrder()
         }
@@ -232,15 +235,19 @@ struct SearchView: View {
 
     // MARK: - Data Loading
 
-    /// Load collection data if Search is opened before visiting a protocol tab
+    /// Load collection data if Search is opened before visiting a protocol tab.
+    /// Always wait for an in-flight stamp fetch so Counterparty CPID exclusion is complete.
     private func loadDataIfNeeded() async {
-        if showStamps || showCounterparty, stampViewModel.assets.isEmpty && !stampViewModel.isLoading {
+        if showStamps || showCounterparty, stampViewModel.assets.isEmpty {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
 
-        if showCounterparty, counterpartyViewModel.assets.isEmpty && !counterpartyViewModel.isLoading {
-            let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
-            await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
+        if showCounterparty {
+            counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
+            if counterpartyViewModel.assets.isEmpty && !counterpartyViewModel.isLoading {
+                await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampViewModel.stampCPIDs)
+                counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
+            }
         }
     }
 

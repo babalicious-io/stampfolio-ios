@@ -74,13 +74,14 @@ struct SettingsView: View {
                                     Button {
                                         Task {
                                             await stampViewModel.fetchAssetMetadata(for: wallet, allWallets: wallets, forceRefresh: true)
-                                            let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
+                                            let stampCPIDs = stampViewModel.stampCPIDs
                                             await counterpartyViewModel.fetchAssetMetadata(
                                                 for: wallet,
                                                 allWallets: wallets,
                                                 excludingCPIDs: stampCPIDs,
                                                 forceRefresh: true
                                             )
+                                            counterpartyViewModel.applyStampExclusion(stampCPIDs)
                                         }
                                     } label: {
                                         Label("Refresh", systemImage: "arrow.clockwise")

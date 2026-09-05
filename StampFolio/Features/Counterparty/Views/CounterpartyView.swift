@@ -34,7 +34,7 @@ struct CounterpartyView: View {
 
     /// Asset names (CPIDs) already shown as Bitcoin Stamps, so they aren't duplicated here
     private var stampCPIDs: Set<String> {
-        Set(stampViewModel.assets.map { $0.asset.counterpartyId })
+        stampViewModel.stampCPIDs
     }
 
     private var hasActiveSort: Bool {
@@ -65,10 +65,13 @@ struct CounterpartyView: View {
         .task {
             await loadData()
         }
+        .onChange(of: stampViewModel.stampCPIDs) { _, cpids in
+            viewModel.applyStampExclusion(cpids)
+        }
         .onChange(of: wallets.count) { oldCount, newCount in
             if newCount < oldCount {
                 Task {
-                    await viewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
+                    await viewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampViewModel.stampCPIDs)
                 }
             }
         }
@@ -95,13 +98,15 @@ struct CounterpartyView: View {
 
     // MARK: - Data Loading
 
-    /// Ensure Stamps are loaded first (so CPID exclusion is accurate), then fetch Counterparty assets
+    /// Wait for Stamps to finish loading so CPID exclusion is complete, then fetch Counterparty assets
     private func loadData() async {
-        if stampViewModel.assets.isEmpty && !stampViewModel.isLoading {
+        if stampViewModel.assets.isEmpty {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
+        viewModel.applyStampExclusion(stampViewModel.stampCPIDs)
         if viewModel.assets.isEmpty && !viewModel.isLoading {
-            await viewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
+            await viewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampViewModel.stampCPIDs)
+            viewModel.applyStampExclusion(stampViewModel.stampCPIDs)
         }
     }
 

@@ -175,8 +175,7 @@ final class CounterpartyViewModel {
             }
         }
 
-        // Exclude assets already displayed as Bitcoin Stamps (CPID overlap)
-        let nonStampBalances = allBalances.filter { !excludingCPIDs.contains($0.asset) }
+        let nonStampBalances = allBalances.filter { !Self.matchesStampCPID($0.asset, longname: $0.assetLongname, stampCPIDs: excludingCPIDs) }
 
         // Deduplicate by asset name (same asset held in multiple wallets shows the first-seen entry)
         var seen = Set<String>()
@@ -190,6 +189,7 @@ final class CounterpartyViewModel {
 
         let displayAssets = uniqueBalances.map { CounterpartyDisplay(from: $0) }
         assets = sortedAssets(displayAssets, by: currentSortOption, wallets: wallets)
+        applyStampExclusion(excludingCPIDs)
 
         if assets.isEmpty && !fetchErrors.isEmpty {
             errorMessage = "Unable to load Counterparty assets: \(fetchErrors.first ?? "Unknown error")"
@@ -232,7 +232,7 @@ final class CounterpartyViewModel {
 
         do {
             let balances = try await apiClient.fetchBalances(for: wallet.address, forceRefresh: forceRefresh)
-            let nonStampBalances = balances.filter { !excludingCPIDs.contains($0.asset) }
+            let nonStampBalances = balances.filter { !Self.matchesStampCPID($0.asset, longname: $0.assetLongname, stampCPIDs: excludingCPIDs) }
             let newDisplayAssets = nonStampBalances.map { CounterpartyDisplay(from: $0) }
 
             // Remove existing assets from this wallet, then add fresh ones
@@ -248,6 +248,7 @@ final class CounterpartyViewModel {
             }
 
             assets = sortedAssets(uniqueAssets, by: currentSortOption, wallets: allWallets)
+            applyStampExclusion(excludingCPIDs)
 
             if !newDisplayAssets.isEmpty {
                 fetchAssetsImages(from: newDisplayAssets, forceRefresh: forceRefresh, cancelExisting: false)
@@ -326,6 +327,15 @@ final class CounterpartyViewModel {
         errorMessage = nil
     }
 
+    /// Drop already-loaded assets whose name or longname is a stamp CPID.
+    /// Re-applies exclusion to the full collection after stamps finish loading or a wallet is added.
+    func applyStampExclusion(_ stampCPIDs: Set<String>) {
+        guard !stampCPIDs.isEmpty else { return }
+        assets.removeAll { display in
+            Self.matchesStampCPID(display.asset.asset, longname: display.asset.assetLongname, stampCPIDs: stampCPIDs)
+        }
+    }
+
     /// Toggle a lock-status filter ("locked" or "unlocked")
     func toggleLockedFilter(_ value: String) {
         activeLockedFilters.toggleMembership(of: value)
@@ -397,6 +407,12 @@ final class CounterpartyViewModel {
     }
 
     // MARK: - Private Methods
+
+    private static func matchesStampCPID(_ asset: String, longname: String?, stampCPIDs: Set<String>) -> Bool {
+        if stampCPIDs.contains(asset) { return true }
+        if let longname, stampCPIDs.contains(longname) { return true }
+        return false
+    }
 
     private func sortedAssets(
         _ assets: [CounterpartyDisplay],

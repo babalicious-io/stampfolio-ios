@@ -116,10 +116,12 @@ CounterpartyDisplay   (UI layer: asset + balance + wallet)
 
 A Bitcoin Stamp's `counterpartyId` (CPID) **is** a Counterparty asset — every stamp is backed by
 one. To avoid listing the same asset twice (once under the Stamps tab, once under Counterparty),
-`CounterpartyViewModel.fetchAssetsMetadata` accepts an `excludingCPIDs: Set<String>` parameter.
-`CounterpartyView` computes this set from `StampViewModel.stamps` and, if Stamps haven't
-loaded yet for the current wallets, proactively triggers that fetch first so the exclusion is
-accurate regardless of which tab the user opens first.
+`CounterpartyViewModel.fetchAssetsMetadata` / `fetchAssetMetadata` take an `excludingCPIDs`
+set (stamp names plus `asset_longname` for subassets). Callers wait for `StampViewModel` to
+finish loading — including an in-flight fetch — before building that set. After a wallet is
+added or stamps later finish loading, `applyStampExclusion` re-filters the **full** in-memory
+Counterparty list so a stamp leaked on an earlier fetch (empty CPID set) or from another wallet
+is dropped without another network round-trip.
 
 ### Resolving artwork from `description`
 

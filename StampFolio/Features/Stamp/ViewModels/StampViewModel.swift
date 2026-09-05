@@ -142,12 +142,19 @@ final class StampViewModel {
         guard !trimmed.isEmpty else { return [] }
         return assets.filter { $0.matchesSearch(trimmed) }
     }
+
+    /// Counterparty asset names (CPIDs) for stamps already shown in the Stamps collection
+    var stampCPIDs: Set<String> {
+        Set(assets.map(\.asset.counterpartyId))
+    }
     
     // MARK: - Private Properties
     
     private let apiClient = StampchainAPIClient()
     private var imagePrefetcher: ImagePrefetcher?
     private var incrementalImagePrefetchers: [ImagePrefetcher] = []
+    private var isFetchingAllMetadata = false
+    private var fetchAllWaiters: [CheckedContinuation<Void, Never>] = []
     
     // MARK: - Initialization
     
@@ -161,6 +168,21 @@ final class StampViewModel {
     ///   - forceRefresh: When true, bypasses cache and fetches from network
     @MainActor
     func fetchAssetsMetadata(for wallets: [WalletConfig], forceRefresh: Bool = false) async {
+        if isFetchingAllMetadata {
+            await withCheckedContinuation { continuation in
+                fetchAllWaiters.append(continuation)
+            }
+            if !forceRefresh { return }
+        }
+
+        isFetchingAllMetadata = true
+        defer {
+            isFetchingAllMetadata = false
+            let waiters = fetchAllWaiters
+            fetchAllWaiters.removeAll()
+            waiters.forEach { $0.resume() }
+        }
+
         guard !wallets.isEmpty else {
             assets = []
             return

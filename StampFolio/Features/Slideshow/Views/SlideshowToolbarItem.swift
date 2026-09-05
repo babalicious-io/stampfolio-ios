@@ -260,13 +260,16 @@ private struct SlideshowMenuButton: View {
         let needsStamps = protocolsForPlayback.contains(.stamps) || protocolsForPlayback.contains(.counterparty)
         let needsCounterparty = protocolsForPlayback.contains(.counterparty)
 
-        if needsStamps, stampViewModel.assets.isEmpty, !stampViewModel.isLoading {
+        if needsStamps, stampViewModel.assets.isEmpty {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
 
-        if needsCounterparty, counterpartyViewModel.assets.isEmpty, !counterpartyViewModel.isLoading {
-            let stampCPIDs = Set(stampViewModel.assets.map { $0.asset.counterpartyId })
-            await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampCPIDs)
+        if needsCounterparty {
+            counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
+            if counterpartyViewModel.assets.isEmpty && !counterpartyViewModel.isLoading {
+                await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampViewModel.stampCPIDs)
+                counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
+            }
         }
     }
 
