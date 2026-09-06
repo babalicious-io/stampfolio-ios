@@ -72,6 +72,7 @@ struct CounterpartyAssetImageView: View {
         if shouldAnimateGIF(url) {
             KFAnimatedImage(url)
                 .placeholder { placeholderIcon }
+                .protocolCache(ProtocolImageCache.counterparty)
                 .loadDiskFileSynchronously()
                 .cacheOriginalImage()
                 .diskCacheExpiration(.never)
@@ -83,6 +84,7 @@ struct CounterpartyAssetImageView: View {
         } else if displayMode == .thumbnail {
             KFImage(url)
                 .placeholder { placeholderIcon }
+                .protocolCache(ProtocolImageCache.counterparty)
                 .loadDiskFileSynchronously()
                 .setProcessor(DownsamplingImageProcessor(size: CollectionImageThumbnail.size))
                 .scaleFactor(displayScale)
@@ -99,6 +101,7 @@ struct CounterpartyAssetImageView: View {
         } else {
             KFImage(url)
                 .placeholder { placeholderIcon }
+                .protocolCache(ProtocolImageCache.counterparty)
                 .loadDiskFileSynchronously()
                 .retry(maxCount: 3, interval: .seconds(1))
                 .fade(duration: 0.25)
@@ -159,6 +162,7 @@ struct CounterpartyAssetFullscreenContent: View {
                 if CounterpartyArtworkURL.isGIF(resolvedImageURL) {
                     KFAnimatedImage(resolvedImageURL)
                         .placeholder { placeholderIcon }
+                        .protocolCache(ProtocolImageCache.counterparty)
                         .loadDiskFileSynchronously()
                         .cacheOriginalImage()
                         .diskCacheExpiration(.never)
@@ -169,6 +173,7 @@ struct CounterpartyAssetFullscreenContent: View {
                 } else {
                     KFImage(resolvedImageURL)
                         .placeholder { placeholderIcon }
+                        .protocolCache(ProtocolImageCache.counterparty)
                         .loadDiskFileSynchronously()
                         .retry(maxCount: 3)
                         .cacheOriginalImage()

@@ -322,10 +322,7 @@ final class CounterpartyViewModel {
 
         let prefetcher = ImagePrefetcher(
             urls: urls,
-            options: [
-                .cacheOriginalImage,
-                .diskCacheExpiration(.never)
-            ],
+            options: ProtocolImageCache.options(for: ProtocolImageCache.counterparty),
             completionHandler: { skippedResources, failedResources, completedResources in
                 print("✅ Counterparty artwork prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
             }

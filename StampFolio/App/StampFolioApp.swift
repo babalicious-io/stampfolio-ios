@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import Kingfisher
 
 /// Main entry point for the StampFolio application.
 /// A portfolio viewer for Bitcoin Stamps on iPad and iPhone.
@@ -21,6 +20,7 @@ struct StampFolioApp: App {
         // Restores icon + text layout with Liquid Glass on iPadOS 26.
         // Ref: https://bendodson.com/weblog/2026/01/22/traditional-tab-bar-on-ipados-26/
         UserDefaults.standard.register(defaults: ["UseFloatingTabBar": false])
+        ProtocolImageCache.warm()
     }
     
     // MARK: - State
@@ -77,9 +77,6 @@ struct StampFolioApp: App {
                 .preferredColorScheme(isDarkMode ? .dark : .light)
                 .onAppear {
                     networkMonitor.start()
-                    
-                    // Cap Kingfisher memory cache at 100 MB (disk cache unlimited)
-                    ImageCache.default.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
                 }
                 .onChange(of: scenePhase) { oldPhase, newPhase in
                     // Clear market data cache when app enters background or terminates

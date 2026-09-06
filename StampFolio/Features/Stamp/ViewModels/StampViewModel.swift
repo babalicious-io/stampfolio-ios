@@ -361,10 +361,7 @@ final class StampViewModel {
         if !pixelURLs.isEmpty {
             let prefetcher = ImagePrefetcher(
                 urls: pixelURLs,
-                options: [
-                    .cacheOriginalImage,
-                    .diskCacheExpiration(.never)
-                ],
+                options: ProtocolImageCache.options(for: ProtocolImageCache.stamps),
                 completionHandler: { skippedResources, failedResources, completedResources in
                     print("✅ Pixel prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
                 }

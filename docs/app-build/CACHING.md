@@ -15,13 +15,12 @@ StampFolio uses these caching layers:
        ▼                            ▼                            ▼
 ┌──────────────┐         ┌─────────────────────┐         ┌──────────────┐
 │  Kingfisher  │         │ Resolved URL map    │         │   URLCache   │
-│  Memory      │         │ (CP artwork URLs)   │         │  Memory      │
-│  (100 MB)    │         │ + supply JSON map   │         │              │
-│  Disk        │         │ Caches/...json      │         │  Disk        │
-│  (never)     │         └─────────────────────┘         │              │
-└──────────────┘                                         └──────────────┘
-  Stamp pixels +              description → image URL      API JSON
-  CP artwork                  asset → confirmed supply     Stampchain +
+│  stamps 40MB │         │ (CP artwork URLs)   │         │  Memory      │
+│  CP 70MB     │         │ + supply JSON map   │         │              │
+│  Disk never  │         │ Caches/...json      │         │  Disk        │
+└──────────────┘         └─────────────────────┘         └──────────────┘
+  ProtocolImageCache          description → image URL      API JSON
+  (named, not default)        asset → confirmed supply     Stampchain +
                               (nil URL = no artwork)       Counterparty
 
 ┌────────────────────────────┐   ┌──────────────────────────────┐
@@ -62,19 +61,26 @@ func perform(_ url: URL, forceRefresh: Bool = false) async throws -> (Data, URLR
 
 ### Layer 2 -- Kingfisher (Pixel Images)
 
-Handles raster image loading and caching for **Stamps** (JPEG, PNG, WebP, GIF) and **Counterparty artwork**. Configured at app startup in `StampFolioApp`.
+Handles raster image loading and caching for **Stamps** (JPEG, PNG, WebP, GIF) and **Counterparty artwork**. Named caches in `ProtocolImageCache` — `ImageCache.default` is unused for protocol images. Warmed at launch in `StampFolioApp.init`.
 
-| Property | Value |
-|----------|-------|
-| Memory cache limit | 100 MB |
-| Disk cache expiration | Never (`.diskCacheExpiration(.never)`) |
-| Disk load | Synchronous (`.loadDiskFileSynchronously()`) |
-| Downsampling | 200pt for grid/row thumbnails |
-| Original caching | Always (`.cacheOriginalImage()`) |
+| Property | Stamps | Counterparty |
+|----------|--------|--------------|
+| Cache name | `stamps` | `counterparty` |
+| Memory | 40 MB | 70 MB |
+| Disk | Unlimited, never expire | Unlimited, never expire |
+| Disk load | Synchronous (`.loadDiskFileSynchronously()`) | Same |
+| Downsampling | 200pt grid/row thumbnails | Same (`CollectionImageThumbnail.size`) |
+| Original caching | Always (`.cacheOriginalImage()` + `.originalCache`) | Same |
+
+Omitting `.originalCache` would keep full-size files on `ImageCache.default`. Views use `.protocolCache(_:)`; prefetchers use `ProtocolImageCache.options(for: ProtocolImageCache.stamps)` (or `.counterparty`).
+
+Named disk folders are separate from the old default Kingfisher cache. Existing default files are **not** migrated — first launch after this change re-downloads artwork once.
 
 ```swift
-// StampFolioApp.swift -- global configuration
-ImageCache.default.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
+enum ProtocolImageCache {
+    static let stamps = makeCache(name: "stamps", memoryBytes: 40 * 1024 * 1024)
+    static let counterparty = makeCache(name: "counterparty", memoryBytes: 70 * 1024 * 1024)
+}
 ```
 
 #### Dual-Resolution Caching
@@ -84,10 +90,11 @@ Grid and row views use `DownsamplingImageProcessor` at `CollectionImageThumbnail
 ```swift
 // StampAssetPixelView / CounterpartyAssetImageView thumbnail -- grid/row
 KFImage(url)
+    .protocolCache(ProtocolImageCache.stamps) // or .counterparty
     .loadDiskFileSynchronously()
     .setProcessor(DownsamplingImageProcessor(size: CollectionImageThumbnail.size))
     .scaleFactor(UIScreen.main.scale)
-    .cacheOriginalImage()       // also saves full-res to disk
+    .cacheOriginalImage()
     .diskCacheExpiration(.never)
 ```
 
@@ -106,7 +113,7 @@ The detail view always plays animated GIFs at full resolution regardless of this
 
 `.loadDiskFileSynchronously()` is applied to all Kingfisher calls. When an image is already in the disk cache, Kingfisher loads it on the calling thread instead of dispatching to a background queue. This eliminates the brief placeholder flash for cached stamps.
 
-Counterparty uses the same dual-resolution Kingfisher pattern on one HD URL (CIP-25 / Horizon poster): grid/row `DownsamplingImageProcessor(CollectionImageThumbnail.size)` + `.cacheOriginalImage()`; detail and fullscreen decode the original. GIF path extensions use `KFAnimatedImage` like Stamps; Horizon URLs without an extension stay static. Wallet refresh re-resolves artwork URLs and re-prefetches; it does **not** delete existing Kingfisher files. A new URL downloads; the same URL is a cache hit. HTTPS-only: HTTP description links are rejected and Horizon is tried instead.
+Counterparty uses the same dual-resolution Kingfisher pattern on one HD URL (CIP-25 / Horizon poster): grid/row `DownsamplingImageProcessor(CollectionImageThumbnail.size)` + `.cacheOriginalImage()`; detail and fullscreen decode the original. Bytes live in `ProtocolImageCache.counterparty`. GIF path extensions use `KFAnimatedImage` like Stamps; Horizon URLs without an extension stay static. Wallet refresh re-resolves artwork URLs and re-prefetches; it does **not** delete existing Kingfisher files. A new URL downloads; the same URL is a cache hit. HTTPS-only: HTTP description links are rejected and Horizon is tried instead.
 
 ### Layer 3 -- StampContentCache (HTML/SVG/Text)
 
@@ -207,7 +214,7 @@ fetchAssetsImages()  (not awaited)
        │
        ├── resolveImageURL (memory → JSON disk → network)
        │
-       └── ImagePrefetcher (.cacheOriginalImage, .diskCacheExpiration(.never))
+       └── ImagePrefetcher (ProtocolImageCache.options(for: ProtocolImageCache.counterparty))
 ```
 
 Full-collection loads cancel in-flight prefetch. Add-wallet and per-wallet refresh prefetch only that wallet's assets and do not cancel an existing full prefetch.
@@ -358,8 +365,9 @@ Collection **Try Again** force-refreshes every wallet the same way. Kingfisher, 
 
 | Resource | Limit | Eviction |
 |----------|-------|----------|
-| Kingfisher memory cache | 100 MB | LRU eviction by Kingfisher |
-| Kingfisher disk cache | Unlimited | Never expires |
+| Kingfisher stamps memory | 40 MB | LRU in `ProtocolImageCache.stamps` |
+| Kingfisher Counterparty memory | 70 MB | LRU in `ProtocolImageCache.counterparty` |
+| Kingfisher disk cache | Unlimited | Never expires (named folders, not `ImageCache.default`) |
 | StampContentCache NSCache | 100 entries | Auto-evicted by iOS under memory pressure |
 | StampContentCache disk | Unlimited | Never expires |
 | StampVectorSnapshotCache NSCache | 50 entries | Auto-evicted by iOS under memory pressure |
@@ -393,7 +401,8 @@ Located in Settings > Performance.
 | `CounterpartyAssetImageResolver.swift` | Manifest URLCache, versioned asset→URL map, CIP-25 then Horizon, force re-resolve |
 | `CounterpartyArtworkURL.swift` | CIP-25 classifier, `ipfs:` / `ar://` HTTPS rewrite, GIF extension check |
 | `CounterpartySupplyCache.swift` | Persisted asset→supply map, overlay then GET /assets confirm |
-| `StampFolioApp.swift` | Kingfisher memory cache limit (100 MB) |
+| `ProtocolImageCache.swift` | Named stamps (40 MB) and Counterparty (70 MB) Kingfisher caches |
+| `StampFolioApp.swift` | `ProtocolImageCache.warm()` at launch |
 | `StampViewModel.swift` | `fetchAssetsMetadata()`, `fetchStampsImages()` prefetch |
 | `CounterpartyViewModel.swift` | `fetchAssetsMetadata()`, `fetchAssetsImages()` resolve + prefetch, `hydrateSupplies()` |
 | `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text stamp content |

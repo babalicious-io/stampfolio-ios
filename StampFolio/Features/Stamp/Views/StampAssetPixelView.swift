@@ -34,6 +34,7 @@ struct StampAssetPixelView: View {
                 .placeholder {
                     loadingView
                 }
+                .protocolCache(ProtocolImageCache.stamps)
                 .loadDiskFileSynchronously()
                 .cacheOriginalImage()
                 .diskCacheExpiration(.never)
@@ -51,6 +52,7 @@ struct StampAssetPixelView: View {
                 .placeholder {
                     loadingView
                 }
+                .protocolCache(ProtocolImageCache.stamps)
                 .loadDiskFileSynchronously()
                 .setProcessor(DownsamplingImageProcessor(size: CollectionImageThumbnail.size))
                 .scaleFactor(displayScale)

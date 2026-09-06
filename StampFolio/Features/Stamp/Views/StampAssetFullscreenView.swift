@@ -173,6 +173,7 @@ struct StampAssetFullscreenContent: View {
                         ProgressView()
                             .tint(appColorScheme.primary)
                     }
+                    .protocolCache(ProtocolImageCache.stamps)
                     .loadDiskFileSynchronously()
                     .cacheOriginalImage()
                     .diskCacheExpiration(.never)
@@ -184,6 +185,7 @@ struct StampAssetFullscreenContent: View {
                         ProgressView()
                             .tint(appColorScheme.primary)
                     }
+                    .protocolCache(ProtocolImageCache.stamps)
                     .loadDiskFileSynchronously()
                     .retry(maxCount: 3)
                     .cacheOriginalImage()

@@ -182,7 +182,9 @@ as Stamps: grid/row downsample to `CollectionImageThumbnail.size` (200pt) and st
 `.cacheOriginalImage()`; detail and `CounterpartyAssetFullscreenContent` decode the original (no
 processor). Path-extension `.gif` URLs use `KFAnimatedImage` when Animated GIF is on (grid/row)
 or always in detail/fullscreen. Horizon proxy URLs often have no extension and stay static
-`KFImage`. Prefetch in `fetchAssetsImages()` still warms **originals** only.
+`KFImage`. Prefetch in `fetchAssetsImages()` still warms **originals** only, into
+`ProtocolImageCache.counterparty` (70 MB memory LRU, never-expire disk). Stamps use a separate
+`ProtocolImageCache.stamps` cache (40 MB).
 
 ### Full toolbar and grid parity with Stamps
 
