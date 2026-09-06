@@ -85,7 +85,7 @@ struct StampAssetRowView: View {
     }
 
     private var previewImage: some View {
-        StampAssetImageView(asset: asset, size: AssetRowMetrics.stampPreviewSize)
+        StampAssetImageView(asset: asset, size: AssetRowMetrics.stampPreviewSize, reusesWebView: true)
             .clipShape(RoundedRectangle(cornerRadius: AssetRowMetrics.previewCornerRadius))
     }
 

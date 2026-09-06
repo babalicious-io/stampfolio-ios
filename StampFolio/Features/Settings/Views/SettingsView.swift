@@ -29,6 +29,7 @@ struct SettingsView: View {
     @AppStorage("showStamps") private var showStamps = true
     @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
     @AppStorage("performancePreview") private var performancePreview = true
+    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = true
     @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: WalletConfig?
     @State private var protocolEditMode: EditMode = .inactive
@@ -118,10 +119,11 @@ struct SettingsView: View {
                 // Performance Section
                 Section {
                     previewDisplayToggle
+                    htmlPreviewDisplayToggle
                 } header: {
                     Text("Performance")
                 } footer: {
-                    Text("Display small static preview images instead of animated GIFs in grids and lists to save resources.")
+                    Text("Static previews in grids and lists save resources. Turn off Animated GIF to freeze GIF frames. Turn off Animated HTML to show a cached snapshot of HTML and SVG stamps instead of a live WebKit view. Fullscreen always plays live.")
                 }
                 
                 // About Section
@@ -312,6 +314,26 @@ struct SettingsView: View {
         .accessibilityLabel(performancePreview ? "Animated image" : "Static preview image")
         .accessibilityValue(performancePreview ? "On" : "Off")
         .accessibilityHint("Double tap to toggle between animated and static preview images")
+    }
+
+    private var htmlPreviewDisplayToggle: some View {
+        Toggle(isOn: $htmlPerformancePreview) {
+            HStack(spacing: 14) {
+                Image(systemName: htmlPerformancePreview ? "chevron.left.forwardslash.chevron.right" : "square.fill")
+                    .foregroundStyle(appColorScheme.primary)
+                Text(htmlPerformancePreview ? "Animated HTML" : "Static HTML Preview")
+            }
+        }
+        .tint(appColorScheme.primary)
+        .padding(.vertical, 4)
+        .accessibilityLabel(htmlPerformancePreview ? "Animated HTML" : "Static HTML preview")
+        .accessibilityValue(htmlPerformancePreview ? "On" : "Off")
+        .accessibilityHint("Double tap to toggle between live HTML stamps and static snapshots")
+        .onChange(of: htmlPerformancePreview) { _, isOn in
+            if !isOn {
+                StampVectorWebViewPool.shared.drainIdle()
+            }
+        }
     }
     
     // MARK: - Wallet Icon Toggle

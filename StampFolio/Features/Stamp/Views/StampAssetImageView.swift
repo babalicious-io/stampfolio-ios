@@ -15,6 +15,8 @@ struct StampAssetImageView: View {
 
     let asset: StampAsset
     var size: CGSize = CGSize(width: 200, height: 200)
+    /// When true, HTML/SVG WKWebViews are checked out of the collection pool.
+    var reusesWebView: Bool = false
 
     // MARK: - Environment
 
@@ -31,7 +33,11 @@ struct StampAssetImageView: View {
             if imageLoadFailed {
                 failedImageView
             } else if asset.isHTML || asset.isSVG {
-                StampAssetVectorView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
+                StampAssetVectorView(
+                    url: asset.imageURL,
+                    onFailure: { imageLoadFailed = true },
+                    reusesWebView: reusesWebView
+                )
             } else if asset.isText {
                 StampAssetTextView(url: asset.imageURL, onFailure: { imageLoadFailed = true })
             } else if asset.isLibrary, let label = asset.libraryLabel {

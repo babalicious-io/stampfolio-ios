@@ -24,14 +24,14 @@ StampFolio uses these caching layers:
   CP artwork                  asset → confirmed supply     Stampchain +
                               (nil URL = no artwork)       Counterparty
 
-┌────────────────────────────┐
-│    StampContentCache       │
-│  NSCache + disk files      │
-│  HTML / SVG / Text stamps  │
-└────────────────────────────┘
+┌────────────────────────────┐   ┌──────────────────────────────┐
+│    StampContentCache       │   │ StampVectorSnapshotCache     │
+│  NSCache + disk files      │   │ NSCache + PNG disk           │
+│  HTML / SVG / Text stamps  │   │ HTML/SVG collection stills   │
+└────────────────────────────┘   └──────────────────────────────┘
 ```
 
-Counterparty holdings are image-only (no HTML/SVG/text viewer). `StampContentCache` is Stamps-only.
+Counterparty holdings are image-only (no HTML/SVG/text viewer). `StampContentCache` and `StampVectorSnapshotCache` are Stamps-only.
 
 ### Layer 1 -- URLCache (API Responses)
 
@@ -161,7 +161,32 @@ The `NSCache` tier auto-evicts entries under iOS memory pressure with no manual 
 
 #### HTML/SVG Viewport Injection
 
-Vector stamps (HTML/SVG) fetched from the network have a `<meta viewport>` tag injected before caching. This pre-processing happens once during prefetch; subsequent loads serve the already-processed HTML directly to `WKWebView` via `loadHTMLString()`, avoiding both the network request and the string processing.
+Vector stamps (HTML/SVG) fetched from the network have a `<meta viewport>` tag injected before caching. This pre-processing happens once during prefetch. Collection cells do **not** treat `loadHTMLString()` as visually instant — WebKit still has to parse and paint. Collection previews use a rendered bitmap from `StampVectorSnapshotCache` (below). Fullscreen still loads HTML into `WKWebView`.
+
+### Layer 3.5 -- StampVectorSnapshotCache (HTML/SVG collection stills)
+
+A two-tier actor cache of 200pt PNG snapshots of HTML/SVG stamps, used by grid, list, and the details sheet. Fullscreen and slideshow keep a live `WKWebView` and do not read this cache.
+
+| Property | Value |
+|----------|-------|
+| Memory tier | `NSCache<NSString, UIImage>`, 50 entries max |
+| Disk tier | PNG files in `Caches/stamp_vector_snapshots/` |
+| Key | SHA-256 of URL + `light`/`dark` appearance |
+| Expiration | Never |
+| Size | 200pt (same as pixel thumbnails) |
+
+`fetchStampsImages()` writes HTML into `StampContentCache`, then `StampVectorSnapshotPrefetcher` walks those URLs on one off-screen 200pt `WKWebView` (serial, hosted in the key window at alpha 0.01). Collection cells that appear first still capture on `didFinish`; the prefetcher skips URLs already stored.
+
+When **Animated HTML** is on, `StampVectorWebViewPool` reuses collection `WKWebView`s across view-mode changes (exclusive URL checkout, idle LRU ~20). Details and fullscreen are unpooled. Turning the toggle off drains idle views and shows snapshots only.
+
+#### Animated HTML Handling
+
+A user-configurable `htmlPerformancePreview` setting (Settings > Performance) controls collection/detail HTML/SVG:
+
+- **Animated HTML ON** (default): snapshot placeholder, then a live (pooled in grid/list) `WKWebView`
+- **Animated HTML OFF**: cached snapshot only; no collection WebKit after the first capture/prefetch
+
+Fullscreen always uses live `WebContentView`.
 
 ### Layer 4 -- Counterparty resolved artwork URLs
 
@@ -246,9 +271,9 @@ in AddWalletView  -> Wallet to SwiftData  ->   sheet dismisses immediately
                                     ▼                                    ▼
                               Stamps for that wallet              Counterparty for that wallet
                               fetchStampsImages()                 fetchAssetsImages()
-                              (new URLs only,                     resolve URLs + Kingfisher
-                               does not cancel full prefetch)     (incremental)
-                                                                  hydrateSupplies()
+                              (new URLs only: pixel + HTML        resolve URLs + Kingfisher
+                               + snapshot prefetch;               (incremental)
+                               does not cancel full prefetch)     hydrateSupplies()
                                                                   overlay cache, then GET /assets
                                                                   (incremental, concurrency 4)
 ```
@@ -293,25 +318,19 @@ StampAssetPixelView renders
 ```
 StampAssetVectorView renders
        │
-       ▼
-StampContentCache.read(url)
+       ├── Snapshot cache hit ──> show UIImage immediately
+       │         │
+       │         └── Animated HTML ON ──> attach pooled WKWebView (skip load if already painted)
        │
-       ├── NSCache hit ──> loadHTMLString() instantly
-       │
-       ├── Disk hit ──> promote to NSCache, loadHTMLString()
-       │
-       └── Cache miss ──> URLSession fetch
-                              │
-                              ▼
-                         Inject viewport meta tag
-                              │
-                              ▼
-                         StampContentCache.write()
-                         (memory + disk)
-                              │
-                              ▼
-                         loadHTMLString()
+       └── Snapshot miss ──> WKWebView + spinner
+                 │
+                 ├── StampContentCache.read ──> loadHTMLString()
+                 │         (NSCache / disk / network + viewport inject)
+                 │
+                 └── didFinish ──> takeSnapshot, downsample 200pt, write StampVectorSnapshotCache
 ```
+
+`loadHTMLString()` is not visually instant. Instant collection display is the PNG snapshot (and a pooled WebView that already loaded that URL).
 
 ## Manual Refresh
 
@@ -334,7 +353,7 @@ fetchAssetMetadata(wallet, forceRefresh: true)   // Stamps, then Counterparty
                  hydrateSupplies(forceRefresh: true) — refetch supply, rewrite JSON cache
 ```
 
-Collection **Try Again** force-refreshes every wallet the same way. Kingfisher and `StampContentCache` are not cleared.
+Collection **Try Again** force-refreshes every wallet the same way. Kingfisher, `StampContentCache`, and `StampVectorSnapshotCache` are not cleared.
 
 ## Memory Management
 
@@ -342,8 +361,11 @@ Collection **Try Again** force-refreshes every wallet the same way. Kingfisher a
 |----------|-------|----------|
 | Kingfisher memory cache | 100 MB | LRU eviction by Kingfisher |
 | Kingfisher disk cache | Unlimited | Never expires |
-| StampContentCache NSCache | 50 entries | Auto-evicted by iOS under memory pressure |
+| StampContentCache NSCache | 100 entries | Auto-evicted by iOS under memory pressure |
 | StampContentCache disk | Unlimited | Never expires |
+| StampVectorSnapshotCache NSCache | 50 entries | Auto-evicted by iOS under memory pressure |
+| StampVectorSnapshotCache disk | Unlimited | Never expires |
+| StampVectorWebViewPool idle | ~20 WKWebViews | LRU; drained on memory warning or Animated HTML off |
 | CP resolved URL map | One JSON file | Replaced on each resolve; bypassed on force refresh |
 | CP confirmed supply map | One JSON file | Overlay on launch; rewritten after GET /assets; force refresh refetches |
 | Stampchain URLCache memory/disk | 10 MB / 50 MB | Managed by system |
@@ -351,13 +373,14 @@ Collection **Try Again** force-refreshes every wallet the same way. Kingfisher a
 | CP manifest URLCache memory/disk | 5 MB / 20 MB | Managed by system |
 | Downsampled thumbnails | 200pt | Cached separately from originals |
 
-Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMemoryWarningNotification`. The `NSCache` in `StampContentCache` is also Apple-managed and auto-evicts under memory pressure. Disk caches persist across app launches.
+Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMemoryWarningNotification`. The `NSCache` tiers in `StampContentCache` and `StampVectorSnapshotCache` are also Apple-managed and auto-evict under memory pressure. `StampVectorWebViewPool` drains idle WebViews on the same memory warning. Disk caches persist across app launches.
 
 ## User Settings
 
 | Setting | Key | Default | Effect |
 |---------|-----|---------|--------|
 | Animated Images | `performancePreview` | `true` | When off, GIFs render as static downsampled thumbnails in grids/lists |
+| Animated HTML | `htmlPerformancePreview` | `true` | When off, HTML/SVG stamps show a cached 200pt snapshot in grids, lists, and the details sheet |
 
 Located in Settings > Performance.
 
@@ -374,11 +397,14 @@ Located in Settings > Performance.
 | `StampViewModel.swift` | `fetchAssetsMetadata()`, `fetchStampsImages()` prefetch |
 | `CounterpartyViewModel.swift` | `fetchAssetsMetadata()`, `fetchAssetsImages()` resolve + prefetch, `hydrateSupplies()` |
 | `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text stamp content |
+| `StampVectorSnapshotCache.swift` | Two-tier actor cache for 200pt HTML/SVG collection snapshots |
+| `StampVectorSnapshotPrefetcher.swift` | Serial offscreen WKWebView snapshot prefetch after HTML cache |
+| `StampVectorWebViewPool.swift` | Exclusive URL-keyed WKWebView reuse for collection cells |
 | `StampAssetPixelView.swift` | Downsampled thumbnails, sync disk load, animated preview toggle |
 | `StampAssetFullscreenView.swift` | Full-resolution images, sync disk load |
-| `StampAssetVectorView.swift` | WKWebView with StampContentCache read/write |
+| `StampAssetVectorView.swift` | Snapshot-first HTML/SVG preview, pooled WKWebView when animated |
 | `StampAssetTextView.swift` | Text content with StampContentCache read/write |
 | `CounterpartyAssetImageView.swift` | KFImage never-expire disk cache, resolver-backed artwork |
 | `AddWalletView.swift` | Save, dismiss, fetch only the new wallet |
 | `StampView.swift` | Cache-first `.task`, deletion-only `.onChange` |
-| `SettingsView.swift` | Per-wallet refresh swipe, performance preview toggle |
+| `SettingsView.swift` | Per-wallet refresh swipe, GIF and HTML performance preview toggles |

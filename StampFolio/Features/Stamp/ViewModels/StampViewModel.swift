@@ -309,7 +309,9 @@ final class StampViewModel {
     }
     
     /// Prefetch all stamp images in background
-    /// Pixel stamps use Kingfisher ImagePrefetcher, vector/text use URLSession
+    /// Pixel stamps use Kingfisher ImagePrefetcher, vector/text use URLSession,
+    /// then HTML/SVG snapshots via StampVectorSnapshotPrefetcher
+    @MainActor
     func fetchStampsImages() {
         fetchStampsImages(from: assets, cancelExisting: true)
     }
@@ -318,11 +320,13 @@ final class StampViewModel {
     /// - Parameters:
     ///   - displays: Stamps whose image URLs should be prefetched
     ///   - cancelExisting: When true, stop in-flight prefetch of the full collection
+    @MainActor
     func fetchStampsImages(from displays: [StampDisplay], cancelExisting: Bool) {
         if cancelExisting {
             imagePrefetcher?.stop()
             incrementalImagePrefetchers.forEach { $0.stop() }
             incrementalImagePrefetchers.removeAll()
+            StampVectorSnapshotPrefetcher.shared.cancel()
         }
         
         // Separate URLs by stamp type
@@ -428,6 +432,10 @@ final class StampViewModel {
                 }
                 
                 print("✅ Vector/text prefetch done: \(vectorURLs.count) vector + \(textURLs.count) text stamps cached")
+
+                if !vectorURLs.isEmpty {
+                    await StampVectorSnapshotPrefetcher.shared.enqueue(vectorURLs)
+                }
             }
         }
     }

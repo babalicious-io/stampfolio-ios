@@ -60,7 +60,7 @@ struct StampAssetCardView: View {
     private var stampContent: some View {
         GeometryReader { geometry in
             ZStack {
-                StampAssetImageView(asset: asset, size: geometry.size)
+                StampAssetImageView(asset: asset, size: geometry.size, reusesWebView: true)
                 
                 // Overlay: Stamp number (top left), wallet icon (top right) and Edition balance (bottom right)
                 // Hidden in dense grid mode for cleaner appearance
