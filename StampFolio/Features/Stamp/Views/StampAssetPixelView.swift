@@ -25,12 +25,6 @@ struct StampAssetPixelView: View {
     /// User preference: animated GIF previews or static downsampled thumbnails
     @AppStorage("performancePreview") private var performancePreview = true
     
-    // MARK: - Constants
-    
-    /// Downsampled thumbnail size for grid/row views (200pt).
-    /// Kingfisher caches both this small decoded bitmap and the full-res original on disk.
-    private static let thumbnailSize = CGSize(width: 200, height: 200)
-    
     // MARK: - Body
     
     var body: some View {
@@ -58,7 +52,7 @@ struct StampAssetPixelView: View {
                     loadingView
                 }
                 .loadDiskFileSynchronously()
-                .setProcessor(DownsamplingImageProcessor(size: Self.thumbnailSize))
+                .setProcessor(DownsamplingImageProcessor(size: CollectionImageThumbnail.size))
                 .scaleFactor(displayScale)
                 .retry(maxCount: 3, interval: .seconds(1))
                 .fade(duration: 0.3)

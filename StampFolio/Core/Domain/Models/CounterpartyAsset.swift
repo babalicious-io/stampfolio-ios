@@ -153,12 +153,6 @@ struct CounterpartyAsset: Identifiable, Codable, Hashable, Sendable {
         asset.hasPrefix("A") && asset.dropFirst().allSatisfy { $0.isNumber }
     }
 
-    /// Whether the description looks like a URL to a JSON manifest (common convention for token icons/art)
-    var descriptionIsURL: Bool {
-        guard let description = description else { return false }
-        return description.hasPrefix("http://") || description.hasPrefix("https://")
-    }
-
     /// Date of the first issuance, if known
     var firstIssuanceDate: Date? {
         firstIssuanceBlockTime.map { Date(timeIntervalSince1970: TimeInterval($0)) }

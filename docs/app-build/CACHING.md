@@ -79,21 +79,15 @@ ImageCache.default.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
 
 #### Dual-Resolution Caching
 
-Grid and row views use `DownsamplingImageProcessor` to decode images at 200x200pt, drastically reducing memory. The `.cacheOriginalImage()` modifier ensures the full-resolution original is also saved to disk for the detail view.
+Grid and row views use `DownsamplingImageProcessor` at `CollectionImageThumbnail.size` (200pt), drastically reducing memory. The `.cacheOriginalImage()` modifier ensures the full-resolution original is also saved to disk for the detail view. Stamps (`StampAssetPixelView`) and Counterparty (`CounterpartyAssetImageView` thumbnail mode) share that size.
 
 ```swift
-// StampAssetPixelView.swift -- grid/row (downsampled thumbnail)
-KFImage(stamp.imageURL)
+// StampAssetPixelView / CounterpartyAssetImageView thumbnail -- grid/row
+KFImage(url)
     .loadDiskFileSynchronously()
-    .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200)))
+    .setProcessor(DownsamplingImageProcessor(size: CollectionImageThumbnail.size))
     .scaleFactor(UIScreen.main.scale)
     .cacheOriginalImage()       // also saves full-res to disk
-    .diskCacheExpiration(.never)
-
-// StampAssetFullscreenView.swift -- fullscreen (full resolution)
-KFImage(currentStamp.imageURL)
-    .loadDiskFileSynchronously()
-    .cacheOriginalImage()
     .diskCacheExpiration(.never)
 ```
 
@@ -112,7 +106,7 @@ The detail view always plays animated GIFs at full resolution regardless of this
 
 `.loadDiskFileSynchronously()` is applied to all Kingfisher calls. When an image is already in the disk cache, Kingfisher loads it on the calling thread instead of dispatching to a background queue. This eliminates the brief placeholder flash for cached stamps.
 
-Counterparty uses the same Kingfisher options on `CounterpartyAssetImageView` (`.cacheOriginalImage()`, `.diskCacheExpiration(.never)`, `.loadDiskFileSynchronously()`). Wallet refresh re-resolves artwork URLs and re-prefetches; it does **not** delete existing Kingfisher files. A new URL downloads; the same URL is a cache hit.
+Counterparty uses the same dual-resolution Kingfisher pattern on one HD URL (CIP-25 / Horizon poster): grid/row `DownsamplingImageProcessor(CollectionImageThumbnail.size)` + `.cacheOriginalImage()`; detail and fullscreen decode the original. GIF path extensions use `KFAnimatedImage` like Stamps; Horizon URLs without an extension stay static. Wallet refresh re-resolves artwork URLs and re-prefetches; it does **not** delete existing Kingfisher files. A new URL downloads; the same URL is a cache hit. HTTPS-only: HTTP description links are rejected and Horizon is tried instead.
 
 ### Layer 3 -- StampContentCache (HTML/SVG/Text)
 
@@ -193,15 +187,17 @@ Fullscreen always uses live `WebContentView`.
 
 ### Layer 4 -- Counterparty resolved artwork URLs
 
-Counterparty assets do not include an image URL. `CounterpartyAssetImageResolver` maps asset name → artwork URL (or "none") from the on-chain `description` and, if needed, Horizon Market.
+Counterparty assets do not include an image URL. `CounterpartyAssetImageResolver` maps asset name → artwork URL (or "none") via CIP-25 classification (`CounterpartyArtworkURL`), HTTPS gateway rewrite, large-first JSON ranking, then Horizon posters (`image_large_url` even when `kind` is not `"image"`).
 
 | Property | Value |
 |----------|-------|
 | Memory | `[String: URL?]` on the resolver actor (`nil` = no artwork) |
-| Disk | `Caches/counterparty_resolved_urls.json` (empty string = no artwork) |
+| Disk | `Caches/counterparty_resolved_urls.json` (`version: 2`, empty string = no artwork) |
 | Manifest HTTP cache | `counterparty_manifest_cache` URLCache |
 | Expiration | Persists across launches; re-resolved only when `forceRefresh` is true |
-| Artwork bytes | Kingfisher disk, never expire (same as Stamps) |
+| Artwork bytes | Kingfisher disk, never expire (same dual-res as Stamps: 200pt grid, original fullscreen, one URL) |
+
+Version 2 of the JSON map is not compatible with the unversioned pre-CIP-25 file (different ranking and no `ipfs:` / `ar://` rewrite). The old file is deleted on first launch after this change.
 
 ```
 fetchAssetsMetadata / fetchAssetMetadata
@@ -394,7 +390,8 @@ Located in Settings > Performance.
 | `NetworkRequestExecutor.swift` | Shared URLCache session, cache-first policy, force refresh |
 | `StampchainAPIClient.swift` | Stampchain cache path (10/50 MB) |
 | `CounterpartyAPIClient.swift` | Counterparty cache path (5/25 MB) |
-| `CounterpartyAssetImageResolver.swift` | Manifest URLCache, persisted asset→URL map, force re-resolve |
+| `CounterpartyAssetImageResolver.swift` | Manifest URLCache, versioned asset→URL map, CIP-25 then Horizon, force re-resolve |
+| `CounterpartyArtworkURL.swift` | CIP-25 classifier, `ipfs:` / `ar://` HTTPS rewrite, GIF extension check |
 | `CounterpartySupplyCache.swift` | Persisted asset→supply map, overlay then GET /assets confirm |
 | `StampFolioApp.swift` | Kingfisher memory cache limit (100 MB) |
 | `StampViewModel.swift` | `fetchAssetsMetadata()`, `fetchStampsImages()` prefetch |
@@ -407,7 +404,8 @@ Located in Settings > Performance.
 | `StampAssetFullscreenView.swift` | Full-resolution images, sync disk load |
 | `StampAssetVectorView.swift` | Snapshot-first HTML/SVG preview, pooled WKWebView when animated |
 | `StampAssetTextView.swift` | Text content with StampContentCache read/write |
-| `CounterpartyAssetImageView.swift` | KFImage never-expire disk cache, resolver-backed artwork |
+| `CounterpartyAssetImageView.swift` | Thumbnail 200pt vs original; KFAnimatedImage for `.gif`; resolver-backed artwork |
+| `CollectionViewComponents.swift` | `CollectionImageThumbnail.size` (200pt) shared by Stamps and Counterparty |
 | `AddWalletView.swift` | Save, dismiss, fetch only the new wallet |
 | `StampView.swift` | Cache-first `.task`, deletion-only `.onChange` |
 | `SettingsView.swift` | Per-wallet refresh swipe, GIF and HTML performance preview toggles |

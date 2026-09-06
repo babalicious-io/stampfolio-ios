@@ -8,6 +8,15 @@
 import SwiftUI
 import Kingfisher
 
+/// Decode size for collection vs immersive Counterparty artwork.
+/// Layout `size` is independent (letterboxed `.fit` in the view frame).
+enum CounterpartyArtworkDisplayMode {
+    /// 200pt downsample + original on disk (grid, row)
+    case thumbnail
+    /// Full original decode (detail, fullscreen)
+    case original
+}
+
 /// Renders a Counterparty asset's artwork when one can be resolved from its `description`
 /// field, falling back to the standard placeholder icon when the asset has no artwork or the
 /// image fails to load.
@@ -16,12 +25,16 @@ struct CounterpartyAssetImageView: View {
     // MARK: - Properties
 
     let asset: CounterpartyAsset
-    var size: CGSize = CGSize(width: 200, height: 200)
+    var size: CGSize = CollectionImageThumbnail.size
+    var displayMode: CounterpartyArtworkDisplayMode = .thumbnail
 
     // MARK: - Environment
 
     @Environment(\.appColorScheme) private var appColorScheme
     @Environment(\.displayScale) private var displayScale
+
+    /// User preference: animated GIF previews or static downsampled thumbnails
+    @AppStorage("performancePreview") private var performancePreview = true
 
     // MARK: - State
 
@@ -39,21 +52,7 @@ struct CounterpartyAssetImageView: View {
                     // tint fills any letterboxing around it instead.
                     appColorScheme.primary.opacity(0.08)
 
-                    KFImage(resolvedImageURL)
-                        .placeholder { placeholderIcon }
-                        .loadDiskFileSynchronously()
-                        .setProcessor(DownsamplingImageProcessor(size: size))
-                        .scaleFactor(displayScale)
-                        .retry(maxCount: 2, interval: .seconds(1))
-                        .fade(duration: 0.25)
-                        .cacheOriginalImage()
-                        .diskCacheExpiration(.never)
-                        .onFailure { _ in
-                            imageLoadFailed = true
-                        }
-                        .resizable()
-                        .interpolation(.none) // Many manifests only have tiny (e.g. 48x48) icons; avoid blurring them when scaled up
-                        .aspectRatio(contentMode: .fit)
+                    artwork(for: resolvedImageURL)
                 }
                 .frame(width: size.width, height: size.height)
                 .clipped()
@@ -64,6 +63,61 @@ struct CounterpartyAssetImageView: View {
         .task(id: asset.id) {
             await resolveImageIfNeeded()
         }
+    }
+
+    // MARK: - Artwork
+
+    @ViewBuilder
+    private func artwork(for url: URL) -> some View {
+        if shouldAnimateGIF(url) {
+            KFAnimatedImage(url)
+                .placeholder { placeholderIcon }
+                .loadDiskFileSynchronously()
+                .cacheOriginalImage()
+                .diskCacheExpiration(.never)
+                .onFailure { _ in
+                    imageLoadFailed = true
+                }
+                .aspectRatio(contentMode: .fit)
+                .frame(width: size.width, height: size.height)
+        } else if displayMode == .thumbnail {
+            KFImage(url)
+                .placeholder { placeholderIcon }
+                .loadDiskFileSynchronously()
+                .setProcessor(DownsamplingImageProcessor(size: CollectionImageThumbnail.size))
+                .scaleFactor(displayScale)
+                .retry(maxCount: 2, interval: .seconds(1))
+                .fade(duration: 0.25)
+                .cacheOriginalImage()
+                .diskCacheExpiration(.never)
+                .onFailure { _ in
+                    imageLoadFailed = true
+                }
+                .resizable()
+                .interpolation(.none)
+                .aspectRatio(contentMode: .fit)
+        } else {
+            KFImage(url)
+                .placeholder { placeholderIcon }
+                .loadDiskFileSynchronously()
+                .retry(maxCount: 3, interval: .seconds(1))
+                .fade(duration: 0.25)
+                .cacheOriginalImage()
+                .diskCacheExpiration(.never)
+                .onFailure { _ in
+                    imageLoadFailed = true
+                }
+                .resizable()
+                .interpolation(.none)
+                .aspectRatio(contentMode: .fit)
+        }
+    }
+
+    /// Animate when the URL is a `.gif` file and either this is original (detail) or animated previews are on.
+    /// Horizon proxy URLs often have no extension and stay on static `KFImage`.
+    private func shouldAnimateGIF(_ url: URL) -> Bool {
+        guard CounterpartyArtworkURL.isGIF(url) else { return false }
+        return displayMode == .original || performancePreview
     }
 
     // MARK: - Placeholder Icon
@@ -102,18 +156,30 @@ struct CounterpartyAssetFullscreenContent: View {
     var body: some View {
         Group {
             if let resolvedImageURL, !imageLoadFailed {
-                KFImage(resolvedImageURL)
-                    .placeholder { placeholderIcon }
-                    .loadDiskFileSynchronously()
-                    .retry(maxCount: 3)
-                    .cacheOriginalImage()
-                    .diskCacheExpiration(.never)
-                    .onFailure { _ in
-                        imageLoadFailed = true
-                    }
-                    .resizable()
-                    .interpolation(.none)
-                    .aspectRatio(contentMode: .fit)
+                if CounterpartyArtworkURL.isGIF(resolvedImageURL) {
+                    KFAnimatedImage(resolvedImageURL)
+                        .placeholder { placeholderIcon }
+                        .loadDiskFileSynchronously()
+                        .cacheOriginalImage()
+                        .diskCacheExpiration(.never)
+                        .onFailure { _ in
+                            imageLoadFailed = true
+                        }
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    KFImage(resolvedImageURL)
+                        .placeholder { placeholderIcon }
+                        .loadDiskFileSynchronously()
+                        .retry(maxCount: 3)
+                        .cacheOriginalImage()
+                        .diskCacheExpiration(.never)
+                        .onFailure { _ in
+                            imageLoadFailed = true
+                        }
+                        .resizable()
+                        .interpolation(.none)
+                        .aspectRatio(contentMode: .fit)
+                }
             } else {
                 placeholderIcon
             }

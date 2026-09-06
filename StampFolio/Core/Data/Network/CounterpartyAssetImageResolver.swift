@@ -10,29 +10,32 @@ import Foundation
 
 /// Resolves a Counterparty asset's image URL.
 ///
-/// Counterparty assets don't carry an image URL directly — artwork (when it exists) is hosted
-/// externally and referenced indirectly through the asset's `description` field, which is
-/// sometimes a URL to a JSON manifest (`CounterpartyAssetManifest`) containing the real image
-/// URL, and sometimes a direct link to the image itself.
+/// Artwork is not on the asset record. The on-chain `description` is classified as CIP-25
+/// (imgur shorthand, `ipfs:` / `ar://`, HTTPS JSON or raster URL). Native schemes are rewritten
+/// to HTTPS gateways (`ipfs.io`, `arweave.net`). Only `https://` raster URLs are returned so
+/// ATS cannot black-hole an HTTP "success".
 ///
-/// Many of these `description` links date back to 2014-2016 (the original "Rare Pepe" era) and
-/// their hosts have since died, moved, or gone HTTP-only. Marketplaces like Horizon Market and
-/// pepe.wtf solve this by maintaining their own permanent, re-hosted archive of this artwork
-/// (S3/Arweave) instead of depending on those fragile original hosts. Horizon Market exposes
-/// this archive through a public, CORS-open JSON endpoint
-/// (`https://horizon.market/api/tokens/counterparty/{asset}`), so this resolver tries the
-/// on-chain `description` first (cheap, no third party involved, works for currently-alive
-/// hosts) and falls back to Horizon's pre-resolved artwork when that fails or the description
-/// isn't a URL at all. Most assets have no artwork anywhere, in which case this returns `nil`.
+/// When description resolution fails (HTTP-only host, gateway timeout, `stamp:` / `ord:`,
+/// plain text), Horizon Market's archive is tried next. Horizon posters are used even when
+/// `media.kind` is not `"image"` (audio/video still show a still). Placeholder Horizon art is skipped.
 ///
-/// Resolved URLs (including "no artwork") are kept in memory and persisted under Caches so
-/// cold launches skip Horizon and dead hosts. Settings wallet refresh passes `forceRefresh`
-/// to re-resolve in case artwork was archived later.
+/// Resolved URLs (including "no artwork") are kept in memory and persisted under Caches.
+/// Cache version 2 dropped pre-CIP-25 mappings so large-first / gateway URLs replace old picks.
+/// Settings wallet refresh passes `forceRefresh` to re-resolve in case artwork was archived later.
 actor CounterpartyAssetImageResolver {
 
     // MARK: - Singleton
 
     static let shared = CounterpartyAssetImageResolver()
+
+    // MARK: - Nested Types
+
+    /// On-disk map. `version` is bumped when resolution rules change so stale URLs are not reused.
+    private struct DiskCache: Codable {
+        var version: Int
+        var urls: [String: String]
+        static let currentVersion = 2
+    }
 
     // MARK: - Properties
 
@@ -105,15 +108,19 @@ actor CounterpartyAssetImageResolver {
     // MARK: - Private Methods
 
     private func resolve(asset: CounterpartyAsset, forceRefresh: Bool) async -> URL? {
-        if asset.descriptionIsURL,
-           let description = asset.description,
-           let descriptionURL = URL(string: description),
-           let resolved = await fetchImageURL(from: descriptionURL, forceRefresh: forceRefresh) {
-            return resolved
+        if let description = asset.description {
+            switch CounterpartyArtworkURL.classify(description) {
+            case .directImage(let url):
+                return url
+            case .fetch(let url):
+                if let resolved = await fetchImageURL(from: url, forceRefresh: forceRefresh) {
+                    return resolved
+                }
+            case .skip:
+                break
+            }
         }
 
-        // On-chain description missing, non-URL, or its host is dead/broken — try Horizon
-        // Market's pre-resolved archive before giving up.
         return await fetchFromHorizonMarket(assetName: asset.displayName, forceRefresh: forceRefresh)
     }
 
@@ -123,13 +130,13 @@ actor CounterpartyAssetImageResolver {
 
             if let manifest = try? decoder.decode(CounterpartyAssetManifest.self, from: data),
                let urlString = manifest.resolvedImageURLString,
-               let resolvedURL = URL(string: urlString) {
+               let resolvedURL = CounterpartyArtworkURL.httpsURL(from: urlString) {
                 return resolvedURL
             }
 
-            // Not a JSON manifest — if the description URL itself served image bytes,
-            // treat it as a direct link to the artwork.
-            if let mimeType = (response as? HTTPURLResponse)?.mimeType, mimeType.hasPrefix("image/") {
+            if let mimeType = (response as? HTTPURLResponse)?.mimeType,
+               CounterpartyArtworkURL.isRasterMIME(mimeType),
+               descriptionURL.scheme?.lowercased() == "https" {
                 return descriptionURL
             }
 
@@ -142,6 +149,7 @@ actor CounterpartyAssetImageResolver {
     /// Queries Horizon Market's public asset endpoint for artwork it has already resolved
     /// (and, for HTTP-only sources, proxied over HTTPS) for the given asset. Returns `nil`
     /// when Horizon doesn't recognize the asset or only has a generic placeholder for it.
+    /// Audio/video tokens still use poster URLs (`image_large_url` / `image_url`).
     private func fetchFromHorizonMarket(assetName: String, forceRefresh: Bool) async -> URL? {
         guard let encodedName = assetName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let url = URL(string: "https://horizon.market/api/tokens/counterparty/\(encodedName)") else {
@@ -153,15 +161,16 @@ actor CounterpartyAssetImageResolver {
             let decoded = try decoder.decode(HorizonAssetResponse.self, from: data)
             let media = decoded.data.media
 
-            guard !media.imageIsPlaceholder, media.kind == "image" else {
+            guard !media.imageIsPlaceholder else {
                 return nil
             }
 
-            guard let urlString = media.imageLargeURL ?? media.imageURL else {
+            guard let urlString = media.imageLargeURL ?? media.imageURL,
+                  let httpsURL = CounterpartyArtworkURL.httpsURL(from: urlString) else {
                 return nil
             }
 
-            return URL(string: urlString)
+            return httpsURL
         } catch {
             return nil
         }
@@ -176,18 +185,25 @@ actor CounterpartyAssetImageResolver {
     }
 
     private static func loadCache(from diskURL: URL) -> [String: URL?] {
-        guard let data = try? Data(contentsOf: diskURL),
-              let decoded = try? JSONDecoder().decode([String: String].self, from: data) else {
-            return [:]
+        guard let data = try? Data(contentsOf: diskURL) else { return [:] }
+
+        if let payload = try? JSONDecoder().decode(DiskCache.self, from: data),
+           payload.version == DiskCache.currentVersion {
+            return payload.urls.mapValues { $0.isEmpty ? nil : URL(string: $0) }
         }
-        // Empty string is the on-disk sentinel for "no artwork"
-        return decoded.mapValues { $0.isEmpty ? nil : URL(string: $0) }
+
+        // Unversioned pre-CIP-25 map used different ranking and no gateway rewrite — drop it.
+        try? FileManager.default.removeItem(at: diskURL)
+        return [:]
     }
 
     private func persistCache() {
-        let payload: [String: String] = Dictionary(uniqueKeysWithValues: cache.map { key, url in
-            (key, url?.absoluteString ?? "")
-        })
+        let payload = DiskCache(
+            version: DiskCache.currentVersion,
+            urls: Dictionary(uniqueKeysWithValues: cache.map { key, url in
+                (key, url?.absoluteString ?? "")
+            })
+        )
         guard let data = try? JSONEncoder().encode(payload) else { return }
         try? data.write(to: diskURL, options: .atomic)
     }
@@ -206,13 +222,11 @@ private struct HorizonAssetData: Decodable {
 }
 
 private struct HorizonAssetMedia: Decodable {
-    let kind: String
     let imageURL: String?
     let imageLargeURL: String?
     let imageIsPlaceholder: Bool
 
     enum CodingKeys: String, CodingKey {
-        case kind
         case imageURL = "image_url"
         case imageLargeURL = "image_large_url"
         case imageIsPlaceholder = "image_is_placeholder"

@@ -128,7 +128,7 @@ struct CounterpartyAssetDetailView: View {
             .aspectRatio(5 / 7, contentMode: .fit)
             .overlay {
                 GeometryReader { geometry in
-                    CounterpartyAssetImageView(asset: asset, size: geometry.size)
+                    CounterpartyAssetImageView(asset: asset, size: geometry.size, displayMode: .original)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
             }

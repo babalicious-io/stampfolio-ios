@@ -111,9 +111,11 @@ CounterpartyDisplay   (UI layer: asset + balance + wallet)
   `counterparty_cache`, separate from Stampchain's `stampchain_cache`), reuses the shared
   `NetworkError` enum defined in `StampchainAPIClient.swift`.
 - `CounterpartyAssetImageResolver` (`Core/Data/Network/`) — actor, own `URLCache` (disk path
-  `counterparty_manifest_cache`), resolves an asset's artwork URL from its `description` field
-  (see "Resolving artwork from `description`" below) and decodes `CounterpartyAssetManifest`
-  (`Core/Domain/Models/`) when the description points to a JSON manifest.
+  `counterparty_manifest_cache`), classifies `description` via `CounterpartyArtworkURL` (CIP-25),
+  rewrites `ipfs:` / `ar://` to HTTPS gateways, decodes `CounterpartyAssetManifest` (large-first),
+  and falls back to Horizon posters. Only `https://` raster URLs are returned.
+- `CounterpartyArtworkURL` (`Core/Data/Network/`) — CIP-25 classifier and gateway rewrite used by
+  the resolver and GIF path-extension checks in the image views.
 - `CounterpartySupplyCache` (`Core/Data/Cache/`) — actor, memory + `Caches/counterparty_supply.json`,
   confirmed supply from `GET /assets/{asset}`. Overlay on list bind; hydrate remaining in
   the background after balances. Not cleared on app background (unlike `detailCache`).
@@ -140,41 +142,47 @@ is dropped without another network round-trip.
 ### Resolving artwork from `description`
 
 Counterparty assets don't carry an image URL directly. Most fungible tokens have no artwork at
-all, but some reference it indirectly through the `description` field, which is sometimes a URL
-to an external JSON manifest (e.g. `description: "https://xcp.fun/XCPIANS.json"`) containing the
-real image URL (`image`, or an `images: [{type, data}]` array), and occasionally a direct link to
-the image itself.
+all. When they do, the on-chain `description` follows CIP-25 / TokenScan conventions rather than
+always being a plain `https://` JSON URL.
 
-`CounterpartyAssetImageResolver` (`Core/Data/Network/`) is an actor that resolves this indirection.
-It tries the on-chain `description` first: fetches it once, tries to decode it as a
-`CounterpartyAssetManifest`, and falls back to treating the `description` URL as a direct image
-link if the response's MIME type is `image/*`. Results (including "no artwork") are cached in
-memory and persisted to `Caches/counterparty_resolved_urls.json` so cold launches skip Horizon
-and dead hosts. Settings wallet refresh passes `forceRefresh` to re-resolve from the network.
+`CounterpartyArtworkURL.classify` maps a description to:
 
-Many `description` links date back to Counterparty's 2014-2016 "Rare Pepe" era and their hosts
-have since died, moved, or serve **plain HTTP only** (which iOS's App Transport Security blocks
-by default — no ATS exception is added for this, see below). When the direct attempt fails, or
-`description` isn't a URL at all, the resolver falls back to
+| Description | Result |
+|---|---|
+| `imgur/FILE[;title]` | `https://i.imgur.com/FILE` (direct image) |
+| `ipfs:CID` / `ipfs://CID[/path]` | `https://ipfs.io/ipfs/{CID[/path]}`, then fetch as JSON or image |
+| `ar://TXID[/path]` | `https://arweave.net/{TXID[/path]}`, then fetch as JSON or image |
+| HTTPS URL with gif/jpg/png/webp/avif | Direct image |
+| HTTPS JSON (`url.json;sha256` hash suffix stripped) | Fetch, decode `CounterpartyAssetManifest` |
+| HTTPS URL without an image extension | Fetch; use if JSON or raster `image/*` MIME |
+| `stamp:`, `ord:`, YouTube/SoundCloud, plain text, `http://` | Skip (Horizon) |
+
+Inner JSON image fields get the **same** gateway rewrite. Already-HTTPS Arweave (`https://….ar.io/…`)
+and HTTPS IPFS gateways are left unchanged. Only `https://` URLs are returned — HTTP is never
+handed to Kingfisher (no ATS exception). One gateway per protocol (`ipfs.io`, `arweave.net`);
+failures and timeouts fall through to Horizon. TokenScan HTML is not scraped.
+
+`CounterpartyAssetManifest` ranks artwork **large-first**: `image_large_hd` → `image_large` →
+`images` type `hires` → `large` → `standard` → top-level `image` → `icon` → first `images[].data`.
+CIP-25 `audio` / `video` / `html` fields are ignored. The resolver still returns **one** HD (or
+poster) URL. Grid/row do not fetch a second small file.
+
+When description resolution fails, the resolver falls back to
 [Horizon Market](https://horizon.market)'s public asset endpoint
-(`GET https://horizon.market/api/tokens/counterparty/{asset}`, documented as part of their
-[`horizon-market-client`](https://github.com/UnspendableLabs/Horizon-Market-Client) API surface,
-served with `Access-Control-Allow-Origin: *`). Horizon (and pepe.wtf, which it shares an S3/Arweave
-artwork archive with) maintains its own permanent, re-hosted copy of this artwork instead of
-depending on the fragile original hosts, and proxies any HTTP-only sources over HTTPS
-(`/api/asset-media/proxy?url=...`) — so this fallback recovers artwork for assets whose on-chain
-`description` link is now dead, without StampFolio needing any ATS exceptions of its own. If
-Horizon's own catalog has no real artwork either (`image_is_placeholder: true`), the resolver
-caches `nil` — that asset genuinely has no recoverable artwork anywhere.
+(`GET https://horizon.market/api/tokens/counterparty/{asset}`). Horizon proxies HTTP-only sources
+over HTTPS. `media.kind == "image"` is **not** required — audio/video tokens still show
+`image_large_url ?? image_url` posters. `image_is_placeholder: true` caches `nil`.
 
-`CounterpartyAssetImageView` (`Features/Counterparty/Views/`) wraps this resolver and renders the
-artwork with Kingfisher (`KFImage`, same downsampling/retry/fade/`.diskCacheExpiration(.never)`
-pipeline as `StampAssetPixelView`), including `.interpolation(.none)` since many of these
-manifests only ever had tiny (e.g. 48×48) icons that would otherwise blur when scaled up to
-card/row size. It falls back to the existing placeholder icon when there's no artwork or the
-load fails, and is shared by the row, card, detail, and slideshow views so each asset's image
-is only resolved once. After balances load, `CounterpartyViewModel.fetchAssetsImages()` resolves
-URLs in the background and prefetches successful artwork into Kingfisher.
+Results (including "no artwork") are cached in memory and persisted to
+`Caches/counterparty_resolved_urls.json` (`version: 2`). Version 2 dropped pre-CIP-25 mappings
+(old ranking, no gateway rewrite). Settings wallet refresh passes `forceRefresh` to re-resolve.
+
+`CounterpartyAssetImageView` uses that single URL with the same dual-resolution Kingfisher pattern
+as Stamps: grid/row downsample to `CollectionImageThumbnail.size` (200pt) and still
+`.cacheOriginalImage()`; detail and `CounterpartyAssetFullscreenContent` decode the original (no
+processor). Path-extension `.gif` URLs use `KFAnimatedImage` when Animated GIF is on (grid/row)
+or always in detail/fullscreen. Horizon proxy URLs often have no extension and stay static
+`KFImage`. Prefetch in `fetchAssetsImages()` still warms **originals** only.
 
 ### Full toolbar and grid parity with Stamps
 

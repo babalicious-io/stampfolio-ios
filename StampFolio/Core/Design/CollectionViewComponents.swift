@@ -138,6 +138,12 @@ func gridColumns(viewMode: ViewMode, horizontalSizeClass: UserInterfaceSizeClass
 
 // MARK: - Asset Row Metrics
 
+/// Shared Kingfisher downsample size for collection grid/row thumbnails (Stamps and Counterparty).
+/// Overlay Static GIF prefetch should use this same size so processed cache keys match display.
+enum CollectionImageThumbnail {
+    static let size = CGSize(width: 200, height: 200)
+}
+
 /// Shared list-row sizing for Stamp and Counterparty previews and status glyphs
 enum AssetRowMetrics {
     static let previewHeight: CGFloat = 72
