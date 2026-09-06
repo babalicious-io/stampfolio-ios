@@ -122,20 +122,17 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
             await waitForNavigation(generation: gen)
             guard gen == generation, currentURL == url else { continue }
 
-            try? await Task.sleep(for: .milliseconds(120))
+            try? await Task.sleep(for: StampVectorSnapshotImage.settleDuration)
             guard gen == generation, currentURL == url else { continue }
 
             if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
                 continue
             }
 
-            guard webView.bounds.width > 1, webView.bounds.height > 1 else { continue }
+            guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: webView) else { continue }
+            guard gen == generation, currentURL == url else { continue }
 
-            let raw = await snapshotImage()
-            guard gen == generation, currentURL == url, let raw else { continue }
-
-            let downsampled = StampVectorSnapshotImage.downsampled(raw)
-            await StampVectorSnapshotCache.shared.write(downsampled, for: url, appearance: appearance)
+            await StampVectorSnapshotCache.shared.write(thumbnail, for: url, appearance: appearance)
         }
 
         isRunning = false
@@ -152,6 +149,7 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             navigationWaiter = continuation
             Task { @MainActor in
+                // Load timeout only — animation settle happens after this returns.
                 try? await Task.sleep(for: .seconds(5))
                 guard self.generation == gen, self.navigationID == waitID else { return }
                 self.finishNavigationWait()
@@ -162,14 +160,6 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
     private func finishNavigationWait() {
         navigationWaiter?.resume()
         navigationWaiter = nil
-    }
-
-    private func snapshotImage() async -> UIImage? {
-        await withCheckedContinuation { continuation in
-            webView.takeSnapshot(with: nil) { image, _ in
-                continuation.resume(returning: image)
-            }
-        }
     }
 
     // MARK: - Host window

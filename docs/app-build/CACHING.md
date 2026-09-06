@@ -171,11 +171,12 @@ A two-tier actor cache of 200pt PNG snapshots of HTML/SVG stamps, used by grid, 
 |----------|-------|
 | Memory tier | `NSCache<NSString, UIImage>`, 50 entries max |
 | Disk tier | PNG files in `Caches/stamp_vector_snapshots/` |
-| Key | SHA-256 of URL + `light`/`dark` appearance |
+| Key | SHA-256 of URL + `light`/`dark` + `.1x1` (invalidates stretched previews) |
 | Expiration | Never |
-| Size | 200pt (same as pixel thumbnails) |
+| Size | 200×200pt 1:1 (center-cropped) |
+| Capture delay | 5s after `didFinish` so HTML animation can settle |
 
-`fetchStampsImages()` writes HTML into `StampContentCache`, then `StampVectorSnapshotPrefetcher` walks those URLs on one off-screen 200pt `WKWebView` (serial, hosted in the key window at alpha 0.01). Collection cells that appear first still capture on `didFinish`; the prefetcher skips URLs already stored.
+`fetchStampsImages()` writes HTML into `StampContentCache`, then `StampVectorSnapshotPrefetcher` walks those URLs on one off-screen 200×200pt `WKWebView` (serial, hosted in the key window at alpha 0.01). After `didFinish` it waits 5 seconds, then captures a centered 1:1 snapshot. Collection cells that appear first use the same delay; the prefetcher skips URLs already stored.
 
 When **Animated HTML** is on, `StampVectorWebViewPool` reuses collection `WKWebView`s across view-mode changes (exclusive URL checkout, idle LRU ~20). Details and fullscreen are unpooled. Turning the toggle off drains idle views and shows snapshots only.
 
@@ -327,7 +328,7 @@ StampAssetVectorView renders
                  ├── StampContentCache.read ──> loadHTMLString()
                  │         (NSCache / disk / network + viewport inject)
                  │
-                 └── didFinish ──> takeSnapshot, downsample 200pt, write StampVectorSnapshotCache
+                 └── didFinish ──> wait 5s ──> square takeSnapshot, write StampVectorSnapshotCache
 ```
 
 `loadHTMLString()` is not visually instant. Instant collection display is the PNG snapshot (and a pooled WebView that already loaded that URL).
@@ -397,7 +398,7 @@ Located in Settings > Performance.
 | `StampViewModel.swift` | `fetchAssetsMetadata()`, `fetchStampsImages()` prefetch |
 | `CounterpartyViewModel.swift` | `fetchAssetsMetadata()`, `fetchAssetsImages()` resolve + prefetch, `hydrateSupplies()` |
 | `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text stamp content |
-| `StampVectorSnapshotCache.swift` | Two-tier actor cache for 200pt HTML/SVG collection snapshots |
+| `StampVectorSnapshotCache.swift` | Two-tier actor cache for 200×200pt 1:1 HTML/SVG collection snapshots |
 | `StampVectorSnapshotPrefetcher.swift` | Serial offscreen WKWebView snapshot prefetch after HTML cache |
 | `StampVectorWebViewPool.swift` | Exclusive URL-keyed WKWebView reuse for collection cells |
 | `StampAssetPixelView.swift` | Downsampled thumbnails, sync disk load, animated preview toggle |

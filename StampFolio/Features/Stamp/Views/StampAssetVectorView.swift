@@ -45,7 +45,7 @@ struct StampAssetVectorView: View {
                 Image(uiImage: snapshot)
                     .resizable()
                     .interpolation(.none)
-                    .scaledToFill()
+                    .aspectRatio(1, contentMode: .fit)
             }
 
             if shouldMountWebView {
@@ -211,21 +211,14 @@ private struct StampVectorWebView: UIViewRepresentable {
             let url = currentURL
             let capturedAppearance = appearance
             snapshotTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(120))
+                try? await Task.sleep(for: StampVectorSnapshotImage.settleDuration)
                 guard !Task.isCancelled, currentURL == url else { return }
-                guard webView.bounds.width > 1, webView.bounds.height > 1 else { return }
+                guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: webView) else { return }
+                guard !Task.isCancelled, currentURL == url else { return }
 
-                let raw: UIImage? = await withCheckedContinuation { continuation in
-                    webView.takeSnapshot(with: nil) { image, _ in
-                        continuation.resume(returning: image)
-                    }
-                }
-                guard !Task.isCancelled, currentURL == url, let raw else { return }
-
-                let downsampled = StampVectorSnapshotImage.downsampled(raw)
-                onSnapshot(downsampled)
+                onSnapshot(thumbnail)
                 if let url {
-                    await StampVectorSnapshotCache.shared.write(downsampled, for: url, appearance: capturedAppearance)
+                    await StampVectorSnapshotCache.shared.write(thumbnail, for: url, appearance: capturedAppearance)
                 }
             }
         }

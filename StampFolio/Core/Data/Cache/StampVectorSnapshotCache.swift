@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import WebKit
 import CryptoKit
 
 /// Light/dark variant for snapshot keys. HTML uses `UIColor.systemBackground`,
@@ -16,18 +17,73 @@ enum StampVectorColorAppearance: String, Sendable {
     case dark
 }
 
-/// Downsamples WKWebView snapshots to the same 200pt thumbnail size as pixel stamps.
+/// Square 200pt thumbnails from WKWebView snapshots (same size as pixel stamp previews).
 enum StampVectorSnapshotImage {
     static let thumbnailSize = CGSize(width: 200, height: 200)
 
-    static func downsampled(_ image: UIImage, to pointSize: CGSize = thumbnailSize) -> UIImage {
+    /// Pause after `didFinish` so HTML/SVG animation can reach a representative frame.
+    static let settleDuration: Duration = .seconds(5)
+
+    /// Capture the largest centered square of the web view at `thumbnailSize`.
+    static func snapshotConfiguration(for webView: WKWebView) -> WKSnapshotConfiguration {
+        let config = WKSnapshotConfiguration()
+        let bounds = webView.bounds
+        let side = min(bounds.width, bounds.height)
+        if side > 1 {
+            config.rect = CGRect(
+                x: (bounds.width - side) / 2,
+                y: (bounds.height - side) / 2,
+                width: side,
+                height: side
+            )
+        }
+        config.snapshotWidth = NSNumber(value: thumbnailSize.width)
+        return config
+    }
+
+    /// Center-crops to 1:1, then scales to `pointSize` without stretching.
+    static func squareThumbnail(_ image: UIImage, to pointSize: CGSize = thumbnailSize) -> UIImage {
+        let cropped = centerCroppedSquare(image) ?? image
         let format = UIGraphicsImageRendererFormat()
-        format.scale = image.scale
+        format.scale = cropped.scale
         format.opaque = false
         let renderer = UIGraphicsImageRenderer(size: pointSize, format: format)
         return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: pointSize))
+            cropped.draw(in: CGRect(origin: .zero, size: pointSize))
         }
+    }
+
+    @MainActor
+    static func captureSquareThumbnail(from webView: WKWebView) async -> UIImage? {
+        guard min(webView.bounds.width, webView.bounds.height) > 1 else { return nil }
+        let raw: UIImage? = await withCheckedContinuation { continuation in
+            webView.takeSnapshot(with: snapshotConfiguration(for: webView)) { image, _ in
+                continuation.resume(returning: image)
+            }
+        }
+        guard let raw else { return nil }
+        return squareThumbnail(raw)
+    }
+
+    private static func centerCroppedSquare(_ image: UIImage) -> UIImage? {
+        let size = image.size
+        let side = min(size.width, size.height)
+        guard side > 0 else { return nil }
+        let crop = CGRect(
+            x: (size.width - side) / 2,
+            y: (size.height - side) / 2,
+            width: side,
+            height: side
+        )
+        let scale = image.scale
+        let pixelCrop = CGRect(
+            x: crop.origin.x * scale,
+            y: crop.origin.y * scale,
+            width: crop.width * scale,
+            height: crop.height * scale
+        ).integral
+        guard let cgImage = image.cgImage?.cropping(to: pixelCrop) else { return nil }
+        return UIImage(cgImage: cgImage, scale: scale, orientation: image.imageOrientation)
     }
 }
 
@@ -109,10 +165,10 @@ actor StampVectorSnapshotCache {
     }
 
     private func cacheKey(for url: URL, appearance: StampVectorColorAppearance) -> NSString {
-        "\(urlHash(for: url)).\(appearance.rawValue)" as NSString
+        "\(urlHash(for: url)).\(appearance.rawValue).1x1" as NSString
     }
 
     private func cacheFilePath(for url: URL, appearance: StampVectorColorAppearance) -> URL {
-        cacheDirectory.appendingPathComponent("\(urlHash(for: url)).\(appearance.rawValue).png")
+        cacheDirectory.appendingPathComponent("\(urlHash(for: url)).\(appearance.rawValue).1x1.png")
     }
 }
