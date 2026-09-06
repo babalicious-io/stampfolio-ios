@@ -170,10 +170,15 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
             attachHostIfNeeded()
             guard hostView.window != nil else {
                 windowWaitAttempts += 1
-                if windowWaitAttempts < 25, !queued.contains(url) {
-                    queued.insert(url)
-                    queue.insert(url, at: 0)
+                if windowWaitAttempts < 25 {
+                    if !queued.contains(url) {
+                        queued.insert(url)
+                        queue.insert(url, at: 0)
+                    }
                     try? await Task.sleep(for: .milliseconds(200))
+                } else if !queued.contains(url) {
+                    // No window to render into. Stop blocking the download overlay on this stamp.
+                    finishWaiters(for: url)
                 }
                 continue
             }

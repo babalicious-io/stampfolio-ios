@@ -351,12 +351,29 @@ final class CounterpartyViewModel {
     /// Confirm supply and issuance dates before the overlay picks the newest 20.
     /// Verbose balances omit `first_issuance_block_time`, so without this the newest-first
     /// order would be arbitrary.
+    ///
+    /// Hydration is one request per asset at concurrency 4, so a large wallet is capped by
+    /// `budget`: whatever dates arrived are used for ordering and the rest is hydrated in the
+    /// background, rather than holding the popup open for minutes.
     @MainActor
-    func hydrateSuppliesAndWait(from displays: [CounterpartyDisplay], wallets: [WalletConfig]) async {
+    func hydrateSuppliesAndWait(
+        from displays: [CounterpartyDisplay],
+        wallets: [WalletConfig],
+        budget: Duration = .seconds(20)
+    ) async {
         let names = displays.compactMap { $0.asset.hasConfirmedSupply ? nil : $0.asset.asset }
         guard !names.isEmpty else { return }
 
-        await fetchAndApplySupplies(names: names, forceRefresh: false)
+        let hydration = Task { [weak self] in
+            await self?.fetchAndApplySupplies(names: names, forceRefresh: false)
+        }
+        let watchdog = Task {
+            try? await Task.sleep(for: budget)
+            hydration.cancel()
+        }
+        await hydration.value
+        watchdog.cancel()
+
         assets = sortedAssets(assets, by: currentSortOption, wallets: wallets)
     }
 
@@ -368,8 +385,9 @@ final class CounterpartyViewModel {
         limit: Int,
         onProgress: @escaping (Int, Int) -> Void
     ) async {
-        onProgress(0, 0)
         let candidates = newestAssets(in: displays(forWallet: walletAddress))
+        // Plausible denominator while artwork URLs resolve; corrected once they are known.
+        onProgress(0, min(limit, candidates.count))
         let urls = await resolveNewestArtworkURLs(from: candidates, limit: limit)
         onProgress(0, urls.count)
         guard !urls.isEmpty else { return }

@@ -95,15 +95,21 @@ Use a **two-tier data model** with **lazy market data fetching**:
 - stamp_url, stamp_mimetype
 - balance, supply, locked
 - creator, creator_name
+- block_time, block_index, file_size_bytes
 - market_data: nil/empty (ignored)
 ```
+
+`block_time` **is** on the balance endpoint. It is decoded here (not only on `/stamps/{id}`) so
+the collection can sort newest-first and the download overlay can cache the newest previews first.
+`file_size_bytes` is present mainly for recently indexed stamps (see
+`FILE-SIZE-BYTES-INVESTIGATION.md`), so the detail sheet still hides the row when it is null.
 
 **Tier 2: `StampAsset` + `StampAssetMarketData` (from individual stamp endpoint)**
 ```swift
 // Fetched on-demand
 StampAsset:
 - All fields from StampAssetBalance
-- Plus: file_size, block_time, block_index, keyburn
+- Plus: file_hash and populated market_data
 
 StampAssetMarketData:
 - floor_price_btc, recent_sale_price_btc

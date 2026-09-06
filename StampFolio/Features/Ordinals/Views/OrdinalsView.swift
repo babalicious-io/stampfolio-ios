@@ -45,5 +45,8 @@ struct OrdinalsView: View {
 
 #Preview {
     OrdinalsView()
+        .environment(StampViewModel())
+        .environment(CounterpartyViewModel())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

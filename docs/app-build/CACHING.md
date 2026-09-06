@@ -72,7 +72,7 @@ Handles raster image loading and caching for **Stamps** (JPEG, PNG, WebP, GIF) a
 | Downsampling | 200pt grid/row thumbnails | Same (`CollectionImageThumbnail.size`) |
 | Original caching | Always (`.cacheOriginalImage()` + `.originalCache`) | Same |
 
-Omitting `.originalCache` would keep full-size files on `ImageCache.default`. Views use `.protocolCache(_:)`; prefetchers use `ProtocolImageCache.options(for: ProtocolImageCache.stamps)` (or `.counterparty`).
+Omitting `.originalCache` would keep full-size files on `ImageCache.default`. Views use `.protocolCache(_:)`; prefetchers use `ProtocolImageCache.options(for: ProtocolImageCache.stamps)` (or `.counterparty`). `thumbnailOptions(for:)` adds the 200pt downsampler for the Static GIF path, and `prefetch(_:options:retain:progress:)` wraps `ImagePrefetcher` in an awaitable call the download overlay uses to wait for its first 20 images.
 
 Named disk folders are separate from the old default Kingfisher cache. Existing default files are **not** migrated — first launch after this change re-downloads artwork once.
 
@@ -269,22 +269,62 @@ var sharedModelContainer: ModelContainer = {
 ### Adding a New Wallet
 
 ```
-User taps "+"        addWallet() saves         fetchAssetMetadata(new wallet)
+User taps "+"        addWallet() saves         AssetDownloadCoordinator
 in AddWalletView  -> Wallet to SwiftData  ->   sheet dismisses immediately
-                                               fetch runs in background
+                                               "Downloading Assets" popup
                                                       │
                                     ┌─────────────────┴──────────────────┐
                                     ▼                                    ▼
                               Stamps for that wallet              Counterparty for that wallet
-                              fetchStampsImages()                 fetchAssetsImages()
-                              (new URLs only: pixel + HTML        resolve URLs + Kingfisher
-                               + snapshot prefetch;               (incremental)
-                               does not cancel full prefetch)     hydrateSupplies()
-                                                                  overlay cache, then GET /assets
-                                                                  (incremental, concurrency 4)
+                              fetchAssetMetadata               fetchAssetMetadata
+                              (startBackgroundWork: false)     (startBackgroundWork: false)
+                                    │                                    │
+                                    │                          hydrateSuppliesAndWait()
+                                    │                          (issuance dates before sorting)
+                                    ▼                                    ▼
+                              newest 20 previews                 newest 20 artwork URLs
+                              (pixel + HTML snapshot)            (resolve, then Kingfisher)
+                                    └─────────────────┬──────────────────┘
+                                                      ▼
+                                             popup closes, grids appear
+                                             remainder keeps caching
 ```
 
-Fetching starts **on confirm**. Add Wallet dismisses as soon as the wallet is saved; collection loading shows on the tab if this is the first wallet.
+Fetching starts **on confirm**. Add Wallet dismisses as soon as the wallet is saved, then the
+shared overlay takes over. See [Download Overlay](#download-overlay) below.
+
+### Download Overlay
+
+`AssetDownloadCoordinator` (app-level `@Observable`, injected in `StampFolioApp`) owns the
+**Downloading Assets** popup. Collection view models do not own it — they conform to
+`ProtocolDownloadSource` and expose a two-phase cache:
+
+| Phase | Method | Behavior |
+|-------|--------|----------|
+| Gate | `prefetchPriorityDownloads` | Awaits the newest `min(20, visualCount)` previews |
+| Remainder | `prefetchRemainderDownloads` | Fire-and-forget for everything else |
+
+- The bar is the **sum** of each enabled protocol's gate (20 stamps + 15 CP art = 35). A protocol
+  with no visual assets is instantly done, and failures still count so the popup cannot hang.
+- Disabled protocols (`showStamps` / `showCounterparty` / `showOrdinals`) are skipped. Ordinals
+  uses `OrdinalsDownloadSource`, a no-op that reports 0 until that tab ships.
+- Presented on both [`MainTabView`](../../StampFolio/App/MainTabView.swift) and
+  [`SettingsView`](../../StampFolio/Features/Settings/Views/SettingsView.swift), because Settings
+  is a sheet above the tabs and the default tab order starts on Ordinals.
+- **First wallet** sets `withholdsCollections`, so Stamps and Counterparty keep showing
+  `CollectionLoadingView` and appear together when the popup closes. Extra wallets stay in
+  Settings and leave the existing grids alone.
+- **Cold start and per-wallet Refresh show no popup** — those keep the silent prefetch.
+
+Newest-first ordering is why `block_time` (Stamps) and `first_issuance_block_time` (Counterparty)
+are decoded up front. Counterparty verbose balances usually omit issuance time, so the coordinator
+awaits `hydrateSuppliesAndWait` before picking the newest 20; artwork URLs are then resolved in
+batches of 20 so a large collection is not fully resolved just to fill the gate. Assets with no
+artwork never block it.
+
+Turning **Animated GIF** off runs the same overlay for GIF thumbnails, using
+`ProtocolImageCache.thumbnailOptions` so the cached processed key matches what the grids request
+(`DownsamplingImageProcessor(CollectionImageThumbnail.size)`). Turning it back on shows no popup.
 
 ### Displaying a Stamp (Cache-First)
 
@@ -386,7 +426,7 @@ Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMem
 
 | Setting | Key | Default | Effect |
 |---------|-----|---------|--------|
-| Animated Images | `performancePreview` | `true` | When off, GIFs render as static downsampled thumbnails in grids/lists |
+| Animated Images | `performancePreview` | `true` | When off, GIFs render as static downsampled thumbnails in grids/lists, and the download overlay caches the newest 20 GIF thumbs per protocol |
 | Animated HTML | `htmlPerformancePreview` | `true` | When off, HTML/SVG stamps show a cached 200pt snapshot in grids, lists, and the details sheet |
 
 Located in Settings > Performance.
@@ -401,10 +441,12 @@ Located in Settings > Performance.
 | `CounterpartyAssetImageResolver.swift` | Manifest URLCache, versioned asset→URL map, CIP-25 then Horizon, force re-resolve |
 | `CounterpartyArtworkURL.swift` | CIP-25 classifier, `ipfs:` / `ar://` HTTPS rewrite, GIF extension check |
 | `CounterpartySupplyCache.swift` | Persisted asset→supply map, overlay then GET /assets confirm |
-| `ProtocolImageCache.swift` | Named stamps (40 MB) and Counterparty (70 MB) Kingfisher caches |
-| `StampFolioApp.swift` | `ProtocolImageCache.warm()` at launch |
-| `StampViewModel.swift` | `fetchAssetsMetadata()`, `fetchStampsImages()` prefetch |
-| `CounterpartyViewModel.swift` | `fetchAssetsMetadata()`, `fetchAssetsImages()` resolve + prefetch, `hydrateSupplies()` |
+| `ProtocolImageCache.swift` | Named stamps (40 MB) and Counterparty (70 MB) Kingfisher caches, awaitable prefetch |
+| `AssetDownloadCoordinator.swift` | Downloading Assets popup state, per-protocol 20-image gate, `ProtocolDownloadSource` |
+| `DownloadingAssetsOverlay.swift` | Glass popup with theme-tinted determinate progress bar |
+| `StampFolioApp.swift` | `ProtocolImageCache.warm()` at launch, injects the download coordinator |
+| `StampViewModel.swift` | `fetchAssetsMetadata()`, `fetchStampsImages()` prefetch, newest-first priority/remainder downloads |
+| `CounterpartyViewModel.swift` | `fetchAssetsMetadata()`, `fetchAssetsImages()` resolve + prefetch, `hydrateSupplies()` / `hydrateSuppliesAndWait()` |
 | `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text stamp content |
 | `StampVectorSnapshotCache.swift` | Two-tier actor cache for 1000×1000px → 200pt HTML/SVG stills |
 | `StampVectorSnapshotPrefetcher.swift` | Serial offscreen WKWebView snapshot prefetch after HTML cache |
@@ -415,6 +457,6 @@ Located in Settings > Performance.
 | `StampAssetTextView.swift` | Text content with StampContentCache read/write |
 | `CounterpartyAssetImageView.swift` | Thumbnail 200pt vs original; KFAnimatedImage for `.gif`; resolver-backed artwork |
 | `CollectionViewComponents.swift` | `CollectionImageThumbnail.size` (200pt) shared by Stamps and Counterparty |
-| `AddWalletView.swift` | Save, dismiss, fetch only the new wallet |
+| `AddWalletView.swift` | Save, dismiss, hand the new wallet to the download coordinator |
 | `StampView.swift` | Cache-first `.task`, deletion-only `.onChange` |
-| `SettingsView.swift` | Per-wallet refresh swipe, GIF and HTML performance preview toggles |
+| `SettingsView.swift` | Per-wallet refresh swipe, GIF and HTML performance preview toggles, overlay host |

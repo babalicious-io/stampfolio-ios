@@ -65,7 +65,10 @@ StampFolio uses a clear separation of concerns across five distinct domain model
 - creatorAddy: String?      // Creator's address
 - creatorName: String?      // Creator's name
 - fileType: String?         // API: "stamp_mimetype"
+- fileSize: Int?            // API: "file_size_bytes" (often null)
 - editionSupply: Int?       // API: "supply"
+- blockTime: Date?          // API: "block_time" (drives newest-first sort)
+- blockIndex: Int?          // API: "block_index"
 - stampUrl: String?         // Image URL
 - txHash: String?           // Transaction hash
 - address: String?          // Wallet address

@@ -41,6 +41,10 @@ With `verbose=true`, each row includes a nested `asset_info` object (`descriptio
 **N/A** for supply until `GET /assets/{asset}` confirms it, rather than defaulting missing
 supply to 0.
 
+`mime_type` and `first_issuance_block_time` are also decoded from `asset_info` when a node sends
+them, so hydration can skip those rows. Nodes normally omit them, which is why the newest-first
+download overlay awaits supply hydration before it sorts by issuance date.
+
 ```json
 {
   "result": [
@@ -77,7 +81,9 @@ places:
   `CounterpartyViewModel.hydrateSupplies` calls `fetchAsset` only (no holders/dispensers),
   limited to 4 concurrent requests, and writes `CounterpartySupplyCache`
   (`Caches/counterparty_supply.json`). Cached supply is overlaid on the next launch so the
-  list does not flash N/A.
+  list does not flash N/A. The add-wallet download overlay calls the awaited variant,
+  `hydrateSuppliesAndWait`, because `first_issuance_block_time` arrives here and the overlay
+  needs it to cache artwork newest-first.
 - **Detail sheet** via `fetchAssetDetail`, which also loads holders, dispensers, and the first
   issuance tx hash (mirrors `StampchainAPIClient.fetchStampDetails`). That write also updates
   the supply cache.
