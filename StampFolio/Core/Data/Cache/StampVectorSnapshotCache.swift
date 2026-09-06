@@ -17,39 +17,45 @@ enum StampVectorColorAppearance: String, Sendable {
     case dark
 }
 
-/// Square 200pt thumbnails from WKWebView snapshots (same size as pixel stamp previews).
+/// Square collection thumbnails captured at 1000×1000px, then scaled to 200pt.
 enum StampVectorSnapshotImage {
     static let thumbnailSize = CGSize(width: 200, height: 200)
+    /// Offscreen WKWebView layout size (CSS viewport). Square so the full stamp is visible.
+    static let captureLayoutSide: CGFloat = 1000
+    /// Snapshot bitmap edge in device pixels before downscaling to `thumbnailSize`.
+    static let capturePixelSide: CGFloat = 1000
 
     /// Pause after `didFinish` so HTML/SVG animation can reach a representative frame.
     static let settleDuration: Duration = .seconds(5)
 
-    /// Capture the largest centered square of the web view at `thumbnailSize`.
+    static var capturePointSize: CGSize {
+        CGSize(width: captureLayoutSide, height: captureLayoutSide)
+    }
+
+    /// Full view from the top-left — never a centered crop (that clips the top of tall HTML).
     static func snapshotConfiguration(for webView: WKWebView) -> WKSnapshotConfiguration {
         let config = WKSnapshotConfiguration()
-        let bounds = webView.bounds
-        let side = min(bounds.width, bounds.height)
-        if side > 1 {
-            config.rect = CGRect(
-                x: (bounds.width - side) / 2,
-                y: (bounds.height - side) / 2,
-                width: side,
-                height: side
-            )
-        }
-        config.snapshotWidth = NSNumber(value: thumbnailSize.width)
+        let side = min(webView.bounds.width, webView.bounds.height)
+        config.rect = CGRect(x: 0, y: 0, width: side, height: side)
+        let scale = max(UIScreen.main.scale, 1)
+        config.snapshotWidth = NSNumber(value: capturePixelSide / scale)
         return config
     }
 
-    /// Center-crops to 1:1, then scales to `pointSize` without stretching.
-    static func squareThumbnail(_ image: UIImage, to pointSize: CGSize = thumbnailSize) -> UIImage {
-        let cropped = centerCroppedSquare(image) ?? image
+    /// Fits the entire snapshot into a 200pt square (top-aligned if taller). Does not crop.
+    static func displayThumbnail(_ image: UIImage, to pointSize: CGSize = thumbnailSize) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
-        format.scale = cropped.scale
+        format.scale = UIScreen.main.scale
         format.opaque = false
         let renderer = UIGraphicsImageRenderer(size: pointSize, format: format)
         return renderer.image { _ in
-            cropped.draw(in: CGRect(origin: .zero, size: pointSize))
+            let src = image.size
+            guard src.width > 0, src.height > 0 else { return }
+            let fit = min(pointSize.width / src.width, pointSize.height / src.height)
+            let drawSize = CGSize(width: src.width * fit, height: src.height * fit)
+            let x = (pointSize.width - drawSize.width) / 2
+            let y = src.height > src.width ? 0 : (pointSize.height - drawSize.height) / 2
+            image.draw(in: CGRect(origin: CGPoint(x: x, y: y), size: drawSize))
         }
     }
 
@@ -62,29 +68,12 @@ enum StampVectorSnapshotImage {
             }
         }
         guard let raw else { return nil }
-        return squareThumbnail(raw)
+        return displayThumbnail(raw)
     }
+}
 
-    private static func centerCroppedSquare(_ image: UIImage) -> UIImage? {
-        let size = image.size
-        let side = min(size.width, size.height)
-        guard side > 0 else { return nil }
-        let crop = CGRect(
-            x: (size.width - side) / 2,
-            y: (size.height - side) / 2,
-            width: side,
-            height: side
-        )
-        let scale = image.scale
-        let pixelCrop = CGRect(
-            x: crop.origin.x * scale,
-            y: crop.origin.y * scale,
-            width: crop.width * scale,
-            height: crop.height * scale
-        ).integral
-        guard let cgImage = image.cgImage?.cropping(to: pixelCrop) else { return nil }
-        return UIImage(cgImage: cgImage, scale: scale, orientation: image.imageOrientation)
-    }
+extension Notification.Name {
+    static let stampVectorSnapshotDidStore = Notification.Name("stampVectorSnapshotDidStore")
 }
 
 /// Two-tier cache for HTML/SVG collection snapshots.
@@ -106,6 +95,15 @@ actor StampVectorSnapshotCache {
     private init() {
         let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         cacheDirectory = cachesDir.appendingPathComponent("stamp_vector_snapshots", isDirectory: true)
+
+        // Drop center-cropped / 200pt captures so 1000×1000px stills are rebuilt.
+        let versionKey = "stampVectorSnapshotCacheVersion"
+        let version = 3
+        if UserDefaults.standard.integer(forKey: versionKey) != version {
+            try? FileManager.default.removeItem(at: cacheDirectory)
+            UserDefaults.standard.set(version, forKey: versionKey)
+        }
+
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
         memoryCache.countLimit = 50
     }
@@ -138,6 +136,14 @@ actor StampVectorSnapshotCache {
         if let data = image.pngData() {
             try? data.write(to: filePath, options: .atomic)
         }
+
+        Task { @MainActor in
+            NotificationCenter.default.post(
+                name: .stampVectorSnapshotDidStore,
+                object: nil,
+                userInfo: ["url": url]
+            )
+        }
     }
 
     /// Whether a snapshot exists in memory or on disk.
@@ -165,10 +171,10 @@ actor StampVectorSnapshotCache {
     }
 
     private func cacheKey(for url: URL, appearance: StampVectorColorAppearance) -> NSString {
-        "\(urlHash(for: url)).\(appearance.rawValue).1x1" as NSString
+        "\(urlHash(for: url)).\(appearance.rawValue).1000px" as NSString
     }
 
     private func cacheFilePath(for url: URL, appearance: StampVectorColorAppearance) -> URL {
-        cacheDirectory.appendingPathComponent("\(urlHash(for: url)).\(appearance.rawValue).1x1.png")
+        cacheDirectory.appendingPathComponent("\(urlHash(for: url)).\(appearance.rawValue).1000px.png")
     }
 }

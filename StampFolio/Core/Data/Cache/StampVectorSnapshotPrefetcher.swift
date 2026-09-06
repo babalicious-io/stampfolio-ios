@@ -9,7 +9,7 @@
 import UIKit
 import WebKit
 
-/// One 200pt WKWebView, off-screen in the key window, processing URLs one at a time.
+/// One 1000×1000pt WKWebView, off-screen in the key window, processing URLs one at a time.
 @MainActor
 final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
 
@@ -20,7 +20,7 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
     // MARK: - Properties
 
     private let webView: WKWebView
-    private let hostView = UIView(frame: CGRect(x: -240, y: -240, width: 200, height: 200))
+    private let hostView: UIView
     private var queue: [URL] = []
     private var queued = Set<URL>()
     private var isRunning = false
@@ -33,18 +33,29 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
     // MARK: - Initialization
 
     private override init() {
+        let pointSize = StampVectorSnapshotImage.capturePointSize
+        let hostView = UIView(
+            frame: CGRect(
+                x: -pointSize.width - 40,
+                y: -pointSize.height - 40,
+                width: pointSize.width,
+                height: pointSize.height
+            )
+        )
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         let webView = WKWebView(
-            frame: CGRect(origin: .zero, size: StampVectorSnapshotImage.thumbnailSize),
+            frame: CGRect(origin: .zero, size: pointSize),
             configuration: config
         )
         webView.isOpaque = false
         webView.backgroundColor = .systemBackground
         webView.scrollView.backgroundColor = .systemBackground
         webView.scrollView.isScrollEnabled = false
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isUserInteractionEnabled = false
         self.webView = webView
+        self.hostView = hostView
         super.init()
         webView.navigationDelegate = self
 

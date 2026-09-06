@@ -70,6 +70,7 @@ final class StampVectorWebViewPool {
         webView.backgroundColor = backgroundColor
         webView.scrollView.backgroundColor = backgroundColor
         webView.scrollView.isScrollEnabled = false
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isUserInteractionEnabled = false
         return webView
     }

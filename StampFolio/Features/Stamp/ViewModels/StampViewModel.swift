@@ -387,30 +387,32 @@ final class StampViewModel {
                     // Vector stamps (HTML/SVG) - fetch, inject viewport, cache
                     for url in vectorURLs {
                         group.addTask {
-                            // Skip if already cached
-                            guard await !cache.contains(url) else { return }
-                            
-                            do {
-                                let (data, _) = try await URLSession.shared.data(from: url)
-                                guard var htmlString = String(data: data, encoding: .utf8) else { return }
-                                
-                                // Inject viewport (same logic as StampAssetVectorView)
-                                if !htmlString.contains("name=\"viewport\"") && !htmlString.contains("name='viewport'") {
-                                    if let headRange = htmlString.range(of: "<head>", options: .caseInsensitive) {
-                                        htmlString.insert(contentsOf: viewportMeta, at: headRange.upperBound)
-                                    } else if let htmlRange = htmlString.range(of: "<html", options: .caseInsensitive) {
-                                        if let closeRange = htmlString[htmlRange.upperBound...].range(of: ">") {
-                                            htmlString.insert(contentsOf: "<head>\(viewportMeta)</head>", at: closeRange.upperBound)
+                            if await !cache.contains(url) {
+                                do {
+                                    let (data, _) = try await URLSession.shared.data(from: url)
+                                    guard var htmlString = String(data: data, encoding: .utf8) else { return }
+                                    
+                                    if !htmlString.contains("name=\"viewport\"") && !htmlString.contains("name='viewport'") {
+                                        if let headRange = htmlString.range(of: "<head>", options: .caseInsensitive) {
+                                            htmlString.insert(contentsOf: viewportMeta, at: headRange.upperBound)
+                                        } else if let htmlRange = htmlString.range(of: "<html", options: .caseInsensitive) {
+                                            if let closeRange = htmlString[htmlRange.upperBound...].range(of: ">") {
+                                                htmlString.insert(contentsOf: "<head>\(viewportMeta)</head>", at: closeRange.upperBound)
+                                            }
+                                        } else {
+                                            htmlString = viewportMeta + htmlString
                                         }
-                                    } else {
-                                        htmlString = viewportMeta + htmlString
                                     }
+                                    
+                                    await cache.write(htmlString, for: url)
+                                } catch {
+                                    print("⚠️ Vector prefetch failed for \(url): \(error.localizedDescription)")
+                                    return
                                 }
-                                
-                                await cache.write(htmlString, for: url)
-                            } catch {
-                                print("⚠️ Vector prefetch failed for \(url): \(error.localizedDescription)")
                             }
+
+                            guard await cache.contains(url) else { return }
+                            await StampVectorSnapshotPrefetcher.shared.enqueue([url])
                         }
                     }
                     

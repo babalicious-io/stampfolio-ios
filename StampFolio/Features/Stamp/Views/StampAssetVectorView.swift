@@ -29,7 +29,7 @@ struct StampAssetVectorView: View {
         colorScheme == .dark ? .dark : .light
     }
 
-    /// Live WebKit, or a one-shot WebView to capture a missing snapshot.
+    /// Live WebKit when animated HTML is on, or until a prefetch snapshot arrives.
     private var shouldMountWebView: Bool {
         guard didCheckCache else { return false }
         return htmlPerformancePreview || snapshot == nil
@@ -45,19 +45,15 @@ struct StampAssetVectorView: View {
                 Image(uiImage: snapshot)
                     .resizable()
                     .interpolation(.none)
-                    .aspectRatio(1, contentMode: .fit)
+                    .scaledToFit()
             }
 
             if shouldMountWebView {
                 StampVectorWebView(
                     url: url,
                     reusesWebView: reusesWebView,
-                    appearance: appearance,
                     isLoading: $isLoading,
-                    onFailure: onFailure,
-                    onSnapshot: { image in
-                        snapshot = image
-                    }
+                    onFailure: onFailure
                 )
                 .opacity(showLiveWebView || snapshot == nil ? 1 : 0)
             }
@@ -75,6 +71,10 @@ struct StampAssetVectorView: View {
         .task(id: taskID) {
             await loadCachedSnapshot()
             didCheckCache = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .stampVectorSnapshotDidStore)) { notification in
+            guard let updated = notification.userInfo?["url"] as? URL, updated == url else { return }
+            Task { await loadCachedSnapshot() }
         }
     }
 
@@ -101,18 +101,11 @@ private struct StampVectorWebView: UIViewRepresentable {
 
     let url: URL?
     let reusesWebView: Bool
-    let appearance: StampVectorColorAppearance
     @Binding var isLoading: Bool
     let onFailure: () -> Void
-    let onSnapshot: (UIImage) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(
-            appearance: appearance,
-            isLoading: $isLoading,
-            onFailure: onFailure,
-            onSnapshot: onSnapshot
-        )
+        Coordinator(isLoading: $isLoading, onFailure: onFailure)
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -132,8 +125,6 @@ private struct StampVectorWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        context.coordinator.appearance = appearance
-        context.coordinator.onSnapshot = onSnapshot
         context.coordinator.onFailure = onFailure
 
         let backgroundColor = UIColor.systemBackground
@@ -157,7 +148,6 @@ private struct StampVectorWebView: UIViewRepresentable {
     static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
         webView.navigationDelegate = nil
         coordinator.currentTask?.cancel()
-        coordinator.snapshotTask?.cancel()
         guard let entry = coordinator.entry, let poolKey = coordinator.poolKey else { return }
         StampVectorWebViewPool.shared.release(entry, url: poolKey)
     }
@@ -167,24 +157,17 @@ private struct StampVectorWebView: UIViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate {
         var currentURL: URL?
         var currentTask: Task<Void, Never>?
-        var snapshotTask: Task<Void, Never>?
         var entry: StampVectorWebViewPool.Entry?
         var poolKey: URL?
-        var appearance: StampVectorColorAppearance
         @Binding var isLoading: Bool
         var onFailure: () -> Void
-        var onSnapshot: (UIImage) -> Void
 
         init(
-            appearance: StampVectorColorAppearance,
             isLoading: Binding<Bool>,
-            onFailure: @escaping () -> Void,
-            onSnapshot: @escaping (UIImage) -> Void
+            onFailure: @escaping () -> Void
         ) {
-            self.appearance = appearance
             self._isLoading = isLoading
             self.onFailure = onFailure
-            self.onSnapshot = onSnapshot
         }
 
         // MARK: - WKNavigationDelegate
@@ -192,7 +175,6 @@ private struct StampVectorWebView: UIViewRepresentable {
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             entry?.loadedURL = currentURL
             isLoading = false
-            captureSnapshot(from: webView)
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -201,26 +183,6 @@ private struct StampVectorWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
             isLoading = false
-        }
-
-        // MARK: - Snapshot
-
-        @MainActor
-        private func captureSnapshot(from webView: WKWebView) {
-            snapshotTask?.cancel()
-            let url = currentURL
-            let capturedAppearance = appearance
-            snapshotTask = Task { @MainActor in
-                try? await Task.sleep(for: StampVectorSnapshotImage.settleDuration)
-                guard !Task.isCancelled, currentURL == url else { return }
-                guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: webView) else { return }
-                guard !Task.isCancelled, currentURL == url else { return }
-
-                onSnapshot(thumbnail)
-                if let url {
-                    await StampVectorSnapshotCache.shared.write(thumbnail, for: url, appearance: capturedAppearance)
-                }
-            }
         }
 
         // MARK: - Content Loading
