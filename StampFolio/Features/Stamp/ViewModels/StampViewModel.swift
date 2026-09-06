@@ -12,6 +12,8 @@ import Kingfisher
 
 /// Sorting options for stamp collection
 enum StampSortOption: String, CaseIterable, Codable {
+    case dateDescending = "date_desc"
+    case dateAscending = "date_asc"
     case stampAscending = "stamp_asc"
     case stampDescending = "stamp_desc"
     case artistAscending = "artist_asc"
@@ -23,6 +25,8 @@ enum StampSortOption: String, CaseIterable, Codable {
     
     var displayName: String {
         switch self {
+        case .dateDescending: return "Date (newest)"
+        case .dateAscending: return "Date (oldest)"
         case .stampAscending: return "Stamp # (ascending)"
         case .stampDescending: return "Stamp # (descending)"
         case .artistAscending: return "Artist (ascending)"
@@ -51,7 +55,7 @@ final class StampViewModel {
     private(set) var errorMessage: String?
     
     /// Current sort option
-    var currentSortOption: StampSortOption = .stampDescending
+    var currentSortOption: StampSortOption = .dateDescending
     
     /// Filter state: Active ident filters (e.g., "STAMP", "POSH")
     var activeIdentFilters: Set<String> = []
@@ -267,10 +271,17 @@ final class StampViewModel {
     ///   - wallet: The wallet to fetch stamps for
     ///   - allWallets: All wallets for dedup and sorting context
     ///   - forceRefresh: When true, bypasses cache and fetches from network
+    ///   - startBackgroundWork: When false, skip image prefetch so the download overlay can
+    ///     run its own two-phase (newest 20, then remainder) cache
     /// - Returns: Number of stamps returned for this wallet, or `nil` if the fetch failed
     @MainActor
     @discardableResult
-    func fetchAssetMetadata(for wallet: WalletConfig, allWallets: [WalletConfig], forceRefresh: Bool = false) async -> Int? {
+    func fetchAssetMetadata(
+        for wallet: WalletConfig,
+        allWallets: [WalletConfig],
+        forceRefresh: Bool = false,
+        startBackgroundWork: Bool = true
+    ) async -> Int? {
         let showLoading = assets.isEmpty
         if showLoading { isLoading = true }
         errorMessage = nil
@@ -296,7 +307,7 @@ final class StampViewModel {
             
             print("✅ Refreshed wallet \(wallet.displayName): \(newDisplayAssets.count) stamps")
             
-            if !newDisplayAssets.isEmpty {
+            if startBackgroundWork, !newDisplayAssets.isEmpty {
                 fetchStampsImages(from: newDisplayAssets, cancelExisting: false)
             }
             
@@ -377,66 +388,202 @@ final class StampViewModel {
         // Prefetch vector/text stamps into StampContentCache
         if contentURLCount > 0 {
             Task.detached(priority: .utility) {
-                let cache = StampContentCache.shared
-                let viewportMeta = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">"
-                
-                await withTaskGroup(of: Void.self) { group in
-                    // Vector stamps (HTML/SVG) - fetch, inject viewport, cache
-                    for url in vectorURLs {
-                        group.addTask {
-                            if await !cache.contains(url) {
-                                do {
-                                    let (data, _) = try await URLSession.shared.data(from: url)
-                                    guard var htmlString = String(data: data, encoding: .utf8) else { return }
-                                    
-                                    if !htmlString.contains("name=\"viewport\"") && !htmlString.contains("name='viewport'") {
-                                        if let headRange = htmlString.range(of: "<head>", options: .caseInsensitive) {
-                                            htmlString.insert(contentsOf: viewportMeta, at: headRange.upperBound)
-                                        } else if let htmlRange = htmlString.range(of: "<html", options: .caseInsensitive) {
-                                            if let closeRange = htmlString[htmlRange.upperBound...].range(of: ">") {
-                                                htmlString.insert(contentsOf: "<head>\(viewportMeta)</head>", at: closeRange.upperBound)
-                                            }
-                                        } else {
-                                            htmlString = viewportMeta + htmlString
-                                        }
-                                    }
-                                    
-                                    await cache.write(htmlString, for: url)
-                                } catch {
-                                    print("⚠️ Vector prefetch failed for \(url): \(error.localizedDescription)")
-                                    return
-                                }
-                            }
-
-                            guard await cache.contains(url) else { return }
-                            await StampVectorSnapshotPrefetcher.shared.enqueue([url])
-                        }
-                    }
-                    
-                    // Text stamps - fetch and cache as-is
-                    for url in textURLs {
-                        group.addTask {
-                            guard await !cache.contains(url) else { return }
-                            
-                            do {
-                                let (data, _) = try await URLSession.shared.data(from: url)
-                                if let text = String(data: data, encoding: .utf8) {
-                                    await cache.write(text, for: url)
-                                }
-                            } catch {
-                                print("⚠️ Text prefetch failed for \(url): \(error.localizedDescription)")
-                            }
-                        }
-                    }
-                }
-                
-                print("✅ Vector/text prefetch done: \(vectorURLs.count) vector + \(textURLs.count) text stamps cached")
+                await Self.cacheStampContents(vectorURLs: vectorURLs, textURLs: textURLs)
 
                 if !vectorURLs.isEmpty {
                     await StampVectorSnapshotPrefetcher.shared.enqueue(vectorURLs)
                 }
             }
         }
+    }
+    
+    // MARK: - Download Overlay
+    
+    /// Cache the newest `limit` visual previews (pixel images plus HTML/SVG snapshots) and
+    /// return only once each one is cached, failed, or skipped.
+    @MainActor
+    func prefetchPriorityDownloads(
+        walletAddress: String?,
+        limit: Int,
+        onProgress: @escaping (Int, Int) -> Void
+    ) async {
+        let priority = Array(newestVisualAssets(in: displays(forWallet: walletAddress)).prefix(limit))
+        onProgress(0, priority.count)
+        guard !priority.isEmpty else { return }
+        
+        var pixelURLs: [URL] = []
+        var vectorURLs: [URL] = []
+        for display in priority {
+            guard let url = display.asset.imageURL else { continue }
+            if display.asset.isHTML || display.asset.isSVG {
+                vectorURLs.append(url)
+            } else {
+                pixelURLs.append(url)
+            }
+        }
+        
+        let total = priority.count
+        var pixelDone = 0
+        var vectorDone = 0
+        let report = { @MainActor in
+            onProgress(min(pixelDone + vectorDone, total), total)
+        }
+        
+        await withTaskGroup(of: Void.self) { group in
+            if !pixelURLs.isEmpty {
+                group.addTask { @MainActor in
+                    await ProtocolImageCache.prefetch(
+                        pixelURLs,
+                        options: ProtocolImageCache.options(for: ProtocolImageCache.stamps),
+                        retain: { self.incrementalImagePrefetchers.append($0) },
+                        progress: { done in
+                            pixelDone = done
+                            report()
+                        }
+                    )
+                }
+            }
+            
+            if !vectorURLs.isEmpty {
+                group.addTask { @MainActor in
+                    await Self.cacheStampContents(vectorURLs: vectorURLs, textURLs: [])
+                    await StampVectorSnapshotPrefetcher.shared.enqueueAndWait(vectorURLs) { done in
+                        vectorDone = done
+                        report()
+                    }
+                }
+            }
+        }
+        
+        onProgress(total, total)
+    }
+    
+    /// Keep caching everything the priority gate skipped: older visual assets, then text/audio/video.
+    @MainActor
+    func prefetchRemainderDownloads(walletAddress: String?, afterPriorityLimit: Int) {
+        let source = displays(forWallet: walletAddress)
+        let remainingVisual = Array(newestVisualAssets(in: source).dropFirst(afterPriorityLimit))
+        let nonVisual = source.filter { !$0.asset.hasCollectionPreview }
+        let remainder = remainingVisual + nonVisual
+        guard !remainder.isEmpty else { return }
+        fetchStampsImages(from: remainder, cancelExisting: false)
+    }
+    
+    /// Static GIF toggle: cache the newest GIF thumbnails at the same size the grid decodes.
+    @MainActor
+    func prefetchPriorityStaticGIFs(limit: Int, onProgress: @escaping (Int, Int) -> Void) async {
+        let urls = Array(newestGIFAssets().prefix(limit)).compactMap(\.asset.imageURL)
+        onProgress(0, urls.count)
+        guard !urls.isEmpty else { return }
+        
+        await ProtocolImageCache.prefetch(
+            urls,
+            options: ProtocolImageCache.thumbnailOptions(for: ProtocolImageCache.stamps),
+            retain: { incrementalImagePrefetchers.append($0) },
+            progress: { done in onProgress(done, urls.count) }
+        )
+        onProgress(urls.count, urls.count)
+    }
+    
+    @MainActor
+    func prefetchRemainderStaticGIFs(afterPriorityLimit: Int) {
+        let urls = Array(newestGIFAssets().dropFirst(afterPriorityLimit)).compactMap(\.asset.imageURL)
+        guard !urls.isEmpty else { return }
+        
+        let prefetcher = ImagePrefetcher(
+            urls: urls,
+            options: ProtocolImageCache.thumbnailOptions(for: ProtocolImageCache.stamps),
+            completionHandler: { skippedResources, failedResources, completedResources in
+                print("✅ Static GIF prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
+            }
+        )
+        incrementalImagePrefetchers.append(prefetcher)
+        prefetcher.start()
+    }
+    
+    private func displays(forWallet address: String?) -> [StampDisplay] {
+        guard let address else { return assets }
+        return assets.filter { $0.walletAddress == address }
+    }
+    
+    /// Newest first by `blockTime`; stamps without one fall back to stamp number descending.
+    private func newestVisualAssets(in displays: [StampDisplay]) -> [StampDisplay] {
+        displays
+            .filter { $0.asset.hasCollectionPreview && $0.asset.imageURL != nil }
+            .sorted { Self.isNewer($0, than: $1) }
+    }
+    
+    private func newestGIFAssets() -> [StampDisplay] {
+        newestVisualAssets(in: assets).filter(\.asset.isGIF)
+    }
+    
+    private static func isNewer(_ lhs: StampDisplay, than rhs: StampDisplay) -> Bool {
+        switch (lhs.asset.blockTime, rhs.asset.blockTime) {
+        case let (lhsDate?, rhsDate?):
+            return lhsDate == rhsDate ? lhs.id > rhs.id : lhsDate > rhsDate
+        case (nil, _?):
+            return false
+        case (_?, nil):
+            return true
+        case (nil, nil):
+            return lhs.id > rhs.id
+        }
+    }
+    
+    /// Fetch HTML/SVG (with viewport injected) and plain text into `StampContentCache`.
+    private static func cacheStampContents(vectorURLs: [URL], textURLs: [URL]) async {
+        let cache = StampContentCache.shared
+        
+        await withTaskGroup(of: Void.self) { group in
+            // Vector stamps (HTML/SVG) - fetch, inject viewport, cache
+            for url in vectorURLs {
+                group.addTask {
+                    guard await !cache.contains(url) else { return }
+                    do {
+                        let (data, _) = try await URLSession.shared.data(from: url)
+                        guard let htmlString = String(data: data, encoding: .utf8) else { return }
+                        await cache.write(Self.htmlWithViewport(htmlString), for: url)
+                    } catch {
+                        print("⚠️ Vector prefetch failed for \(url): \(error.localizedDescription)")
+                    }
+                }
+            }
+            
+            // Text stamps - fetch and cache as-is
+            for url in textURLs {
+                group.addTask {
+                    guard await !cache.contains(url) else { return }
+                    do {
+                        let (data, _) = try await URLSession.shared.data(from: url)
+                        if let text = String(data: data, encoding: .utf8) {
+                            await cache.write(text, for: url)
+                        }
+                    } catch {
+                        print("⚠️ Text prefetch failed for \(url): \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+        
+        print("✅ Vector/text prefetch done: \(vectorURLs.count) vector + \(textURLs.count) text stamps cached")
+    }
+    
+    private static func htmlWithViewport(_ html: String) -> String {
+        let viewportMeta = "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">"
+        guard !html.contains("name=\"viewport\""), !html.contains("name='viewport'") else {
+            return html
+        }
+        
+        var htmlString = html
+        if let headRange = htmlString.range(of: "<head>", options: .caseInsensitive) {
+            htmlString.insert(contentsOf: viewportMeta, at: headRange.upperBound)
+        } else if let htmlRange = htmlString.range(of: "<html", options: .caseInsensitive),
+                  let closeRange = htmlString[htmlRange.upperBound...].range(of: ">") {
+            htmlString.insert(contentsOf: "<head>\(viewportMeta)</head>", at: closeRange.upperBound)
+        } else {
+            htmlString = viewportMeta + htmlString
+        }
+        return htmlString
     }
     
     /// Clear all assets and errors
@@ -487,6 +634,12 @@ final class StampViewModel {
     /// - Returns: Sorted array of assets
     private func sortedAssets(_ assets: [StampDisplay], by option: StampSortOption, wallets: [WalletConfig]) -> [StampDisplay] {
         switch option {
+        case .dateDescending:
+            return assets.sorted { Self.isNewer($0, than: $1) }
+            
+        case .dateAscending:
+            return assets.sorted { Self.isNewer($1, than: $0) }
+            
         case .stampAscending:
             return assets.sorted { $0.id < $1.id }
             
@@ -596,3 +749,8 @@ final class StampViewModel {
         }
     }
 }
+
+// MARK: - ProtocolDownloadSource
+
+/// Declared in an extension so the `@MainActor` protocol does not isolate the whole view model.
+extension StampViewModel: ProtocolDownloadSource {}

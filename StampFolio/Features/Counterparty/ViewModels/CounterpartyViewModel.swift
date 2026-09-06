@@ -12,6 +12,8 @@ import Kingfisher
 
 /// Sorting options for the Counterparty asset list
 enum CounterpartySortOption: String, CaseIterable, Codable {
+    case dateDescending = "date_desc"
+    case dateAscending = "date_asc"
     case nameAscending = "name_asc"
     case nameDescending = "name_desc"
     case balanceAscending = "balance_asc"
@@ -21,6 +23,8 @@ enum CounterpartySortOption: String, CaseIterable, Codable {
 
     var displayName: String {
         switch self {
+        case .dateDescending: return "Date (newest)"
+        case .dateAscending: return "Date (oldest)"
         case .nameAscending: return "Name (ascending)"
         case .nameDescending: return "Name (descending)"
         case .balanceAscending: return "Balance (ascending)"
@@ -47,7 +51,7 @@ final class CounterpartyViewModel {
     private(set) var errorMessage: String?
 
     /// Current sort option
-    var currentSortOption: CounterpartySortOption = .balanceDescending
+    var currentSortOption: CounterpartySortOption = .dateDescending
 
     /// Filter state: Active lock-status filters ("locked" or "unlocked")
     var activeLockedFilters: Set<String> = []
@@ -72,6 +76,9 @@ final class CounterpartyViewModel {
 
     /// Max concurrent `GET /assets/{asset}` calls while confirming supply
     private static let supplyHydrationConcurrency = 4
+
+    /// Assets resolved per pass while filling the download overlay's newest-first gate
+    private static let artworkResolveBatchSize = 20
 
     // MARK: - Computed Properties
 
@@ -227,6 +234,8 @@ final class CounterpartyViewModel {
     ///   - allWallets: All wallets for dedup and sorting context
     ///   - excludingCPIDs: Asset names already shown as Bitcoin Stamps elsewhere in the app
     ///   - forceRefresh: When true, bypasses cache and fetches from network
+    ///   - startBackgroundWork: When false, skip artwork prefetch and supply hydration so the
+    ///     download overlay can hydrate dates first and then cache the newest 20
     /// - Returns: Number of non-Stamp Counterparty assets returned for this wallet, or `nil` if the fetch failed
     @MainActor
     @discardableResult
@@ -234,7 +243,8 @@ final class CounterpartyViewModel {
         for wallet: WalletConfig,
         allWallets: [WalletConfig],
         excludingCPIDs: Set<String> = [],
-        forceRefresh: Bool = false
+        forceRefresh: Bool = false,
+        startBackgroundWork: Bool = true
     ) async -> Int? {
         let showLoading = assets.isEmpty
         if showLoading { isLoading = true }
@@ -267,7 +277,7 @@ final class CounterpartyViewModel {
 
             let hydrateIDs = Set(withKnownSupply.map(\.id))
             let toHydrate = assets.filter { hydrateIDs.contains($0.id) }
-            if !toHydrate.isEmpty {
+            if startBackgroundWork, !toHydrate.isEmpty {
                 fetchAssetsImages(from: toHydrate, forceRefresh: forceRefresh, cancelExisting: false)
                 hydrateSupplies(from: toHydrate, forceRefresh: forceRefresh, cancelExisting: false)
             }
@@ -334,6 +344,180 @@ final class CounterpartyViewModel {
             imagePrefetcher = prefetcher
         }
         prefetcher.start()
+    }
+
+    // MARK: - Download Overlay
+
+    /// Confirm supply and issuance dates before the overlay picks the newest 20.
+    /// Verbose balances omit `first_issuance_block_time`, so without this the newest-first
+    /// order would be arbitrary.
+    @MainActor
+    func hydrateSuppliesAndWait(from displays: [CounterpartyDisplay], wallets: [WalletConfig]) async {
+        let names = displays.compactMap { $0.asset.hasConfirmedSupply ? nil : $0.asset.asset }
+        guard !names.isEmpty else { return }
+
+        await fetchAndApplySupplies(names: names, forceRefresh: false)
+        assets = sortedAssets(assets, by: currentSortOption, wallets: wallets)
+    }
+
+    /// Resolve artwork newest-first and wait until the newest `limit` images with art are cached.
+    /// Assets without artwork show the placeholder immediately and never block the gate.
+    @MainActor
+    func prefetchPriorityDownloads(
+        walletAddress: String?,
+        limit: Int,
+        onProgress: @escaping (Int, Int) -> Void
+    ) async {
+        onProgress(0, 0)
+        let candidates = newestAssets(in: displays(forWallet: walletAddress))
+        let urls = await resolveNewestArtworkURLs(from: candidates, limit: limit)
+        onProgress(0, urls.count)
+        guard !urls.isEmpty else { return }
+
+        await ProtocolImageCache.prefetch(
+            urls,
+            options: ProtocolImageCache.options(for: ProtocolImageCache.counterparty),
+            retain: { incrementalImagePrefetchers.append($0) },
+            progress: { done in onProgress(done, urls.count) }
+        )
+        onProgress(urls.count, urls.count)
+    }
+
+    /// Resolve and cache everything the priority gate skipped, plus confirm remaining supply.
+    @MainActor
+    func prefetchRemainderDownloads(walletAddress: String?, afterPriorityLimit: Int) {
+        let source = displays(forWallet: walletAddress)
+        guard !source.isEmpty else { return }
+
+        let ordered = newestAssets(in: source)
+        let remainder = Array(ordered.dropFirst(afterPriorityLimit))
+        if !remainder.isEmpty {
+            fetchAssetsImages(from: remainder, cancelExisting: false)
+        }
+        hydrateSupplies(from: source, forceRefresh: false, cancelExisting: false)
+    }
+
+    /// Static GIF toggle: cache newest resolved `.gif` artwork at the grid's decode size.
+    @MainActor
+    func prefetchPriorityStaticGIFs(limit: Int, onProgress: @escaping (Int, Int) -> Void) async {
+        onProgress(0, 0)
+        let urls = await resolveNewestArtworkURLs(from: newestAssets(in: assets), limit: limit, gifsOnly: true)
+        onProgress(0, urls.count)
+        guard !urls.isEmpty else { return }
+
+        await ProtocolImageCache.prefetch(
+            urls,
+            options: ProtocolImageCache.thumbnailOptions(for: ProtocolImageCache.counterparty),
+            retain: { incrementalImagePrefetchers.append($0) },
+            progress: { done in onProgress(done, urls.count) }
+        )
+        onProgress(urls.count, urls.count)
+    }
+
+    @MainActor
+    func prefetchRemainderStaticGIFs(afterPriorityLimit: Int) {
+        let ordered = newestAssets(in: assets)
+        Task { [weak self] in
+            guard let self else { return }
+            let urls = await self.resolveNewestArtworkURLs(
+                from: ordered,
+                limit: Int.max,
+                gifsOnly: true,
+                skipping: afterPriorityLimit
+            )
+            await self.startStaticGIFPrefetch(urls: urls)
+        }
+    }
+
+    @MainActor
+    private func startStaticGIFPrefetch(urls: [URL]) {
+        guard !urls.isEmpty else { return }
+        let prefetcher = ImagePrefetcher(
+            urls: urls,
+            options: ProtocolImageCache.thumbnailOptions(for: ProtocolImageCache.counterparty),
+            completionHandler: { skippedResources, failedResources, completedResources in
+                print("✅ CP static GIF prefetch done: \(completedResources.count) completed, \(skippedResources.count) cached, \(failedResources.count) failed")
+            }
+        )
+        incrementalImagePrefetchers.append(prefetcher)
+        prefetcher.start()
+    }
+
+    private func displays(forWallet address: String?) -> [CounterpartyDisplay] {
+        guard let address else { return assets }
+        return assets.filter { $0.walletAddress == address }
+    }
+
+    /// Newest first by first issuance; unknown dates sort last (name-ascending among themselves).
+    private func newestAssets(in displays: [CounterpartyDisplay]) -> [CounterpartyDisplay] {
+        displays.sorted { Self.isNewer($0, than: $1) }
+    }
+
+    private static func isNewer(_ lhs: CounterpartyDisplay, than rhs: CounterpartyDisplay) -> Bool {
+        switch (lhs.asset.firstIssuanceDate, rhs.asset.firstIssuanceDate) {
+        case let (lhsDate?, rhsDate?):
+            if lhsDate == rhsDate {
+                return lhs.asset.displayName.localizedCaseInsensitiveCompare(rhs.asset.displayName) == .orderedAscending
+            }
+            return lhsDate > rhsDate
+        case (nil, _?):
+            return false
+        case (_?, nil):
+            return true
+        case (nil, nil):
+            return lhs.asset.displayName.localizedCaseInsensitiveCompare(rhs.asset.displayName) == .orderedAscending
+        }
+    }
+
+    /// Walk `displays` newest-first in batches, resolving artwork until `limit` URLs are found.
+    /// Batching avoids resolving a whole collection just to fill the first 20 slots.
+    private func resolveNewestArtworkURLs(
+        from displays: [CounterpartyDisplay],
+        limit: Int,
+        gifsOnly: Bool = false,
+        skipping: Int = 0
+    ) async -> [URL] {
+        guard limit > 0 else { return [] }
+
+        var found: [URL] = []
+        var skipped = 0
+        var index = 0
+        let batchSize = max(Self.artworkResolveBatchSize, 1)
+
+        while index < displays.count, found.count < limit {
+            let batch = Array(displays[index..<min(index + batchSize, displays.count)])
+            index += batch.count
+
+            let resolved = await Self.resolveArtworkURLs(for: batch.map(\.asset))
+            for url in resolved {
+                guard let url else { continue }
+                if gifsOnly, !CounterpartyArtworkURL.isGIF(url) { continue }
+                if skipped < skipping {
+                    skipped += 1
+                    continue
+                }
+                found.append(url)
+                if found.count == limit { break }
+            }
+        }
+
+        return found
+    }
+
+    /// Resolve artwork for `assets`, preserving order so newest-first survives concurrency.
+    private static func resolveArtworkURLs(for assets: [CounterpartyAsset]) async -> [URL?] {
+        var resolved = [URL?](repeating: nil, count: assets.count)
+        await withTaskGroup(of: (Int, URL?).self) { group in
+            for (offset, asset) in assets.enumerated() {
+                group.addTask {
+                    (offset, await CounterpartyAssetImageResolver.shared.resolveImageURL(for: asset))
+                }
+            }
+            for await (offset, url) in group {
+                resolved[offset] = url
+            }
+        }
+        return resolved
     }
 
     /// Clear all assets and errors
@@ -565,6 +749,12 @@ final class CounterpartyViewModel {
         wallets: [WalletConfig]
     ) -> [CounterpartyDisplay] {
         switch option {
+        case .dateDescending:
+            return assets.sorted { Self.isNewer($0, than: $1) }
+
+        case .dateAscending:
+            return assets.sorted { Self.isNewer($1, than: $0) }
+
         case .nameAscending:
             return assets.sorted { $0.asset.displayName.localizedCaseInsensitiveCompare($1.asset.displayName) == .orderedAscending }
 
@@ -585,3 +775,8 @@ final class CounterpartyViewModel {
         }
     }
 }
+
+// MARK: - ProtocolDownloadSource
+
+/// Declared in an extension so the `@MainActor` protocol does not isolate the whole view model.
+extension CounterpartyViewModel: ProtocolDownloadSource {}

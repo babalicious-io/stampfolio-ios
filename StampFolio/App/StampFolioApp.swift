@@ -32,6 +32,7 @@ struct StampFolioApp: App {
     @State private var counterpartyViewModel = CounterpartyViewModel()
     @State private var slideshowSelection = SlideshowSelection()
     @State private var networkMonitor = NetworkMonitor()
+    @State private var downloadCoordinator = AssetDownloadCoordinator()
     
     /// Theme preference stored in UserDefaults
     @AppStorage("isDarkMode") private var isDarkMode = true
@@ -73,6 +74,7 @@ struct StampFolioApp: App {
                 .environment(counterpartyViewModel)
                 .environment(slideshowSelection)
                 .environment(networkMonitor)
+                .environment(downloadCoordinator)
                 .environment(\.appColorScheme, colorScheme)
                 .preferredColorScheme(isDarkMode ? .dark : .light)
                 .onAppear {

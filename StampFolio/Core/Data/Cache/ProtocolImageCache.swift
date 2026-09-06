@@ -6,6 +6,7 @@
 //
 
 import Kingfisher
+import UIKit
 
 /// Named Kingfisher caches so tiny stamp files and large Counterparty artwork
 /// do not share one memory LRU. Disk is unlimited and never expires.
@@ -34,6 +35,50 @@ enum ProtocolImageCache {
             .cacheOriginalImage,
             .diskCacheExpiration(.never)
         ]
+    }
+
+    /// Same as `options(for:)` plus the 200pt downsampler used by collection grids.
+    static func thumbnailOptions(for cache: ImageCache) -> KingfisherOptionsInfo {
+        options(for: cache) + [
+            .processor(DownsamplingImageProcessor(size: CollectionImageThumbnail.size)),
+            .scaleFactor(UIScreen.main.scale)
+        ]
+    }
+
+    /// Await a Kingfisher prefetch. Cache hits and failures both count toward `progress`.
+    @MainActor
+    static func prefetch(
+        _ urls: [URL],
+        options: KingfisherOptionsInfo,
+        retain: (ImagePrefetcher) -> Void,
+        progress: @escaping (Int) -> Void
+    ) async {
+        guard !urls.isEmpty else {
+            progress(0)
+            return
+        }
+
+        await withCheckedContinuation { continuation in
+            let prefetcher = ImagePrefetcher(
+                urls: urls,
+                options: options,
+                progressBlock: { skipped, failed, completed in
+                    let done = skipped.count + failed.count + completed.count
+                    Task { @MainActor in
+                        progress(done)
+                    }
+                },
+                completionHandler: { skipped, failed, completed in
+                    let done = skipped.count + failed.count + completed.count
+                    Task { @MainActor in
+                        progress(done)
+                        continuation.resume()
+                    }
+                }
+            )
+            retain(prefetcher)
+            prefetcher.start()
+        }
     }
 
     private static func makeCache(name: String, memoryBytes: Int) -> ImageCache {

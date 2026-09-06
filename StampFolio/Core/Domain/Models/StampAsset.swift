@@ -48,10 +48,10 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
     /// Keyburn amount (optional)
     let keyburn: Int?
     
-    /// Block timestamp when stamp was created (optional - not in balance endpoint)
+    /// Block timestamp when stamp was created (ISO-8601 on the stamp and balance endpoints)
     let blockTime: Date?
     
-    /// Block index number (optional - not in balance endpoint)
+    /// Block index number (present on the stamp and balance endpoints when indexed)
     let blockIndex: Int?
     
     /// Bitcoin transaction hash
@@ -223,10 +223,15 @@ struct StampAsset: Identifiable, Codable, Hashable, Sendable {
         return formatter.string(fromByteCount: Int64(bytes))
     }
     
-    /// Whether the stamp content is an image (jpg, png, webp, bmp, avif)
+    /// Whether the stamp content is an image (jpg, png, webp, bmp, avif, gif, svg)
     var isImage: Bool {
         guard let mimetype = fileType?.lowercased() else { return true }
         return mimetype.hasPrefix("image/")
+    }
+
+    /// PNG/JPG/GIF/WebP/AVIF/HTML/SVG — collection preview that the download overlay waits on
+    var hasCollectionPreview: Bool {
+        isHTML || isImage
     }
     
     /// Whether the stamp content is (animated) GIF

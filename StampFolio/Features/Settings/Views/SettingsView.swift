@@ -16,6 +16,7 @@ struct SettingsView: View {
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(StampViewModel.self) private var stampViewModel
     @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
+    @Environment(AssetDownloadCoordinator.self) private var downloadCoordinator
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
@@ -162,6 +163,11 @@ struct SettingsView: View {
             }
         }
         .preferredColorScheme(isDarkMode ? .dark : .light)
+        // Settings is a sheet above the tabs, so the overlay has to be presented here too
+        // for extra wallets and the Static GIF switch.
+        .overlay {
+            DownloadingAssetsOverlay()
+        }
     }
     
     // MARK: - Theme Appearance Toggle
@@ -314,6 +320,17 @@ struct SettingsView: View {
         .accessibilityLabel(performancePreview ? "Animated image" : "Static preview image")
         .accessibilityValue(performancePreview ? "On" : "Off")
         .accessibilityHint("Double tap to toggle between animated and static preview images")
+        .onChange(of: performancePreview) { _, isOn in
+            // Switching to static thumbnails needs a differently-processed cache entry,
+            // so cache the newest GIF thumbs per protocol before the grids ask for them.
+            guard !isOn else { return }
+            Task { @MainActor in
+                await downloadCoordinator.downloadStaticGIFPreviews(
+                    stampViewModel: stampViewModel,
+                    counterpartyViewModel: counterpartyViewModel
+                )
+            }
+        }
     }
 
     private var htmlPreviewDisplayToggle: some View {
@@ -482,5 +499,6 @@ struct WalletRow: View {
         .environment(SettingsViewModel())
         .environment(StampViewModel())
         .environment(CounterpartyViewModel())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

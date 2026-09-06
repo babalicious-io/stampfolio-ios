@@ -44,5 +44,6 @@ struct ContentView: View {
         .environment(CounterpartyViewModel())
         .environment(SlideshowSelection())
         .environment(NetworkMonitor())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

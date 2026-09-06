@@ -17,6 +17,7 @@ struct CounterpartyView: View {
     @Environment(CounterpartyViewModel.self) private var viewModel
     @Environment(StampViewModel.self) private var stampViewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
+    @Environment(AssetDownloadCoordinator.self) private var downloadCoordinator
     @Environment(\.appColorScheme) private var appColorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
@@ -38,7 +39,7 @@ struct CounterpartyView: View {
     }
 
     private var hasActiveSort: Bool {
-        viewModel.currentSortOption != .balanceDescending
+        viewModel.currentSortOption != .dateDescending
     }
 
     /// Adaptive columns from available width (compact vs regular)
@@ -126,7 +127,9 @@ struct CounterpartyView: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading && viewModel.assets.isEmpty {
+        // First wallet: hold the grid back so Stamps and Counterparty appear together
+        // when the Downloading Assets popup closes.
+        if downloadCoordinator.withholdsCollections || (viewModel.isLoading && viewModel.assets.isEmpty) {
             CollectionLoadingView()
         } else if viewModel.showError {
             errorView
@@ -293,6 +296,18 @@ struct CounterpartyView: View {
 
                 Menu {
                     Section {
+                        Toggle("Date - newest", isOn: Binding(
+                            get: { viewModel.currentSortOption == .dateDescending },
+                            set: { _ in viewModel.sortAssets(by: .dateDescending, wallets: wallets) }
+                        ))
+
+                        Toggle("Date - oldest", isOn: Binding(
+                            get: { viewModel.currentSortOption == .dateAscending },
+                            set: { _ in viewModel.sortAssets(by: .dateAscending, wallets: wallets) }
+                        ))
+                    }
+
+                    Section {
                         Toggle("Name - asc", isOn: Binding(
                             get: { viewModel.currentSortOption == .nameAscending },
                             set: { _ in viewModel.sortAssets(by: .nameAscending, wallets: wallets) }
@@ -350,5 +365,6 @@ struct CounterpartyView: View {
         .environment(StampViewModel())
         .environment(SlideshowSelection())
         .environment(NetworkMonitor())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

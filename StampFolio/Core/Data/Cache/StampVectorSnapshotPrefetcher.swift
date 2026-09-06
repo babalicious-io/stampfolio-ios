@@ -29,6 +29,8 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
     private var navigationID = 0
     private var currentURL: URL?
     private var windowWaitAttempts = 0
+    private var waitContinuations: [UUID: CheckedContinuation<Void, Never>] = [:]
+    private var waitersByURL: [URL: [UUID]] = [:]
 
     // MARK: - Initialization
 
@@ -77,6 +79,21 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
         startIfNeeded()
     }
 
+    /// Enqueue `urls` and wait until each has a snapshot, failed, or was skipped. Failures still count.
+    func enqueueAndWait(_ urls: [URL], onProgress: @escaping (Int) -> Void) async {
+        guard !urls.isEmpty else { return }
+        var finished = 0
+        await withTaskGroup(of: Void.self) { group in
+            for url in urls {
+                group.addTask { @MainActor in
+                    await self.waitUntilFinished(for: url)
+                    finished += 1
+                    onProgress(finished)
+                }
+            }
+        }
+    }
+
     /// Drop the pending queue and abandon the in-flight snapshot.
     func cancel() {
         generation += 1
@@ -87,6 +104,38 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
         webView.stopLoading()
         finishNavigationWait()
         isRunning = false
+        resumeAllWaiters()
+    }
+
+    /// Wait until this URL is stored, skipped, or the prefetcher is cancelled.
+    private func waitUntilFinished(for url: URL) async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let id = UUID()
+            waitContinuations[id] = continuation
+            waitersByURL[url, default: []].append(id)
+            Task { @MainActor in
+                let appearance = self.currentAppearance
+                if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+                    self.finishWaiters(for: url)
+                    return
+                }
+                self.enqueue([url])
+            }
+        }
+    }
+
+    private func finishWaiters(for url: URL) {
+        let ids = waitersByURL.removeValue(forKey: url) ?? []
+        for id in ids {
+            waitContinuations.removeValue(forKey: id)?.resume()
+        }
+    }
+
+    private func resumeAllWaiters() {
+        let pending = waitContinuations
+        waitContinuations.removeAll()
+        waitersByURL.removeAll()
+        pending.values.forEach { $0.resume() }
     }
 
     // MARK: - Queue
@@ -109,10 +158,12 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
 
             let appearance = currentAppearance
             if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+                finishWaiters(for: url)
                 continue
             }
 
             guard let html = await StampContentCache.shared.read(for: url) else {
+                finishWaiters(for: url)
                 continue
             }
 
@@ -137,13 +188,18 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
             guard gen == generation, currentURL == url else { continue }
 
             if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+                finishWaiters(for: url)
                 continue
             }
 
-            guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: webView) else { continue }
+            guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: webView) else {
+                finishWaiters(for: url)
+                continue
+            }
             guard gen == generation, currentURL == url else { continue }
 
             await StampVectorSnapshotCache.shared.write(thumbnail, for: url, appearance: appearance)
+            finishWaiters(for: url)
         }
 
         isRunning = false

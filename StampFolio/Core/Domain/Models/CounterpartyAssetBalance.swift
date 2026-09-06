@@ -84,6 +84,12 @@ struct CounterpartyAssetInfo: Codable, Hashable, Sendable {
     /// Total supply already divisibility-adjusted, when the balances payload includes it
     let supplyNormalized: String?
 
+    /// MIME type recorded for the asset's description/content, if the node sends it
+    let mimeType: String?
+
+    /// Block time of the first issuance (Unix seconds), if the node sends it on balances
+    let firstIssuanceBlockTime: Int?
+
     enum CodingKeys: String, CodingKey {
         case assetLongname = "asset_longname"
         case description
@@ -93,5 +99,7 @@ struct CounterpartyAssetInfo: Codable, Hashable, Sendable {
         case owner
         case supply
         case supplyNormalized = "supply_normalized"
+        case mimeType = "mime_type"
+        case firstIssuanceBlockTime = "first_issuance_block_time"
     }
 }

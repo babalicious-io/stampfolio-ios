@@ -16,6 +16,7 @@ struct AddWalletView: View {
     @Environment(SettingsViewModel.self) private var viewModel
     @Environment(StampViewModel.self) private var stampViewModel
     @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
+    @Environment(AssetDownloadCoordinator.self) private var downloadCoordinator
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appColorScheme) private var appColorScheme
@@ -208,7 +209,7 @@ struct AddWalletView: View {
     
     // MARK: - Add Wallet
     
-    /// Save locally, dismiss immediately, then load only the new wallet in the background
+    /// Save locally, dismiss immediately, then let the download overlay load only the new wallet
     private func addWallet() {
         let trimmedName = walletName.trimmingCharacters(in: .whitespacesAndNewlines)
         let label = trimmedName.isEmpty ? nil : trimmedName
@@ -221,27 +222,28 @@ struct AddWalletView: View {
         ) else { return }
         
         let allWallets = walletsIncluding(wallet)
+        let isFirstWallet = allWallets.count == 1
         let stampVM = stampViewModel
         let counterpartyVM = counterpartyViewModel
         let settingsVM = viewModel
+        let coordinator = downloadCoordinator
         
         // Show collection loading before the sheet goes away (first wallet only)
         stampVM.prepareToLoadNewWallet()
         counterpartyVM.prepareToLoadNewWallet()
         
-        // Unstructured task survives dismissing this view
+        // Unstructured task survives dismissing this view. The coordinator shows the
+        // Downloading Assets popup, fetches metadata, and waits for each enabled
+        // protocol's newest 20 previews before the collections appear.
         Task { @MainActor in
-            let stampCount = await stampVM.fetchAssetMetadata(for: wallet, allWallets: allWallets)
-            let stampCPIDs = stampVM.stampCPIDs
-            let counterpartyCount = await counterpartyVM.fetchAssetMetadata(
-                for: wallet,
+            await coordinator.downloadAfterAddingWallet(
+                wallet: wallet,
                 allWallets: allWallets,
-                excludingCPIDs: stampCPIDs
+                isFirstWallet: isFirstWallet,
+                stampViewModel: stampVM,
+                counterpartyViewModel: counterpartyVM,
+                settingsViewModel: settingsVM
             )
-            counterpartyVM.applyStampExclusion(stampCPIDs)
-            if let stampCount, let counterpartyCount {
-                settingsVM.notifyIfWalletEmpty(stampCount: stampCount, counterpartyCount: counterpartyCount)
-            }
         }
         
         walletName = ""
@@ -265,5 +267,6 @@ struct AddWalletView: View {
         .environment(SettingsViewModel())
         .environment(StampViewModel())
         .environment(CounterpartyViewModel())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

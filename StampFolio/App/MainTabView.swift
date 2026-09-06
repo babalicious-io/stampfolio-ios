@@ -42,6 +42,14 @@ struct MainTabView: View {
     // MARK: - Body
     
     var body: some View {
+        tabs
+            // Covers Stamps / Counterparty / future Ordinals after the Add Wallet sheet dismisses
+            .overlay {
+                DownloadingAssetsOverlay()
+            }
+    }
+    
+    private var tabs: some View {
         TabView {
             orderedProtocolTabs
             
@@ -121,5 +129,6 @@ struct MainTabView: View {
         .environment(SettingsViewModel())
         .environment(SlideshowSelection())
         .environment(NetworkMonitor())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

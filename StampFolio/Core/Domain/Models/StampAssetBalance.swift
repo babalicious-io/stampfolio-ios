@@ -47,6 +47,15 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
     
     /// MIME type of the stamp content (nullable in API)
     let fileType: String?
+
+    /// Size of the stamp file in bytes when the indexer has populated it
+    let fileSize: Int?
+
+    /// Block timestamp when the stamp was created
+    let blockTime: Date?
+
+    /// Block index number
+    let blockIndex: Int?
     
     /// Transaction hash
     let txHash: String
@@ -112,7 +121,10 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
         case locked
         case divisible
         case keyburn
-        case fileType = "stamp_mimetype"        
+        case fileType = "stamp_mimetype"
+        case fileSize = "file_size_bytes"
+        case blockTime = "block_time"
+        case blockIndex = "block_index"
         case txHash = "tx_hash"
         case stampUrl = "stamp_url"
         case ownerAddy = "address"
@@ -137,6 +149,9 @@ struct StampAssetBalance: Identifiable, Codable, Hashable, Sendable {
         divisible = try container.decode(Int.self, forKey: .divisible)
         keyburn = try container.decodeIfPresent(Int.self, forKey: .keyburn)
         fileType = try container.decodeIfPresent(String.self, forKey: .fileType)
+        fileSize = try container.decodeIfPresent(Int.self, forKey: .fileSize)
+        blockTime = try container.decodeIfPresent(Date.self, forKey: .blockTime)
+        blockIndex = try container.decodeIfPresent(Int.self, forKey: .blockIndex)
         txHash = try container.decode(String.self, forKey: .txHash)
         stampUrl = try container.decode(String.self, forKey: .stampUrl)
         ownerAddy = try container.decode(String.self, forKey: .ownerAddy)

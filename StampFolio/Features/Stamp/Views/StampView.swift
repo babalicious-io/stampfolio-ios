@@ -15,6 +15,7 @@ struct StampView: View {
     
     @Environment(StampViewModel.self) private var viewModel
     @Environment(NetworkMonitor.self) private var networkMonitor
+    @Environment(AssetDownloadCoordinator.self) private var downloadCoordinator
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
@@ -37,9 +38,9 @@ struct StampView: View {
     
     // MARK: - Computed Properties
     
-    /// Check if any sort is active (not the default descending stamp sort)
+    /// Check if any sort is active (not the default newest-first sort)
     private var hasActiveSort: Bool {
-        viewModel.currentSortOption != .stampDescending
+        viewModel.currentSortOption != .dateDescending
     }
     
     // MARK: - Body
@@ -205,6 +206,18 @@ struct StampView: View {
                 // Sort Menu (using Section for semantic grouping)
                 Menu {
                     Section {
+                        Toggle("Date - newest", isOn: Binding(
+                            get: { viewModel.currentSortOption == .dateDescending },
+                            set: { _ in viewModel.sortAssets(by: .dateDescending, wallets: wallets) }
+                        ))
+                        
+                        Toggle("Date - oldest", isOn: Binding(
+                            get: { viewModel.currentSortOption == .dateAscending },
+                            set: { _ in viewModel.sortAssets(by: .dateAscending, wallets: wallets) }
+                        ))
+                    }
+                    
+                    Section {
                         Toggle("Stamp # - asc", isOn: Binding(
                             get: { viewModel.currentSortOption == .stampAscending },
                             set: { _ in viewModel.sortAssets(by: .stampAscending, wallets: wallets) }
@@ -268,7 +281,9 @@ struct StampView: View {
     
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading && viewModel.assets.isEmpty {
+        // First wallet: hold the grid back so Stamps and Counterparty appear together
+        // when the Downloading Assets popup closes.
+        if downloadCoordinator.withholdsCollections || (viewModel.isLoading && viewModel.assets.isEmpty) {
             CollectionLoadingView()
         } else if viewModel.showError {
             errorView
@@ -397,5 +412,6 @@ struct StampView: View {
         .environment(CounterpartyViewModel())
         .environment(SlideshowSelection())
         .environment(NetworkMonitor())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

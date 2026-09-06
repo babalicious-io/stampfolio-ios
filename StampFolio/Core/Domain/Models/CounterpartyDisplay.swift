@@ -74,8 +74,8 @@ struct CounterpartyDisplay: Identifiable {
             supply: balance.assetInfo?.supply,
             supplyNormalized: Self.normalizedSupply(from: balance.assetInfo),
             description: balance.assetInfo?.description,
-            mimeType: nil,
-            firstIssuanceBlockTime: nil,
+            mimeType: balance.assetInfo?.mimeType,
+            firstIssuanceBlockTime: balance.assetInfo?.firstIssuanceBlockTime,
             lastIssuanceBlockTime: nil
         )
         self.balance = balance.balance
