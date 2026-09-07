@@ -188,7 +188,7 @@ struct AddWalletView: View {
 
     private func overviewColumn(for protocolType: ProtocolType) -> some View {
         let count = viewModel.overviewCount(for: protocolType)
-        return VStack(spacing: 0) {
+        return VStack(spacing: 2) {
             Text(protocolType.rawValue)
                 .font(.caption)
                 .foregroundStyle(.secondary)
