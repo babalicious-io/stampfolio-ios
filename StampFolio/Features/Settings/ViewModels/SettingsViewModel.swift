@@ -216,7 +216,9 @@ final class SettingsViewModel {
             let stamps = try await stampAPI.fetchStampsByWallet(address)
             guard generation == overviewGeneration else { return }
             stampCPIDs = Set(stamps.map(\.counterpartyId))
-            await tickStampCount(to: stamps.count, generation: generation)
+            await tickCount(toward: stamps.count, current: stampCount, generation: generation) {
+                stampCount = $0
+            }
         } catch {
             guard generation == overviewGeneration else { return }
         }
@@ -231,7 +233,13 @@ final class SettingsViewModel {
                 let added = page.balances.filter { !Self.matchesStampCPID($0, stampCPIDs: stampCPIDs) }.count
                 guard generation == overviewGeneration else { return }
                 if added > 0 {
-                    counterpartyCount += added
+                    await tickCount(
+                        toward: counterpartyCount + added,
+                        current: counterpartyCount,
+                        generation: generation
+                    ) {
+                        counterpartyCount = $0
+                    }
                 }
                 guard let nextCursor = page.nextCursor else { break }
                 cursor = nextCursor
@@ -241,17 +249,23 @@ final class SettingsViewModel {
         }
     }
 
-    private func tickStampCount(to target: Int, generation: Int) async {
-        guard target > 0 else { return }
-        let steps = min(target, 24)
-        let stepSize = max(1, target / steps)
-        var shown = 0
+    /// Count up by 1 so the overview never jumps (0, 1, 2 … n).
+    private func tickCount(
+        toward target: Int,
+        current: Int,
+        generation: Int,
+        set: (Int) -> Void
+    ) async {
+        guard target > current else { return }
+        let remaining = target - current
+        let delayMs = max(1, min(30, 2000 / remaining))
+        var shown = current
         while shown < target {
             guard generation == overviewGeneration else { return }
-            shown = min(shown + stepSize, target)
-            stampCount = shown
+            shown += 1
+            set(shown)
             if shown < target {
-                try? await Task.sleep(for: .milliseconds(25))
+                try? await Task.sleep(for: .milliseconds(delayMs))
             }
         }
     }

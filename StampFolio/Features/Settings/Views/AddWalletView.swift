@@ -174,29 +174,35 @@ struct AddWalletView: View {
     
     private var assetOverview: some View {
         HStack(alignment: .top, spacing: 0) {
-            ForEach(ProtocolType.defaultOrder) { protocolType in
-                let count = viewModel.overviewCount(for: protocolType)
-                VStack(spacing: 6) {
-                    Text(protocolType.rawValue)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    Text("\(count)")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                        .foregroundStyle(appColorScheme.primary)
-                }
-                .frame(maxWidth: .infinity)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(protocolType.rawValue) \(count)")
-            }
+            overviewColumn(for: .ordinals)
+            Spacer(minLength: 0)
+            overviewColumn(for: .counterparty)
+            Spacer(minLength: 0)
+            overviewColumn(for: .stamps)
         }
         .animation(.snappy, value: viewModel.stampCount)
         .animation(.snappy, value: viewModel.counterpartyCount)
         .padding(.vertical, 4)
+        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+    }
+
+    private func overviewColumn(for protocolType: ProtocolType) -> some View {
+        let count = viewModel.overviewCount(for: protocolType)
+        return VStack(spacing: 0) {
+            Text(protocolType.rawValue)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text("\(count)")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .foregroundStyle(appColorScheme.primary)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(protocolType.rawValue) \(count)")
     }
     
     // MARK: - Add Wallet
