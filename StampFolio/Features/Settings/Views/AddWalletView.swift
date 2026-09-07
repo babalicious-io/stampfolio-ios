@@ -183,7 +183,7 @@ struct AddWalletView: View {
         .animation(.snappy, value: viewModel.stampCount)
         .animation(.snappy, value: viewModel.counterpartyCount)
         .padding(.vertical, 4)
-        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
     }
 
     private func overviewColumn(for protocolType: ProtocolType) -> some View {
@@ -199,7 +199,7 @@ struct AddWalletView: View {
                 .fontWeight(.semibold)
                 .monospacedDigit()
                 .contentTransition(.numericText())
-                .foregroundStyle(appColorScheme.primary)
+                .foregroundStyle(.primary)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(protocolType.rawValue) \(count)")
