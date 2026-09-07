@@ -181,16 +181,16 @@ Disk is wiped when `stampVectorSnapshotCacheVersion` increments (currently 3) so
 
 `fetchStampsImages()` (first collection load, **add wallet**, per-wallet refresh) writes HTML into `StampContentCache`, then enqueues each vector URL on `StampVectorSnapshotPrefetcher` as soon as that HTML is ready. The prefetcher is one 1000×1000pt off-screen `WKWebView` (serial). Collection cells **display** those stills; they do not overwrite the cache. A notification refreshes visible cells when a snapshot is stored.
 
-When **Animated HTML** is on, `StampVectorWebViewPool` reuses collection `WKWebView`s across view-mode changes (exclusive URL checkout, idle LRU ~20). Details and fullscreen are unpooled. Turning the toggle off drains idle views and shows snapshots only.
+When **Animated HTML** is on, `StampVectorWebViewPool` reuses collection `WKWebView`s across view-mode changes (exclusive URL checkout, idle LRU ~20). Details use unpooled WebKit when live. Turning the toggle off drains idle views and shows snapshots only.
 
 #### Animated HTML Handling
 
-A user-configurable `htmlPerformancePreview` setting (Settings > Performance) controls collection/detail HTML/SVG:
+A user-configurable `htmlPerformancePreview` setting (Settings > Performance) controls collection/detail/fullscreen HTML/SVG:
 
-- **Animated HTML ON** (default): snapshot placeholder, then a live (pooled in grid/list) `WKWebView`
-- **Animated HTML OFF**: cached 200pt still from the 1000×1000px prefetch; no collection WebKit once the snapshot exists
+- **Animated HTML OFF** (default): cached 200pt still from the 1000×1000px prefetch; no collection WebKit once the snapshot exists. Fullscreen shows that still, with an eye control to reveal live `WebContentView`.
+- **Animated HTML ON**: snapshot placeholder, then a live (pooled in grid/list) `WKWebView`. Fullscreen is live with no eye control.
 
-Fullscreen always uses live `WebContentView`.
+Fullscreen GIFs always use `KFAnimatedImage`, even when Static GIF is on in the collection.
 
 ### Layer 4 -- Counterparty resolved artwork URLs
 
@@ -460,8 +460,8 @@ Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMem
 
 | Setting | Key | Default | Effect |
 |---------|-----|---------|--------|
-| Animated Images | `performancePreview` | `true` | When off, GIFs render as static downsampled thumbnails in grids/lists, and the download overlay caches the newest 20 GIF thumbs per protocol |
-| Animated HTML | `htmlPerformancePreview` | `true` | When off, HTML/SVG stamps show a cached 200pt snapshot in grids, lists, and the details sheet |
+| Animated HTML | `htmlPerformancePreview` | `false` | When off (default), HTML/SVG stamps show a cached snapshot in grids, lists, details, and fullscreen. Turn on for live WebKit. Fullscreen eye reveals the original HTML. |
+| Animated Images | `performancePreview` | `true` | When off, GIFs render as static frames in grids/lists only. Fullscreen GIFs always animate. Turning it off also caches the newest 20 GIF thumbs per protocol. |
 
 Located in Settings > Performance.
 
@@ -490,7 +490,7 @@ Located in Settings > Performance.
 | `StampAssetVectorView.swift` | Snapshot-first HTML/SVG preview, pooled WKWebView when animated |
 | `StampAssetTextView.swift` | Text content with StampContentCache read/write |
 | `CounterpartyAssetImageView.swift` | Thumbnail 200pt vs original; KFAnimatedImage for `.gif`; resolver-backed artwork |
-| `CollectionViewComponents.swift` | `CollectionImageThumbnail.size` (200pt) shared by Stamps and Counterparty |
+| `CollectionViewComponents.swift` | `CollectionImageThumbnail.size` (200pt); `FullscreenOriginalRevealButton` |
 | `AddWalletView.swift` | Save, dismiss, hand the new wallet to the download coordinator |
 | `StampView.swift` | Cache-first `.task` (skips while overlay / `isLoading`), deletion-only `.onChange` |
 | `SearchView.swift` / `SlideshowToolbarItem.swift` | Same overlay/`isLoading` guard before a full fetch |

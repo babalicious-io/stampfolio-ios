@@ -310,3 +310,28 @@ struct AssetStatusIconsView: View {
             .accessibilityLabel(label)
     }
 }
+
+// MARK: - Fullscreen original reveal
+
+/// Top-trailing control on immersive viewers. Visible when Static HTML Preview is on
+/// and the current stamp is HTML or SVG. Toggles the cached snapshot versus live WebKit.
+struct FullscreenOriginalRevealButton: View {
+    @Binding var showOriginal: Bool
+
+    var body: some View {
+        Button {
+            showOriginal.toggle()
+        } label: {
+            Image(systemName: showOriginal ? "eye.slash.fill" : "eye.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(showOriginal ? "Show static HTML preview" : "Show original HTML")
+        .accessibilityHint("Double tap to switch between the cached snapshot and live HTML")
+        .padding(.top, 52)
+        .padding(.trailing, 16)
+    }
+}

@@ -122,10 +122,8 @@ final class StampVectorWebViewPool {
         }
     }
 
+    /// Missing key matches `@AppStorage` default: static HTML snapshots, not live WebKit.
     private static var isLiveHTMLPreviewEnabled: Bool {
-        if UserDefaults.standard.object(forKey: "htmlPerformancePreview") == nil {
-            return true
-        }
-        return UserDefaults.standard.bool(forKey: "htmlPerformancePreview")
+        UserDefaults.standard.bool(forKey: "htmlPerformancePreview")
     }
 }

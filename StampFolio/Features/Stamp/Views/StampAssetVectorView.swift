@@ -17,7 +17,7 @@ struct StampAssetVectorView: View {
     let onFailure: () -> Void
     var reusesWebView: Bool = false
 
-    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = true
+    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = false
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.appColorScheme) private var appColorScheme
 

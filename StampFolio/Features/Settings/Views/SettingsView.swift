@@ -30,7 +30,7 @@ struct SettingsView: View {
     @AppStorage("showStamps") private var showStamps = true
     @AppStorage("colorScheme") private var colorSchemeRawValue = AppColorScheme.satoshiOrange.rawValue
     @AppStorage("performancePreview") private var performancePreview = true
-    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = true
+    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = false
     @State private var protocolOrder: [ProtocolType] = []
     @State private var editingWallet: WalletConfig?
     @State private var protocolEditMode: EditMode = .inactive
@@ -124,7 +124,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Performance")
                 } footer: {
-                    Text("Static previews in grids and lists save resources. Turn off Animated GIF to freeze GIF frames. Turn off Animated HTML to show a cached snapshot of HTML and SVG stamps instead of a live WebKit view. Fullscreen always plays live.")
+                    Text("Static GIF freezes frames in grids and lists; fullscreen GIFs always animate. HTML and SVG stamps default to a cached snapshot in grids, lists, details, and fullscreen; turn on Animated HTML for a live WebKit view. In fullscreen, tap the eye to show the original HTML.")
                 }
                 
                 // About Section

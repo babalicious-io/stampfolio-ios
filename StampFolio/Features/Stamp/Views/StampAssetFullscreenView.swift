@@ -28,12 +28,18 @@ struct StampAssetFullscreenView: View {
     
     @State private var currentIndex: Int
     @AppStorage("slideshowInterval") private var slideshowInterval = 5
+    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = false
     @State private var gestureState = ZoomPanNavigationState()
+    @State private var showOriginal = false
     
     // MARK: - Computed Properties
     
     private var currentAsset: StampAsset {
         assets[currentIndex]
+    }
+
+    private var canRevealOriginal: Bool {
+        (currentAsset.isHTML || currentAsset.isSVG) && !htmlPerformancePreview
     }
     
     // MARK: - Initialization
@@ -60,7 +66,11 @@ struct StampAssetFullscreenView: View {
                 
                 // Content based on type
                 ZStack {
-                    StampAssetFullscreenContent(asset: currentAsset, size: geometry.size)
+                    StampAssetFullscreenContent(
+                        asset: currentAsset,
+                        size: geometry.size,
+                        showOriginal: showOriginal
+                    )
                         .scaleEffect(gestureState.scale)
                         .offset(gestureState.offset)
                         .offset(y: gestureState.dragOffset.height)
@@ -79,6 +89,16 @@ struct StampAssetFullscreenView: View {
                         gestureState.toggleZoom()
                     }
                 }
+
+                if canRevealOriginal {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            FullscreenOriginalRevealButton(showOriginal: $showOriginal)
+                        }
+                        Spacer()
+                    }
+                }
             }
         }
         .ignoresSafeArea()
@@ -89,6 +109,9 @@ struct StampAssetFullscreenView: View {
             try? await Task.sleep(for: .seconds(slideshowInterval))
             guard !Task.isCancelled else { return }
             navigateToNextSlideshow()
+        }
+        .onChange(of: currentIndex) { _, _ in
+            showOriginal = false
         }
         .accessibilityAddTraits(.isImage)
         .accessibilityLabel("\(currentAsset.formattedStampId), \(currentIndex + 1) of \(assets.count)")
@@ -154,8 +177,14 @@ struct StampAssetFullscreenView: View {
 struct StampAssetFullscreenContent: View {
     let asset: StampAsset
     let size: CGSize
+    var showOriginal: Bool = false
 
     @Environment(\.appColorScheme) private var appColorScheme
+    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = false
+
+    private var showLiveHTML: Bool {
+        htmlPerformancePreview || showOriginal
+    }
 
     var body: some View {
         Group {
@@ -166,7 +195,11 @@ struct StampAssetFullscreenContent: View {
             } else if asset.isVideo {
                 VideoContentView(url: asset.imageURL)
             } else if asset.isSVG || asset.isHTML {
-                WebContentView(url: asset.imageURL)
+                if showLiveHTML {
+                    WebContentView(url: asset.imageURL)
+                } else {
+                    StampVectorSnapshotFullscreenView(url: asset.imageURL)
+                }
             } else if asset.isGIF {
                 KFAnimatedImage(asset.imageURL)
                     .placeholder {
@@ -196,6 +229,45 @@ struct StampAssetFullscreenContent: View {
             }
         }
         .frame(width: size.width, height: size.height)
+    }
+}
+
+/// Cached HTML/SVG still for fullscreen when Static HTML Preview is on.
+private struct StampVectorSnapshotFullscreenView: View {
+    let url: URL?
+
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.appColorScheme) private var appColorScheme
+    @State private var snapshot: UIImage?
+
+    private var appearance: StampVectorColorAppearance {
+        colorScheme == .dark ? .dark : .light
+    }
+
+    var body: some View {
+        ZStack {
+            if let snapshot {
+                Image(uiImage: snapshot)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+            } else {
+                ProgressView()
+                    .tint(appColorScheme.primary)
+            }
+        }
+        .task(id: "\(url?.absoluteString ?? "")-\(appearance.rawValue)") {
+            await loadCachedSnapshot()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .stampVectorSnapshotDidStore)) { notification in
+            guard let updated = notification.userInfo?["url"] as? URL, updated == url else { return }
+            Task { await loadCachedSnapshot() }
+        }
+    }
+
+    private func loadCachedSnapshot() async {
+        guard let url else { return }
+        snapshot = await StampVectorSnapshotCache.shared.read(for: url, appearance: appearance)
     }
 }
 

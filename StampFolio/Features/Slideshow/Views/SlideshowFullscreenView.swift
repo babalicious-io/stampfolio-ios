@@ -47,12 +47,23 @@ struct SlideshowFullscreenView: View {
 
     @State private var currentIndex: Int = 0
     @AppStorage("slideshowInterval") private var slideshowInterval = 5
+    @AppStorage("htmlPerformancePreview") private var htmlPerformancePreview = false
     @State private var gestureState = ZoomPanNavigationState()
+    @State private var showOriginal = false
 
     // MARK: - Computed Properties
 
     private var currentItem: SlideshowItem {
         items[currentIndex]
+    }
+
+    private var canRevealOriginal: Bool {
+        switch currentItem {
+        case .stamp(let asset):
+            return (asset.isHTML || asset.isSVG) && !htmlPerformancePreview
+        case .counterparty:
+            return false
+        }
     }
 
     // MARK: - Body
@@ -67,7 +78,11 @@ struct SlideshowFullscreenView: View {
                     }
 
                 ZStack {
-                    SlideshowSlide(item: currentItem, size: geometry.size)
+                    SlideshowSlide(
+                        item: currentItem,
+                        size: geometry.size,
+                        showOriginal: showOriginal
+                    )
                         .id(currentItem.id)
                         .scaleEffect(gestureState.scale)
                         .offset(gestureState.offset)
@@ -86,6 +101,16 @@ struct SlideshowFullscreenView: View {
                         gestureState.toggleZoom()
                     }
                 }
+
+                if canRevealOriginal {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            FullscreenOriginalRevealButton(showOriginal: $showOriginal)
+                        }
+                        Spacer()
+                    }
+                }
             }
         }
         .ignoresSafeArea()
@@ -96,6 +121,9 @@ struct SlideshowFullscreenView: View {
             try? await Task.sleep(for: .seconds(slideshowInterval))
             guard !Task.isCancelled else { return }
             navigateToNextSlideshow()
+        }
+        .onChange(of: currentIndex) { _, _ in
+            showOriginal = false
         }
         .accessibilityAddTraits(.isImage)
         .accessibilityLabel("\(currentItem.accessibilityName), \(currentIndex + 1) of \(items.count)")
@@ -159,11 +187,12 @@ struct SlideshowFullscreenView: View {
 private struct SlideshowSlide: View {
     let item: SlideshowItem
     let size: CGSize
+    var showOriginal: Bool = false
 
     var body: some View {
         switch item {
         case .stamp(let asset):
-            StampAssetFullscreenContent(asset: asset, size: size)
+            StampAssetFullscreenContent(asset: asset, size: size, showOriginal: showOriginal)
         case .counterparty(let asset):
             CounterpartyAssetFullscreenContent(asset: asset, size: size)
         }
