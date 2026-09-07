@@ -174,12 +174,12 @@ A two-tier actor cache of HTML/SVG collection stills. Fullscreen and slideshow k
 | Disk tier | PNG files in `Caches/stamp_vector_snapshots/` |
 | Key | SHA-256 of URL + `light`/`dark` + `.1000px` |
 | Expiration | Never |
-| Capture | Offscreen 1000×1000pt WKWebView → 1000×1000px bitmap, scaled to 200pt (fit, no crop) |
+| Capture | Up to five off-screen 1000×1000pt WKWebViews → 1000×1000px bitmap, scaled to 200pt (fit, no crop) |
 | Capture delay | 5s after `didFinish` so HTML animation can settle |
 
 Disk is wiped when `stampVectorSnapshotCacheVersion` increments (currently 3) so older center-cropped files are not reused.
 
-`fetchStampsImages()` (first collection load, **add wallet**, per-wallet refresh) writes HTML into `StampContentCache`, then enqueues each vector URL on `StampVectorSnapshotPrefetcher` as soon as that HTML is ready. The prefetcher is one 1000×1000pt off-screen `WKWebView` (serial). Collection cells **display** those stills; they do not overwrite the cache. A notification refreshes visible cells when a snapshot is stored.
+`fetchStampsImages()` (first collection load, **add wallet**, per-wallet refresh) writes HTML into `StampContentCache`, then enqueues each vector URL on `StampVectorSnapshotPrefetcher` as soon as that HTML is ready. The prefetcher runs up to five 1000×1000pt off-screen `WKWebView`s in parallel. Collection cells **display** those stills; they do not overwrite the cache. A notification refreshes visible cells when a snapshot is stored. Add-wallet overlay awaits HTML **source** cache, not these snapshots.
 
 When **Animated HTML** is on, `StampVectorWebViewPool` reuses collection `WKWebView`s across view-mode changes (exclusive URL checkout, idle LRU ~20). Details use unpooled WebKit when live. Turning the toggle off drains idle views and shows snapshots only.
 
@@ -283,7 +283,8 @@ in AddWalletView  -> Wallet to SwiftData  ->   sheet dismisses immediately
                                     │                          (issuance dates before sorting)
                                     ▼                                    ▼
                               newest 20 previews                 newest 20 artwork URLs
-                              (pixel + HTML snapshot)            (resolve, then Kingfisher)
+                              (pixel + HTML source;              (resolve, then Kingfisher)
+                               snapshots after popup)
                                     └─────────────────┬──────────────────┘
                                                       ▼
                                              popup closes, grids appear
@@ -301,13 +302,15 @@ shared overlay takes over. See [Download Overlay](#download-overlay) below.
 
 | Phase | Method | Behavior |
 |-------|--------|----------|
-| Gate | `prefetchPriorityDownloads` | Awaits the newest `min(20, visualCount)` previews |
+| Gate | `prefetchPriorityDownloads` | Awaits newest `min(20, visualCount)` pixel images and HTML source; HTML/SVG snapshots enqueue and continue after the popup |
 | Remainder | `prefetchRemainderDownloads` | Fire-and-forget for everything else |
 
 - The bar is determinate from the first frame and starts at **1%** until gate totals exist (and
   while completed is still 0), so the fill is visible during metadata fetch instead of a spinner.
   Progress is the **sum** of each enabled protocol's gate (20 stamps + 15 CP art = 35). A protocol
   with no visual assets is instantly done, and failures still count so the popup cannot hang.
+  Stamp HTML/SVG stills do not hold the popup: the gate counts them done after `StampContentCache`
+  write, then `StampVectorSnapshotPrefetcher` captures up to five in parallel after dismiss.
 - Disabled protocols (`showStamps` / `showCounterparty` / `showOrdinals`) are skipped. Ordinals
   uses `OrdinalsDownloadSource`, a no-op that reports 0 until that tab ships.
 - Presented on both [`MainTabView`](../../StampFolio/App/MainTabView.swift) and
@@ -447,6 +450,7 @@ Collection **Try Again** force-refreshes every wallet the same way. Kingfisher, 
 | StampVectorSnapshotCache NSCache | 50 entries | Auto-evicted by iOS under memory pressure |
 | StampVectorSnapshotCache disk | Unlimited | Never expires |
 | StampVectorWebViewPool idle | ~20 WKWebViews | LRU; drained on memory warning or Animated HTML off |
+| StampVectorSnapshotPrefetcher | 5 off-screen WKWebViews | Drops to 1 concurrent capture on memory warning |
 | CP resolved URL map | One JSON file | Replaced on each resolve; bypassed on force refresh |
 | CP confirmed supply map | One JSON file | Overlay on launch; rewritten after GET /assets; force refresh refetches |
 | Stampchain URLCache memory/disk | 10 MB / 50 MB | Managed by system |
@@ -454,7 +458,7 @@ Collection **Try Again** force-refreshes every wallet the same way. Kingfisher, 
 | CP manifest URLCache memory/disk | 5 MB / 20 MB | Managed by system |
 | Downsampled thumbnails | 200pt | Cached separately from originals |
 
-Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMemoryWarningNotification`. The `NSCache` tiers in `StampContentCache` and `StampVectorSnapshotCache` are also Apple-managed and auto-evict under memory pressure. `StampVectorWebViewPool` drains idle WebViews on the same memory warning. Disk caches persist across app launches.
+Kingfisher automatically clears its memory cache on `UIApplication.didReceiveMemoryWarningNotification`. The `NSCache` tiers in `StampContentCache` and `StampVectorSnapshotCache` are also Apple-managed and auto-evict under memory pressure. `StampVectorWebViewPool` drains idle WebViews on the same memory warning. `StampVectorSnapshotPrefetcher` drops to one in-flight capture until the queue empties. Disk caches persist across app launches.
 
 ## User Settings
 
@@ -483,7 +487,7 @@ Located in Settings > Performance.
 | `CounterpartyViewModel.swift` | `fetchAssetsMetadata()`, `fetchAssetsImages()` resolve + prefetch, `hydrateSupplies()` / `hydrateSuppliesAndWait()` |
 | `StampContentCache.swift` | Two-tier actor cache for HTML/SVG/text stamp content |
 | `StampVectorSnapshotCache.swift` | Two-tier actor cache for 1000×1000px → 200pt HTML/SVG stills |
-| `StampVectorSnapshotPrefetcher.swift` | Serial offscreen WKWebView snapshot prefetch after HTML cache |
+| `StampVectorSnapshotPrefetcher.swift` | Up to five off-screen WKWebViews snapshotting HTML/SVG after content cache |
 | `StampVectorWebViewPool.swift` | Exclusive URL-keyed WKWebView reuse for collection cells |
 | `StampAssetPixelView.swift` | Downsampled thumbnails, sync disk load, animated preview toggle |
 | `StampAssetFullscreenView.swift` | Full-resolution images, sync disk load |

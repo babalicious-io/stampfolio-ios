@@ -2,70 +2,144 @@
 //  StampVectorSnapshotPrefetcher.swift
 //  StampFolio
 //
-//  Serial offscreen WKWebView that rasterizes HTML/SVG stamps into
+//  Off-screen WKWebViews that rasterize HTML/SVG stamps into
 //  StampVectorSnapshotCache after StampContentCache has the source.
 //
 
 import UIKit
 import WebKit
 
-/// One 1000×1000pt WKWebView, off-screen in the key window, processing URLs one at a time.
+/// Up to five 1000×1000pt WKWebViews, off-screen in the key window, capturing in parallel.
 @MainActor
-final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
+final class StampVectorSnapshotPrefetcher {
+
+    // MARK: - Nested Types
+
+    /// One capture WebView plus its own navigation waiter. Delegate must be per-view.
+    @MainActor
+    private final class SnapshotSlot: NSObject, WKNavigationDelegate {
+        let index: Int
+        let webView: WKWebView
+        let hostView: UIView
+        var currentURL: URL?
+        var isRunning = false
+        private var navigationWaiter: CheckedContinuation<Void, Never>?
+        private var navigationID = 0
+
+        init(index: Int) {
+            self.index = index
+            let pointSize = StampVectorSnapshotImage.capturePointSize
+            let gap: CGFloat = 8
+            let hostView = UIView(
+                frame: CGRect(
+                    x: -pointSize.width - 40 - CGFloat(index) * (pointSize.width + gap),
+                    y: -pointSize.height - 40,
+                    width: pointSize.width,
+                    height: pointSize.height
+                )
+            )
+            let config = WKWebViewConfiguration()
+            config.allowsInlineMediaPlayback = true
+            let webView = WKWebView(
+                frame: CGRect(origin: .zero, size: pointSize),
+                configuration: config
+            )
+            webView.isOpaque = false
+            webView.backgroundColor = .systemBackground
+            webView.scrollView.backgroundColor = .systemBackground
+            webView.scrollView.isScrollEnabled = false
+            webView.scrollView.contentInsetAdjustmentBehavior = .never
+            webView.isUserInteractionEnabled = false
+            self.webView = webView
+            self.hostView = hostView
+            super.init()
+            webView.navigationDelegate = self
+
+            hostView.isUserInteractionEnabled = false
+            hostView.alpha = 0.01
+            hostView.addSubview(webView)
+            webView.frame = hostView.bounds
+            webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        }
+
+        func waitForNavigation(isCurrentGeneration: @escaping () -> Bool) async {
+            navigationID += 1
+            let waitID = navigationID
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                navigationWaiter = continuation
+                Task { @MainActor in
+                    // Load timeout only — animation settle happens after this returns.
+                    try? await Task.sleep(for: .seconds(5))
+                    guard isCurrentGeneration(), self.navigationID == waitID else { return }
+                    self.finishNavigationWait()
+                }
+            }
+        }
+
+        func finishNavigationWait() {
+            navigationWaiter?.resume()
+            navigationWaiter = nil
+        }
+
+        func stop() {
+            currentURL = nil
+            webView.stopLoading()
+            finishNavigationWait()
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            finishNavigationWait()
+        }
+
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            finishNavigationWait()
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            didFailProvisionalNavigation navigation: WKNavigation!,
+            withError error: Error
+        ) {
+            finishNavigationWait()
+        }
+    }
 
     // MARK: - Singleton
 
     static let shared = StampVectorSnapshotPrefetcher()
 
+    /// Concurrent off-screen captures. Settle sleeps overlap across slots.
+    static let concurrency = 5
+
     // MARK: - Properties
 
-    private let webView: WKWebView
-    private let hostView: UIView
+    private let slots: [SnapshotSlot]
     private var queue: [URL] = []
     private var queued = Set<URL>()
-    private var isRunning = false
     private var generation = 0
-    private var navigationWaiter: CheckedContinuation<Void, Never>?
-    private var navigationID = 0
-    private var currentURL: URL?
     private var windowWaitAttempts = 0
-    private var waitContinuations: [UUID: CheckedContinuation<Void, Never>] = [:]
-    private var waitersByURL: [URL: [UUID]] = [:]
+    private var maxConcurrency = StampVectorSnapshotPrefetcher.concurrency
+    private var memoryWarningObserver: NSObjectProtocol?
 
     // MARK: - Initialization
 
-    private override init() {
-        let pointSize = StampVectorSnapshotImage.capturePointSize
-        let hostView = UIView(
-            frame: CGRect(
-                x: -pointSize.width - 40,
-                y: -pointSize.height - 40,
-                width: pointSize.width,
-                height: pointSize.height
-            )
-        )
-        let config = WKWebViewConfiguration()
-        config.allowsInlineMediaPlayback = true
-        let webView = WKWebView(
-            frame: CGRect(origin: .zero, size: pointSize),
-            configuration: config
-        )
-        webView.isOpaque = false
-        webView.backgroundColor = .systemBackground
-        webView.scrollView.backgroundColor = .systemBackground
-        webView.scrollView.isScrollEnabled = false
-        webView.scrollView.contentInsetAdjustmentBehavior = .never
-        webView.isUserInteractionEnabled = false
-        self.webView = webView
-        self.hostView = hostView
-        super.init()
-        webView.navigationDelegate = self
+    private init() {
+        slots = (0..<Self.concurrency).map { SnapshotSlot(index: $0) }
+        memoryWarningObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                StampVectorSnapshotPrefetcher.shared.maxConcurrency = 1
+            }
+        }
+    }
 
-        hostView.isUserInteractionEnabled = false
-        hostView.alpha = 0.01
-        hostView.addSubview(webView)
-        webView.frame = hostView.bounds
-        webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    deinit {
+        if let memoryWarningObserver {
+            NotificationCenter.default.removeObserver(memoryWarningObserver)
+        }
     }
 
     // MARK: - Public Methods
@@ -76,170 +150,109 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
             queued.insert(url)
             queue.append(url)
         }
-        startIfNeeded()
+        startWorkers()
     }
 
-    /// Enqueue `urls` and wait until each has a snapshot, failed, or was skipped. Failures still count.
-    func enqueueAndWait(_ urls: [URL], onProgress: @escaping (Int) -> Void) async {
-        guard !urls.isEmpty else { return }
-        var finished = 0
-        await withTaskGroup(of: Void.self) { group in
-            for url in urls {
-                group.addTask { @MainActor in
-                    await self.waitUntilFinished(for: url)
-                    finished += 1
-                    onProgress(finished)
-                }
-            }
-        }
-    }
-
-    /// Drop the pending queue and abandon the in-flight snapshot.
+    /// Drop the pending queue and abandon in-flight snapshots.
     func cancel() {
         generation += 1
         queue.removeAll()
         queued.removeAll()
-        currentURL = nil
         windowWaitAttempts = 0
-        webView.stopLoading()
-        finishNavigationWait()
-        isRunning = false
-        resumeAllWaiters()
-    }
-
-    /// Wait until this URL is stored, skipped, or the prefetcher is cancelled.
-    private func waitUntilFinished(for url: URL) async {
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            let id = UUID()
-            waitContinuations[id] = continuation
-            waitersByURL[url, default: []].append(id)
-            Task { @MainActor in
-                let appearance = self.currentAppearance
-                if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
-                    self.finishWaiters(for: url)
-                    return
-                }
-                self.enqueue([url])
-            }
+        for slot in slots {
+            slot.isRunning = false
+            slot.stop()
         }
     }
 
-    private func finishWaiters(for url: URL) {
-        let ids = waitersByURL.removeValue(forKey: url) ?? []
-        for id in ids {
-            waitContinuations.removeValue(forKey: id)?.resume()
+    // MARK: - Workers
+
+    private func startWorkers() {
+        attachHostsIfNeeded()
+        for slot in slots where !slot.isRunning {
+            guard slot.index < maxConcurrency else { continue }
+            guard !queue.isEmpty else { return }
+            slot.isRunning = true
+            Task { await runWorker(slot) }
         }
     }
 
-    private func resumeAllWaiters() {
-        let pending = waitContinuations
-        waitContinuations.removeAll()
-        waitersByURL.removeAll()
-        pending.values.forEach { $0.resume() }
-    }
-
-    // MARK: - Queue
-
-    private func startIfNeeded() {
-        guard !isRunning else { return }
-        isRunning = true
-        Task { await processQueue() }
-    }
-
-    private func processQueue() async {
+    private func runWorker(_ slot: SnapshotSlot) async {
         let gen = generation
-        attachHostIfNeeded()
-
-        while !queue.isEmpty {
-            guard gen == generation else { break }
-
-            let url = queue.removeFirst()
-            queued.remove(url)
-
-            let appearance = currentAppearance
-            if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
-                finishWaiters(for: url)
-                continue
-            }
-
-            guard let html = await StampContentCache.shared.read(for: url) else {
-                finishWaiters(for: url)
-                continue
-            }
-
-            attachHostIfNeeded()
-            guard hostView.window != nil else {
-                windowWaitAttempts += 1
-                if windowWaitAttempts < 25 {
-                    if !queued.contains(url) {
-                        queued.insert(url)
-                        queue.insert(url, at: 0)
-                    }
-                    try? await Task.sleep(for: .milliseconds(200))
-                } else if !queued.contains(url) {
-                    // No window to render into. Stop blocking the download overlay on this stamp.
-                    finishWaiters(for: url)
-                }
-                continue
-            }
-            windowWaitAttempts = 0
-
-            currentURL = url
-            webView.loadHTMLString(html, baseURL: url)
-            await waitForNavigation(generation: gen)
-            guard gen == generation, currentURL == url else { continue }
-
-            try? await Task.sleep(for: StampVectorSnapshotImage.settleDuration)
-            guard gen == generation, currentURL == url else { continue }
-
-            if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
-                finishWaiters(for: url)
-                continue
-            }
-
-            guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: webView) else {
-                finishWaiters(for: url)
-                continue
-            }
-            guard gen == generation, currentURL == url else { continue }
-
-            await StampVectorSnapshotCache.shared.write(thumbnail, for: url, appearance: appearance)
-            finishWaiters(for: url)
+        while gen == generation, slot.index < maxConcurrency {
+            guard let url = dequeue() else { break }
+            await capture(url, slot: slot, generation: gen)
         }
-
-        isRunning = false
-        if !queue.isEmpty, gen == generation {
-            startIfNeeded()
+        slot.isRunning = false
+        if queue.isEmpty {
+            maxConcurrency = Self.concurrency
+        } else if gen == generation {
+            startWorkers()
         }
     }
 
-    // MARK: - Navigation wait
-
-    private func waitForNavigation(generation gen: Int) async {
-        navigationID += 1
-        let waitID = navigationID
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            navigationWaiter = continuation
-            Task { @MainActor in
-                // Load timeout only — animation settle happens after this returns.
-                try? await Task.sleep(for: .seconds(5))
-                guard self.generation == gen, self.navigationID == waitID else { return }
-                self.finishNavigationWait()
-            }
-        }
+    private func dequeue() -> URL? {
+        guard !queue.isEmpty else { return nil }
+        let url = queue.removeFirst()
+        queued.remove(url)
+        return url
     }
 
-    private func finishNavigationWait() {
-        navigationWaiter?.resume()
-        navigationWaiter = nil
+    private func requeue(_ url: URL) {
+        guard !queued.contains(url) else { return }
+        queued.insert(url)
+        queue.insert(url, at: 0)
+    }
+
+    private func capture(_ url: URL, slot: SnapshotSlot, generation gen: Int) async {
+        let appearance = currentAppearance
+        if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+            return
+        }
+
+        guard let html = await StampContentCache.shared.read(for: url) else {
+            return
+        }
+
+        attachHostsIfNeeded()
+        guard slot.hostView.window != nil else {
+            windowWaitAttempts += 1
+            if windowWaitAttempts < 25 {
+                requeue(url)
+                try? await Task.sleep(for: .milliseconds(200))
+            }
+            return
+        }
+        windowWaitAttempts = 0
+
+        slot.currentURL = url
+        slot.webView.loadHTMLString(html, baseURL: url)
+        await slot.waitForNavigation(isCurrentGeneration: { self.generation == gen })
+        guard gen == generation, slot.currentURL == url else { return }
+
+        try? await Task.sleep(for: StampVectorSnapshotImage.settleDuration)
+        guard gen == generation, slot.currentURL == url else { return }
+
+        if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+            return
+        }
+
+        guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: slot.webView) else {
+            return
+        }
+        guard gen == generation, slot.currentURL == url else { return }
+
+        await StampVectorSnapshotCache.shared.write(thumbnail, for: url, appearance: appearance)
+        slot.currentURL = nil
     }
 
     // MARK: - Host window
 
-    private func attachHostIfNeeded() {
-        guard hostView.superview == nil else { return }
+    private func attachHostsIfNeeded() {
         guard let window = Self.keyWindow() else { return }
-        window.addSubview(hostView)
+        for slot in slots where slot.hostView.superview == nil {
+            window.addSubview(slot.hostView)
+        }
     }
 
     private static func keyWindow() -> UIWindow? {
@@ -250,22 +263,8 @@ final class StampVectorSnapshotPrefetcher: NSObject, WKNavigationDelegate {
     }
 
     private var currentAppearance: StampVectorColorAppearance {
-        let style = hostView.window?.traitCollection.userInterfaceStyle
+        let style = slots.first?.hostView.window?.traitCollection.userInterfaceStyle
             ?? UITraitCollection.current.userInterfaceStyle
         return style == .dark ? .dark : .light
-    }
-
-    // MARK: - WKNavigationDelegate
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        finishNavigationWait()
-    }
-
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        finishNavigationWait()
-    }
-
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        finishNavigationWait()
     }
 }

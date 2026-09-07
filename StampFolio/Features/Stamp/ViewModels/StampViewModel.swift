@@ -399,8 +399,8 @@ final class StampViewModel {
     
     // MARK: - Download Overlay
     
-    /// Cache the newest `limit` visual previews (pixel images plus HTML/SVG snapshots) and
-    /// return only once each one is cached, failed, or skipped.
+    /// Cache the newest `limit` visual previews and return once pixel images and HTML/SVG
+    /// source are cached. Snapshots enqueue and continue after the overlay dismisses.
     @MainActor
     func prefetchPriorityDownloads(
         walletAddress: String?,
@@ -447,10 +447,10 @@ final class StampViewModel {
             if !vectorURLs.isEmpty {
                 group.addTask { @MainActor in
                     await Self.cacheStampContents(vectorURLs: vectorURLs, textURLs: [])
-                    await StampVectorSnapshotPrefetcher.shared.enqueueAndWait(vectorURLs) { done in
-                        vectorDone = done
-                        report()
-                    }
+                    vectorDone = vectorURLs.count
+                    report()
+                    // Overlay must not wait on WKWebView captures.
+                    StampVectorSnapshotPrefetcher.shared.enqueue(vectorURLs)
                 }
             }
         }
