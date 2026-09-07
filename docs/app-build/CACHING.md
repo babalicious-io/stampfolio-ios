@@ -179,7 +179,7 @@ A two-tier actor cache of HTML/SVG collection stills. Fullscreen and slideshow k
 
 Disk is wiped when `stampVectorSnapshotCacheVersion` increments (currently 3) so older center-cropped files are not reused.
 
-`fetchStampsImages()` (first collection load, **add wallet**, per-wallet refresh) writes HTML into `StampContentCache`, then enqueues each vector URL on `StampVectorSnapshotPrefetcher` as soon as that HTML is ready. The prefetcher runs up to five 1000×1000pt off-screen `WKWebView`s in parallel. Collection cells **display** those stills; they do not overwrite the cache. A notification refreshes visible cells when a snapshot is stored. Add-wallet overlay awaits HTML **source** cache, not these snapshots.
+`fetchStampsImages()` (first collection load, **add wallet**, per-wallet refresh) writes HTML into `StampContentCache`, then enqueues each vector URL on `StampVectorSnapshotPrefetcher` as soon as that HTML is ready. The prefetcher runs up to five 1000×1000pt off-screen `WKWebView`s in parallel. Collection cells **display** those stills; they do not overwrite the cache. A notification refreshes visible cells when a snapshot is stored. Add-wallet overlay awaits the newest 20 HTML/SVG **snapshots** (not only source) so Static HTML Preview never has to show original HTML.
 
 When **Animated HTML** is on, `StampVectorWebViewPool` reuses collection `WKWebView`s across view-mode changes (exclusive URL checkout, idle LRU ~20). Details use unpooled WebKit when live. Turning the toggle off drains idle views and shows snapshots only.
 
@@ -187,7 +187,7 @@ When **Animated HTML** is on, `StampVectorWebViewPool` reuses collection `WKWebV
 
 A user-configurable `htmlPerformancePreview` setting (Settings > Performance) controls collection/detail/fullscreen HTML/SVG:
 
-- **Animated HTML OFF** (default): cached 200pt still from the 1000×1000px prefetch; no collection WebKit once the snapshot exists. Fullscreen shows that still, with an eye control to reveal live `WebContentView`.
+- **Animated HTML OFF** (default): cached 200pt still only; spinner if the still is missing. Collection, list, and details never mount WebKit. Fullscreen shows that still, with an eye control to reveal live `WebContentView`.
 - **Animated HTML ON**: snapshot placeholder, then a live (pooled in grid/list) `WKWebView`. Fullscreen is live with no eye control.
 
 Fullscreen GIFs always use `KFAnimatedImage`, even when Static GIF is on in the collection.
@@ -283,8 +283,7 @@ in AddWalletView  -> Wallet to SwiftData  ->   sheet dismisses immediately
                                     │                          (issuance dates before sorting)
                                     ▼                                    ▼
                               newest 20 previews                 newest 20 artwork URLs
-                              (pixel + HTML source;              (resolve, then Kingfisher)
-                               snapshots after popup)
+                              (pixel + HTML snapshot)            (resolve, then Kingfisher)
                                     └─────────────────┬──────────────────┘
                                                       ▼
                                              popup closes, grids appear
@@ -302,15 +301,15 @@ shared overlay takes over. See [Download Overlay](#download-overlay) below.
 
 | Phase | Method | Behavior |
 |-------|--------|----------|
-| Gate | `prefetchPriorityDownloads` | Awaits newest `min(20, visualCount)` pixel images and HTML source; HTML/SVG snapshots enqueue and continue after the popup |
+| Gate | `prefetchPriorityDownloads` | Awaits the newest `min(20, visualCount)` pixel images and HTML/SVG snapshots |
 | Remainder | `prefetchRemainderDownloads` | Fire-and-forget for everything else |
 
 - The bar is determinate from the first frame and starts at **1%** until gate totals exist (and
   while completed is still 0), so the fill is visible during metadata fetch instead of a spinner.
   Progress is the **sum** of each enabled protocol's gate (20 stamps + 15 CP art = 35). A protocol
   with no visual assets is instantly done, and failures still count so the popup cannot hang.
-  Stamp HTML/SVG stills do not hold the popup: the gate counts them done after `StampContentCache`
-  write, then `StampVectorSnapshotPrefetcher` captures up to five in parallel after dismiss.
+  Stamp HTML/SVG stills **do** hold the popup: `enqueueAndWait` on up to five parallel
+  `StampVectorSnapshotPrefetcher` workers until the newest 20 captures finish.
 - Disabled protocols (`showStamps` / `showCounterparty` / `showOrdinals`) are skipped. Ordinals
   uses `OrdinalsDownloadSource`, a no-op that reports 0 until that tab ships.
 - Presented on both [`MainTabView`](../../StampFolio/App/MainTabView.swift) and
@@ -405,15 +404,18 @@ StampAssetVectorView renders
        │         │
        │         └── Animated HTML ON ──> attach pooled WKWebView (skip load if already painted)
        │
-       └── Snapshot miss ──> WKWebView + spinner
+       └── Snapshot miss
                  │
-                 ├── StampContentCache.read ──> loadHTMLString()
-                 │         (NSCache / disk / network + viewport inject)
+                 ├── Animated HTML OFF ──> spinner only (never original HTML)
                  │
-                 └── prefetch didFinish ──> wait 5s ──> 1000×1000px snapshot, scale to 200pt
+                 └── Animated HTML ON ──> WKWebView + spinner
+                           │
+                           ├── StampContentCache.read ──> loadHTMLString()
+                           │
+                           └── prefetch didFinish ──> wait 5s ──> 1000×1000px snapshot, scale to 200pt
 ```
 
-`loadHTMLString()` is not visually instant. Instant collection display is the PNG snapshot (and a pooled WebView that already loaded that URL).
+`loadHTMLString()` is not visually instant. Instant collection display is the PNG snapshot. Static HTML Preview never mounts collection WebKit.
 
 ## Manual Refresh
 
@@ -491,7 +493,7 @@ Located in Settings > Performance.
 | `StampVectorWebViewPool.swift` | Exclusive URL-keyed WKWebView reuse for collection cells |
 | `StampAssetPixelView.swift` | Downsampled thumbnails, sync disk load, animated preview toggle |
 | `StampAssetFullscreenView.swift` | Full-resolution images, sync disk load |
-| `StampAssetVectorView.swift` | Snapshot-first HTML/SVG preview, pooled WKWebView when animated |
+| `StampAssetVectorView.swift` | Snapshot-only when Animated HTML is off; pooled WKWebView only when animated |
 | `StampAssetTextView.swift` | Text content with StampContentCache read/write |
 | `CounterpartyAssetImageView.swift` | Thumbnail 200pt vs original; KFAnimatedImage for `.gif`; resolver-backed artwork |
 | `CollectionViewComponents.swift` | `CollectionImageThumbnail.size` (200pt); `FullscreenOriginalRevealButton` |

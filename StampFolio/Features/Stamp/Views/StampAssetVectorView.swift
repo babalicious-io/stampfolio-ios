@@ -9,8 +9,8 @@ import SwiftUI
 import WebKit
 
 /// Collection/detail preview for HTML and SVG stamps.
-/// Shows a cached snapshot immediately; mounts a (pooled) WKWebView when live preview is on
-/// or when no snapshot exists yet.
+/// Shows a cached snapshot immediately. Mounts a (pooled) WKWebView only when
+/// Animated HTML is on. Static HTML Preview never loads original HTML.
 struct StampAssetVectorView: View {
 
     let url: URL?
@@ -29,10 +29,10 @@ struct StampAssetVectorView: View {
         colorScheme == .dark ? .dark : .light
     }
 
-    /// Live WebKit when animated HTML is on, or until a prefetch snapshot arrives.
+    /// Live WebKit only when Animated HTML is on. Snapshot miss must not show original HTML.
     private var shouldMountWebView: Bool {
         guard didCheckCache else { return false }
-        return htmlPerformancePreview || snapshot == nil
+        return htmlPerformancePreview
     }
 
     private var showLiveWebView: Bool {
@@ -55,7 +55,7 @@ struct StampAssetVectorView: View {
                     isLoading: $isLoading,
                     onFailure: onFailure
                 )
-                .opacity(showLiveWebView || snapshot == nil ? 1 : 0)
+                .opacity(showLiveWebView ? 1 : 0)
             }
 
             if isLoading && snapshot == nil {

@@ -118,6 +118,8 @@ final class StampVectorSnapshotPrefetcher {
     private var queued = Set<URL>()
     private var generation = 0
     private var windowWaitAttempts = 0
+    private var waitContinuations: [UUID: CheckedContinuation<Void, Never>] = [:]
+    private var waitersByURL: [URL: [UUID]] = [:]
     private var maxConcurrency = StampVectorSnapshotPrefetcher.concurrency
     private var memoryWarningObserver: NSObjectProtocol?
 
@@ -153,6 +155,21 @@ final class StampVectorSnapshotPrefetcher {
         startWorkers()
     }
 
+    /// Enqueue `urls` and wait until each has a snapshot, failed, or was skipped. Failures still count.
+    func enqueueAndWait(_ urls: [URL], onProgress: @escaping (Int) -> Void) async {
+        guard !urls.isEmpty else { return }
+        var finished = 0
+        await withTaskGroup(of: Void.self) { group in
+            for url in urls {
+                group.addTask { @MainActor in
+                    await self.waitUntilFinished(for: url)
+                    finished += 1
+                    onProgress(finished)
+                }
+            }
+        }
+    }
+
     /// Drop the pending queue and abandon in-flight snapshots.
     func cancel() {
         generation += 1
@@ -163,6 +180,38 @@ final class StampVectorSnapshotPrefetcher {
             slot.isRunning = false
             slot.stop()
         }
+        resumeAllWaiters()
+    }
+
+    /// Wait until this URL is stored, skipped, or the prefetcher is cancelled.
+    private func waitUntilFinished(for url: URL) async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let id = UUID()
+            waitContinuations[id] = continuation
+            waitersByURL[url, default: []].append(id)
+            Task { @MainActor in
+                let appearance = self.currentAppearance
+                if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+                    self.finishWaiters(for: url)
+                    return
+                }
+                self.enqueue([url])
+            }
+        }
+    }
+
+    private func finishWaiters(for url: URL) {
+        let ids = waitersByURL.removeValue(forKey: url) ?? []
+        for id in ids {
+            waitContinuations.removeValue(forKey: id)?.resume()
+        }
+    }
+
+    private func resumeAllWaiters() {
+        let pending = waitContinuations
+        waitContinuations.removeAll()
+        waitersByURL.removeAll()
+        pending.values.forEach { $0.resume() }
     }
 
     // MARK: - Workers
@@ -207,10 +256,12 @@ final class StampVectorSnapshotPrefetcher {
     private func capture(_ url: URL, slot: SnapshotSlot, generation gen: Int) async {
         let appearance = currentAppearance
         if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+            finishWaiters(for: url)
             return
         }
 
         guard let html = await StampContentCache.shared.read(for: url) else {
+            finishWaiters(for: url)
             return
         }
 
@@ -220,6 +271,8 @@ final class StampVectorSnapshotPrefetcher {
             if windowWaitAttempts < 25 {
                 requeue(url)
                 try? await Task.sleep(for: .milliseconds(200))
+            } else {
+                finishWaiters(for: url)
             }
             return
         }
@@ -234,15 +287,18 @@ final class StampVectorSnapshotPrefetcher {
         guard gen == generation, slot.currentURL == url else { return }
 
         if await StampVectorSnapshotCache.shared.contains(url, appearance: appearance) {
+            finishWaiters(for: url)
             return
         }
 
         guard let thumbnail = await StampVectorSnapshotImage.captureSquareThumbnail(from: slot.webView) else {
+            finishWaiters(for: url)
             return
         }
         guard gen == generation, slot.currentURL == url else { return }
 
         await StampVectorSnapshotCache.shared.write(thumbnail, for: url, appearance: appearance)
+        finishWaiters(for: url)
         slot.currentURL = nil
     }
 

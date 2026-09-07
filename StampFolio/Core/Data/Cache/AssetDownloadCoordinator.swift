@@ -12,8 +12,8 @@ import SwiftData
 /// Newest-first visual assets that still need a collection preview cached.
 @MainActor
 protocol ProtocolDownloadSource: AnyObject {
-    /// Cache up to `limit` newest visual previews. Stamps await pixel images and HTML source;
-    /// HTML/SVG snapshots continue after the overlay dismisses. `onProgress` is `(completed, total)`.
+    /// Cache up to `limit` newest visual previews. Stamps await pixel images and HTML/SVG
+    /// snapshots. `onProgress` is `(completed, total)`.
     func prefetchPriorityDownloads(
         walletAddress: String?,
         limit: Int,
