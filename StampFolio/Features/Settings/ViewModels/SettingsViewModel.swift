@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel managing settings state and wallet operations
 @Observable
+@MainActor
 final class SettingsViewModel {
     
     // MARK: - Properties
@@ -57,7 +58,6 @@ final class SettingsViewModel {
     
     /// Validate locally and save a wallet. Asset loading happens after the add sheet dismisses.
     /// - Returns: The saved wallet, or `nil` when validation or save failed
-    @MainActor
     func addWallet(address: String, label: String? = nil, colorName: String = WalletColor.gray.rawValue, context: ModelContext) -> WalletConfig? {
         let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -170,7 +170,6 @@ final class SettingsViewModel {
     }
 
     /// Debounced lookup for the Add Wallet Asset Overview. Invalid addresses reset to 0.
-    @MainActor
     func addressInputDidChange(_ address: String) {
         overviewTask?.cancel()
         overviewGeneration += 1
@@ -199,7 +198,6 @@ final class SettingsViewModel {
 
     // MARK: - Asset Overview
 
-    @MainActor
     private func resetAssetOverview() {
         overviewTask?.cancel()
         overviewGeneration += 1
@@ -208,7 +206,6 @@ final class SettingsViewModel {
         stampCount = 0
     }
 
-    @MainActor
     private func loadAssetOverview(for address: String, generation: Int) async {
         ordinalsCount = 0
         counterpartyCount = 0
@@ -244,7 +241,6 @@ final class SettingsViewModel {
         }
     }
 
-    @MainActor
     private func tickStampCount(to target: Int, generation: Int) async {
         guard target > 0 else { return }
         let steps = min(target, 24)
