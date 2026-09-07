@@ -15,6 +15,7 @@ struct SearchView: View {
 
     @Environment(StampViewModel.self) private var stampViewModel
     @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
+    @Environment(AssetDownloadCoordinator.self) private var downloadCoordinator
     @Environment(\.appColorScheme) private var appColorScheme
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
 
@@ -237,14 +238,20 @@ struct SearchView: View {
 
     /// Load collection data if Search is opened before visiting a protocol tab.
     /// Always wait for an in-flight stamp fetch so Counterparty CPID exclusion is complete.
+    /// Skip while the download overlay is running so a full fetch cannot cancel its prefetchers.
     private func loadDataIfNeeded() async {
-        if showStamps || showCounterparty, stampViewModel.assets.isEmpty {
+        if showStamps || showCounterparty,
+           stampViewModel.assets.isEmpty,
+           !stampViewModel.isLoading,
+           !downloadCoordinator.blocksCollectionFetch {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
 
         if showCounterparty {
             counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
-            if counterpartyViewModel.assets.isEmpty && !counterpartyViewModel.isLoading {
+            if counterpartyViewModel.assets.isEmpty,
+               !counterpartyViewModel.isLoading,
+               !downloadCoordinator.blocksCollectionFetch {
                 await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampViewModel.stampCPIDs)
                 counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
             }
@@ -276,5 +283,6 @@ struct SearchView: View {
     SearchView()
         .environment(StampViewModel())
         .environment(CounterpartyViewModel())
+        .environment(AssetDownloadCoordinator())
         .modelContainer(for: WalletConfig.self, inMemory: true)
 }

@@ -74,11 +74,17 @@ final class CounterpartyViewModel {
     /// Full-collection supply hydration; cancelled when a new full fetch starts
     private var supplyHydrationTask: Task<Void, Never>?
 
+    /// Last wallets passed to fetch/sort, so background hydration can re-apply date order
+    private var sortWallets: [WalletConfig] = []
+
     /// Max concurrent `GET /assets/{asset}` calls while confirming supply
     private static let supplyHydrationConcurrency = 4
 
     /// Assets resolved per pass while filling the download overlay's newest-first gate
     private static let artworkResolveBatchSize = 20
+
+    /// Cap overlay hydration and artwork resolve so a large wallet cannot hold the popup open
+    private static let overlayWorkBudget: Duration = .seconds(20)
 
     // MARK: - Computed Properties
 
@@ -149,11 +155,14 @@ final class CounterpartyViewModel {
     ///   - excludingCPIDs: Asset names already shown as Bitcoin Stamps elsewhere in the app;
     ///     these are filtered out so the same asset isn't listed twice
     ///   - forceRefresh: When true, bypasses cache and fetches from network
+    ///   - startBackgroundWork: When false, skip artwork prefetch and supply hydration so the
+    ///     caller can hydrate dates first (download overlay / Static GIF)
     @MainActor
     func fetchAssetsMetadata(
         for wallets: [WalletConfig],
         excludingCPIDs: Set<String> = [],
-        forceRefresh: Bool = false
+        forceRefresh: Bool = false,
+        startBackgroundWork: Bool = true
     ) async {
         guard !wallets.isEmpty else {
             assets = []
@@ -205,6 +214,7 @@ final class CounterpartyViewModel {
             incoming: displayAssets,
             existing: assets
         )
+        sortWallets = wallets
         assets = sortedAssets(withKnownSupply, by: currentSortOption, wallets: wallets)
         applyStampExclusion(excludingCPIDs)
 
@@ -214,7 +224,7 @@ final class CounterpartyViewModel {
 
         isLoading = false
 
-        if !assets.isEmpty {
+        if startBackgroundWork, !assets.isEmpty {
             fetchAssetsImages(forceRefresh: forceRefresh, cancelExisting: true)
             hydrateSupplies(from: assets, forceRefresh: forceRefresh, cancelExisting: true)
         }
@@ -272,6 +282,7 @@ final class CounterpartyViewModel {
                 return true
             }
 
+            sortWallets = allWallets
             assets = sortedAssets(uniqueAssets, by: currentSortOption, wallets: allWallets)
             applyStampExclusion(excludingCPIDs)
 
@@ -364,6 +375,7 @@ final class CounterpartyViewModel {
         let names = displays.compactMap { $0.asset.hasConfirmedSupply ? nil : $0.asset.asset }
         guard !names.isEmpty else { return }
 
+        sortWallets = wallets
         let hydration = Task { [weak self] in
             await self?.fetchAndApplySupplies(names: names, forceRefresh: false)
         }
@@ -374,7 +386,7 @@ final class CounterpartyViewModel {
         await hydration.value
         watchdog.cancel()
 
-        assets = sortedAssets(assets, by: currentSortOption, wallets: wallets)
+        reapplyCurrentSort()
     }
 
     /// Resolve artwork newest-first and wait until the newest `limit` images with art are cached.
@@ -388,7 +400,11 @@ final class CounterpartyViewModel {
         let candidates = newestAssets(in: displays(forWallet: walletAddress))
         // Plausible denominator while artwork URLs resolve; corrected once they are known.
         onProgress(0, min(limit, candidates.count))
-        let urls = await resolveNewestArtworkURLs(from: candidates, limit: limit)
+        let urls = await resolveNewestArtworkURLs(
+            from: candidates,
+            limit: limit,
+            budget: Self.overlayWorkBudget
+        )
         onProgress(0, urls.count)
         guard !urls.isEmpty else { return }
 
@@ -419,7 +435,12 @@ final class CounterpartyViewModel {
     @MainActor
     func prefetchPriorityStaticGIFs(limit: Int, onProgress: @escaping (Int, Int) -> Void) async {
         onProgress(0, 0)
-        let urls = await resolveNewestArtworkURLs(from: newestAssets(in: assets), limit: limit, gifsOnly: true)
+        let urls = await resolveNewestArtworkURLs(
+            from: newestAssets(in: assets),
+            limit: limit,
+            gifsOnly: true,
+            budget: Self.overlayWorkBudget
+        )
         onProgress(0, urls.count)
         guard !urls.isEmpty else { return }
 
@@ -489,20 +510,26 @@ final class CounterpartyViewModel {
 
     /// Walk `displays` newest-first in batches, resolving artwork until `limit` URLs are found.
     /// Batching avoids resolving a whole collection just to fill the first 20 slots.
+    /// `budget` stops the overlay walk early; remainder resolve passes `nil` and runs to completion.
     private func resolveNewestArtworkURLs(
         from displays: [CounterpartyDisplay],
         limit: Int,
         gifsOnly: Bool = false,
-        skipping: Int = 0
+        skipping: Int = 0,
+        budget: Duration? = nil
     ) async -> [URL] {
         guard limit > 0 else { return [] }
 
+        let deadline: ContinuousClock.Instant? = budget.map { ContinuousClock.now + $0 }
         var found: [URL] = []
         var skipped = 0
         var index = 0
         let batchSize = max(Self.artworkResolveBatchSize, 1)
 
         while index < displays.count, found.count < limit {
+            if Task.isCancelled { break }
+            if let deadline, ContinuousClock.now >= deadline { break }
+
             let batch = Array(displays[index..<min(index + batchSize, displays.count)])
             index += batch.count
 
@@ -528,7 +555,8 @@ final class CounterpartyViewModel {
         await withTaskGroup(of: (Int, URL?).self) { group in
             for (offset, asset) in assets.enumerated() {
                 group.addTask {
-                    (offset, await CounterpartyAssetImageResolver.shared.resolveImageURL(for: asset))
+                    if Task.isCancelled { return (offset, nil as URL?) }
+                    return (offset, await CounterpartyAssetImageResolver.shared.resolveImageURL(for: asset))
                 }
             }
             for await (offset, url) in group {
@@ -576,6 +604,7 @@ final class CounterpartyViewModel {
     ///   - wallets: Array of wallets for mapping wallet addresses to display names
     func sortAssets(by option: CounterpartySortOption, wallets: [WalletConfig]) {
         currentSortOption = option
+        sortWallets = wallets
         assets = sortedAssets(assets, by: option, wallets: wallets)
     }
 
@@ -700,6 +729,13 @@ final class CounterpartyViewModel {
         }
 
         await CounterpartySupplyCache.shared.persist()
+        await reapplyCurrentSort()
+    }
+
+    /// Re-order once after issuance dates land so "Date - newest" is not stuck on name order.
+    @MainActor
+    private func reapplyCurrentSort() {
+        assets = sortedAssets(assets, by: currentSortOption, wallets: sortWallets)
     }
 
     @MainActor

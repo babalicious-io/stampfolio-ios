@@ -327,7 +327,8 @@ struct SettingsView: View {
             Task { @MainActor in
                 await downloadCoordinator.downloadStaticGIFPreviews(
                     stampViewModel: stampViewModel,
-                    counterpartyViewModel: counterpartyViewModel
+                    counterpartyViewModel: counterpartyViewModel,
+                    wallets: wallets
                 )
             }
         }

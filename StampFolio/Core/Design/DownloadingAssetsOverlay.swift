@@ -18,35 +18,36 @@ struct DownloadingAssetsOverlay: View {
             ZStack {
                 Color.black.opacity(0.35)
                     .ignoresSafeArea()
+                    .contentShape(Rectangle())
 
                 VStack(spacing: 16) {
                     Text("Downloading Assets")
                         .font(.headline)
 
-                    if coordinator.isDeterminate {
-                        ProgressView(
-                            value: Double(coordinator.completedCount),
-                            total: Double(max(coordinator.totalCount, 1))
-                        )
+                    ProgressView(value: displayedProgress)
                         .tint(appColorScheme.primary)
-                    } else {
-                        ProgressView()
-                            .tint(appColorScheme.primary)
-                    }
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 20)
                 .frame(maxWidth: 280)
                 .glassEffect(.regular, in: .rect(cornerRadius: 24))
             }
+            .allowsHitTesting(true)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Downloading Assets")
             .accessibilityValue(accessibilityProgress)
         }
     }
 
+    /// Floor at 1% so the bar is visible before totals exist and while completed is still 0.
+    private var displayedProgress: Double {
+        guard coordinator.totalCount > 0 else { return 0.01 }
+        let fraction = Double(coordinator.completedCount) / Double(coordinator.totalCount)
+        return min(1, max(0.01, fraction))
+    }
+
     private var accessibilityProgress: String {
-        guard coordinator.isDeterminate else { return "Loading" }
+        guard coordinator.totalCount > 0 else { return "1 percent" }
         return "\(coordinator.completedCount) of \(coordinator.totalCount)"
     }
 }

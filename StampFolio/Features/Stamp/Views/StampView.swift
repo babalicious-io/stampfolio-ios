@@ -60,7 +60,7 @@ struct StampView: View {
                 }
         }
         .task {
-            if viewModel.assets.isEmpty && !viewModel.isLoading {
+            if viewModel.assets.isEmpty && !viewModel.isLoading && !downloadCoordinator.blocksCollectionFetch {
                 await viewModel.fetchAssetsMetadata(for: wallets)
             }
         }

@@ -205,11 +205,14 @@ marketDataCache[stampId] = fetchedMarketData
 ```
 User adds wallet address
         ↓
+AssetDownloadCoordinator shows Downloading Assets
+(see CACHING.md § Download Overlay — newest 20 previews per protocol, then remainder)
+        ↓
 Fetch /stamps/balance/{address}
         ↓
 Create [StampAssetBalance] → [StampDisplay]
         ↓
-Display in Grid View ✅ (no market data needed)
+Display in Grid View ✅ (no market data needed; withheld until the overlay closes on first wallet)
         |
         ↓ (User switches to Row View - iPhone landscape or iPad)
         |

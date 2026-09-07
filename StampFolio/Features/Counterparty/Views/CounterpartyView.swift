@@ -99,13 +99,14 @@ struct CounterpartyView: View {
 
     // MARK: - Data Loading
 
-    /// Wait for Stamps to finish loading so CPID exclusion is complete, then fetch Counterparty assets
+    /// Wait for Stamps to finish loading so CPID exclusion is complete, then fetch Counterparty assets.
+    /// Skip while the download overlay is running — a full fetch would cancel its prefetchers.
     private func loadData() async {
-        if stampViewModel.assets.isEmpty {
+        if stampViewModel.assets.isEmpty && !stampViewModel.isLoading && !downloadCoordinator.blocksCollectionFetch {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
         viewModel.applyStampExclusion(stampViewModel.stampCPIDs)
-        if viewModel.assets.isEmpty && !viewModel.isLoading {
+        if viewModel.assets.isEmpty && !viewModel.isLoading && !downloadCoordinator.blocksCollectionFetch {
             await viewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampViewModel.stampCPIDs)
             viewModel.applyStampExclusion(stampViewModel.stampCPIDs)
         }

@@ -62,7 +62,10 @@ final class AssetDownloadCoordinator {
     private(set) var completedCount = 0
     private(set) var totalCount = 0
 
-    var isDeterminate: Bool { totalCount > 0 }
+    /// Collection `.task`, Search, and Slideshow must not start a full fetch while the overlay
+    /// owns prefetch — that path calls `fetchStampsImages(cancelExisting: true)` and cancels
+    /// snapshot waiters.
+    var blocksCollectionFetch: Bool { isPresented }
 
     private var runID = 0
     private var protocolCompleted: [ProtocolType: Int] = [:]
@@ -135,13 +138,24 @@ final class AssetDownloadCoordinator {
     // MARK: - Static GIF
 
     /// Settings toggle: cache 20 newest static GIF thumbs per enabled protocol, then the rest.
+    /// Loads collection metadata first when the user has never opened those tabs (default
+    /// landing tab is Ordinals, so both view models can still be empty).
     func downloadStaticGIFPreviews(
         stampViewModel: StampViewModel,
-        counterpartyViewModel: CounterpartyViewModel
+        counterpartyViewModel: CounterpartyViewModel,
+        wallets: [WalletConfig]
     ) async {
         guard !isPresented else { return }
+        guard !wallets.isEmpty else { return }
         begin(withholdsCollections: false)
         let id = runID
+
+        await loadMetadataIfNeeded(
+            stampViewModel: stampViewModel,
+            counterpartyViewModel: counterpartyViewModel,
+            wallets: wallets
+        )
+        guard id == runID else { return }
 
         await withTaskGroup(of: Void.self) { group in
             if Self.isEnabled(.stamps) {
@@ -197,6 +211,31 @@ final class AssetDownloadCoordinator {
         totalCount = 0
         protocolCompleted = [:]
         protocolTotals = [:]
+    }
+
+    /// Static GIF can be toggled before any collection tab has fetched. Stamp CPIDs are
+    /// loaded first so Counterparty exclusion is complete.
+    private func loadMetadataIfNeeded(
+        stampViewModel: StampViewModel,
+        counterpartyViewModel: CounterpartyViewModel,
+        wallets: [WalletConfig]
+    ) async {
+        let needsStamps = Self.isEnabled(.stamps) || Self.isEnabled(.counterparty)
+        if needsStamps, stampViewModel.assets.isEmpty {
+            await stampViewModel.fetchAssetsMetadata(for: wallets)
+        }
+        guard Self.isEnabled(.counterparty), counterpartyViewModel.assets.isEmpty else { return }
+        let stampCPIDs = stampViewModel.stampCPIDs
+        await counterpartyViewModel.fetchAssetsMetadata(
+            for: wallets,
+            excludingCPIDs: stampCPIDs,
+            startBackgroundWork: false
+        )
+        counterpartyViewModel.applyStampExclusion(stampCPIDs)
+        await counterpartyViewModel.hydrateSuppliesAndWait(
+            from: counterpartyViewModel.assets,
+            wallets: wallets
+        )
     }
 
     private func runPriorityGates(

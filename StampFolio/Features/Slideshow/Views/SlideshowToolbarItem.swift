@@ -106,6 +106,7 @@ private struct SlideshowMenuButton: View {
 
     @Environment(StampViewModel.self) private var stampViewModel
     @Environment(CounterpartyViewModel.self) private var counterpartyViewModel
+    @Environment(AssetDownloadCoordinator.self) private var downloadCoordinator
     @Environment(SlideshowSelection.self) private var slideshowSelection
     @Query(sort: \WalletConfig.addedDate, order: .reverse) private var wallets: [WalletConfig]
 
@@ -255,18 +256,24 @@ private struct SlideshowMenuButton: View {
         playlist = SlideshowPlaylist(items: items)
     }
 
-    /// Fetch any selected protocol that hasn't been loaded yet (e.g. playing Counterparty from Stamps)
+    /// Fetch any selected protocol that hasn't been loaded yet (e.g. playing Counterparty from Stamps).
+    /// Skip while the download overlay is running so a full fetch cannot cancel its prefetchers.
     private func loadDataIfNeeded() async {
         let needsStamps = protocolsForPlayback.contains(.stamps) || protocolsForPlayback.contains(.counterparty)
         let needsCounterparty = protocolsForPlayback.contains(.counterparty)
 
-        if needsStamps, stampViewModel.assets.isEmpty {
+        if needsStamps,
+           stampViewModel.assets.isEmpty,
+           !stampViewModel.isLoading,
+           !downloadCoordinator.blocksCollectionFetch {
             await stampViewModel.fetchAssetsMetadata(for: wallets)
         }
 
         if needsCounterparty {
             counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
-            if counterpartyViewModel.assets.isEmpty && !counterpartyViewModel.isLoading {
+            if counterpartyViewModel.assets.isEmpty,
+               !counterpartyViewModel.isLoading,
+               !downloadCoordinator.blocksCollectionFetch {
                 await counterpartyViewModel.fetchAssetsMetadata(for: wallets, excludingCPIDs: stampViewModel.stampCPIDs)
                 counterpartyViewModel.applyStampExclusion(stampViewModel.stampCPIDs)
             }

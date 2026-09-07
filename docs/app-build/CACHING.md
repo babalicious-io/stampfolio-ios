@@ -304,7 +304,9 @@ shared overlay takes over. See [Download Overlay](#download-overlay) below.
 | Gate | `prefetchPriorityDownloads` | Awaits the newest `min(20, visualCount)` previews |
 | Remainder | `prefetchRemainderDownloads` | Fire-and-forget for everything else |
 
-- The bar is the **sum** of each enabled protocol's gate (20 stamps + 15 CP art = 35). A protocol
+- The bar is determinate from the first frame and starts at **1%** until gate totals exist (and
+  while completed is still 0), so the fill is visible during metadata fetch instead of a spinner.
+  Progress is the **sum** of each enabled protocol's gate (20 stamps + 15 CP art = 35). A protocol
   with no visual assets is instantly done, and failures still count so the popup cannot hang.
 - Disabled protocols (`showStamps` / `showCounterparty` / `showOrdinals`) are skipped. Ordinals
   uses `OrdinalsDownloadSource`, a no-op that reports 0 until that tab ships.
@@ -315,16 +317,46 @@ shared overlay takes over. See [Download Overlay](#download-overlay) below.
   `CollectionLoadingView` and appear together when the popup closes. Extra wallets stay in
   Settings and leave the existing grids alone.
 - **Cold start and per-wallet Refresh show no popup** — those keep the silent prefetch.
+- Collection `.task`, Search, and Slideshow skip a full metadata fetch while the overlay is
+  presented (`blocksCollectionFetch`) or a load is already in flight (`isLoading`). A competing
+  `fetchAssetsMetadata` would cancel Kingfisher and HTML snapshot waiters and close the popup
+  early. The dimmed overlay also eats taps so tabs cannot start that path by accident.
 
 Newest-first ordering is why `block_time` (Stamps) and `first_issuance_block_time` (Counterparty)
 are decoded up front. Counterparty verbose balances usually omit issuance time, so the coordinator
 awaits `hydrateSuppliesAndWait` before picking the newest 20; artwork URLs are then resolved in
-batches of 20 so a large collection is not fully resolved just to fill the gate. Assets with no
-artwork never block it.
+batches of 20 so a large collection is not fully resolved just to fill the gate. Both hydration
+and that resolve walk are capped at 20 seconds; whatever arrived is used and the rest continues
+after the popup closes. Assets with no artwork never block it. Background hydration re-sorts
+once when it finishes so Date-newest is not stuck on name order.
 
 Turning **Animated GIF** off runs the same overlay for GIF thumbnails, using
 `ProtocolImageCache.thumbnailOptions` so the cached processed key matches what the grids request
-(`DownsamplingImageProcessor(CollectionImageThumbnail.size)`). Turning it back on shows no popup.
+(`DownsamplingImageProcessor(CollectionImageThumbnail.size)`). If collection tabs have never
+been opened, metadata is fetched first so the GIF lists are not empty. Turning it back on shows
+no popup.
+
+### Ordinals hook
+
+`OrdinalsDownloadSource` is a no-op `ProtocolDownloadSource` (`visualCount = 0`) so the overlay
+does not wait on that tab today. When `OrdinalsViewModel` ships, replace the no-op — do not add a
+second overlay or a third Settings path.
+
+The view model must:
+
+1. Conform to `ProtocolDownloadSource`.
+2. Fetch inscription metadata for the new wallet (same add-wallet call the coordinator already
+   makes for Stamps and Counterparty).
+3. Decode a creation / inscription date and default the collection sort to newest-first.
+4. `prefetchPriorityDownloads` — cache `min(20, visualCount)` newest previews (Kingfisher or the
+   inscription renderer), await each result, count failures so the popup cannot hang.
+5. `prefetchRemainderDownloads` — fire-and-forget everything the gate skipped.
+6. `prefetchPriorityStaticGIFs` / `prefetchRemainderStaticGIFs` — newest GIF thumbs at
+   `CollectionImageThumbnail.size` when Animated GIF is turned off.
+7. Honor `showOrdinals`: the coordinator already skips disabled protocols via `UserDefaults`.
+
+Give Ordinals its own `ProtocolImageCache` named cache (Stamps and Counterparty already do not
+share one LRU). Overlay UI, Settings extra-wallet, and Static GIF entry points stay unchanged.
 
 ### Displaying a Stamp (Cache-First)
 
@@ -332,17 +364,19 @@ Turning **Animated GIF** off runs the same overlay for GIF thumbnails, using
 StampView .task
        │
        ▼
-stamps.isEmpty? ──yes──> fetchStampsMetadata()
-       │                        │
-       no                       ▼
-       │                 URLCache hit? ──yes──> decode JSON, display
-       ▼                        │
-  Display cached                no
-  stamps array                  ▼
-                         Network fetch -> URLCache stores -> decode -> display
-                                                                        │
-                                                                        ▼
-                                                              fetchStampsImages() (background)
+assets.isEmpty && !isLoading && !overlay?
+       │
+      yes──> fetchAssetsMetadata()
+       │            │
+       no           ▼
+       │     URLCache hit? ──yes──> decode JSON, display
+       ▼            │
+  Display cached    no
+  stamps array      ▼
+                 Network fetch -> URLCache stores -> decode -> display
+                                                                │
+                                                                ▼
+                                                      fetchStampsImages() (background)
 ```
 
 ### Viewing a Stamp Image
@@ -458,5 +492,6 @@ Located in Settings > Performance.
 | `CounterpartyAssetImageView.swift` | Thumbnail 200pt vs original; KFAnimatedImage for `.gif`; resolver-backed artwork |
 | `CollectionViewComponents.swift` | `CollectionImageThumbnail.size` (200pt) shared by Stamps and Counterparty |
 | `AddWalletView.swift` | Save, dismiss, hand the new wallet to the download coordinator |
-| `StampView.swift` | Cache-first `.task`, deletion-only `.onChange` |
+| `StampView.swift` | Cache-first `.task` (skips while overlay / `isLoading`), deletion-only `.onChange` |
+| `SearchView.swift` / `SlideshowToolbarItem.swift` | Same overlay/`isLoading` guard before a full fetch |
 | `SettingsView.swift` | Per-wallet refresh swipe, GIF and HTML performance preview toggles, overlay host |
