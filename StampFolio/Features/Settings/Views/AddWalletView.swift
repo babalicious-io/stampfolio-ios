@@ -73,13 +73,11 @@ struct AddWalletView: View {
                     }
                 }
                 
-                // Address Type Preview
-                if !viewModel.walletAddressInput.isEmpty {
-                    Section {
-                        addressTypePreview
-                    } header: {
-                        Text("Address Preview")
-                    }
+                // Asset Overview
+                Section {
+                    assetOverview
+                } header: {
+                    Text("Asset Overview")
                 }
                 
                 // Wallet Color Section
@@ -159,6 +157,10 @@ struct AddWalletView: View {
             }
             .onAppear {
                 isAddressFocused = false
+                viewModel.addressInputDidChange(viewModel.walletAddressInput)
+            }
+            .onChange(of: viewModel.walletAddressInput) { _, newValue in
+                viewModel.addressInputDidChange(newValue)
             }
             .sheet(isPresented: $viewModel.showQRScanner) {
                 QRScannerView { result in
@@ -168,43 +170,33 @@ struct AddWalletView: View {
         }
     }
     
-    // MARK: - Address Type Preview
+    // MARK: - Asset Overview
     
-    private var addressTypePreview: some View {
-        let addressType = BitcoinAddressType.detect(from: viewModel.walletAddressInput)
-        
-        return HStack(spacing: 16) {
-            Image(systemName: addressTypeIcon(for: addressType))
-                .foregroundStyle(appColorScheme.primary)
-                .font(.system(size: 24))
-                .fontWeight(.light)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(addressType.rawValue)
-                    .font(.caption)
-                    .foregroundStyle(appColorScheme.primary)
-                
-                Text(viewModel.walletAddressInput.truncatedAddress(prefixLength: 6, suffixLength: 6))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+    private var assetOverview: some View {
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(ProtocolType.defaultOrder) { protocolType in
+                let count = viewModel.overviewCount(for: protocolType)
+                VStack(spacing: 6) {
+                    Text(protocolType.rawValue)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text("\(count)")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .foregroundStyle(appColorScheme.primary)
+                }
+                .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(protocolType.rawValue) \(count)")
             }
         }
-        .padding(.vertical, 0)
-    }
-    
-    private func addressTypeIcon(for type: BitcoinAddressType) -> String {
-        switch type {
-        case .legacy:
-            return "1.circle"
-        case .segwitP2SH:
-            return "3.circle"
-        case .nativeSegwit:
-            return "q.circle"
-        case .taproot:
-            return "p.circle"
-        case .unknown:
-            return "questionmark.circle"
-        }
+        .animation(.snappy, value: viewModel.stampCount)
+        .animation(.snappy, value: viewModel.counterpartyCount)
+        .padding(.vertical, 4)
     }
     
     // MARK: - Add Wallet

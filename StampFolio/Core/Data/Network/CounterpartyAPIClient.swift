@@ -42,27 +42,36 @@ actor CounterpartyAPIClient {
         var cursor: Int?
 
         for _ in 0..<maxBalancePages {
-            var endpoint = "\(baseURL)/addresses/\(address)/balances?verbose=true&limit=\(balancesPageSize)"
-            if let cursor {
-                endpoint += "&cursor=\(cursor)"
-            }
-
-            guard let url = URL(string: endpoint) else {
-                throw NetworkError.invalidURL
-            }
-
-            let (data, _) = try await executor.perform(url, forceRefresh: forceRefresh)
-            let response = try decoder.decode(CounterpartyBalancesResponse.self, from: data)
-
-            allBalances.append(contentsOf: response.result)
-
-            guard let nextCursor = response.nextCursor, response.result.count == balancesPageSize else {
-                break
-            }
+            let page = try await fetchBalancePage(for: address, cursor: cursor, forceRefresh: forceRefresh)
+            allBalances.append(contentsOf: page.balances)
+            guard let nextCursor = page.nextCursor else { break }
             cursor = nextCursor
         }
 
         return allBalances
+    }
+
+    /// One verbose balances page. `nextCursor` is nil on the last page.
+    func fetchBalancePage(
+        for address: String,
+        cursor: Int? = nil,
+        forceRefresh: Bool = false
+    ) async throws -> (balances: [CounterpartyAssetBalance], nextCursor: Int?) {
+        var endpoint = "\(baseURL)/addresses/\(address)/balances?verbose=true&limit=\(balancesPageSize)"
+        if let cursor {
+            endpoint += "&cursor=\(cursor)"
+        }
+
+        guard let url = URL(string: endpoint) else {
+            throw NetworkError.invalidURL
+        }
+
+        let (data, _) = try await executor.perform(url, forceRefresh: forceRefresh)
+        let response = try decoder.decode(CounterpartyBalancesResponse.self, from: data)
+        let nextCursor = (response.nextCursor != nil && response.result.count == balancesPageSize)
+            ? response.nextCursor
+            : nil
+        return (response.result, nextCursor)
     }
 
     /// Check whether a wallet address holds any Counterparty assets
